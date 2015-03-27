@@ -1,0 +1,8 @@
+com.mysql.clusterj.connectstring = cloudX.sics.se
+com.mysql.clusterj.database = DATABASE_NAME
+com.mysql.clusterj.connection.pool.size = 1
+com.mysql.clusterj.max.transactions = 1024
+
+com.mysql.clusterj.jdbc.username=USER_NAME
+com.mysql.clusterj.jdbc.password=PASSWORD
+com.mysql.clusterj.jdbc.url=jdbc:mysql://cloudX.sics.se:330X/DATABASE_NAME
