@@ -22,7 +22,7 @@ import io.hops.metadata.ndb.wrapper.HopsSession;
 
 public class DBSession {
 
-  private HopsSession session;
+  dfdprivate HopsSession session;
   private final int MAX_REUSE_COUNT;
   private int sessionUseCount;
 
