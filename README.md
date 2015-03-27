@@ -1,4 +1,4 @@
-Hop Metadata DAL NDB Implementation
+Hops Metadata DAL NDB Implementation
 ===
 
 Hops Database abstraction layer for storing the hops metadata in MySQL Cluster
@@ -19,4 +19,4 @@ deploys the jar file as an artifact to the kompics maven repository.
 
 # License
 
-Hop-Metadata-dal is released under an [GPL 2.0 license](LICENSE.txt).
+Hops-Metadata-dal-impl-ndb is released under an [GPL 2.0 license](LICENSE.txt).
