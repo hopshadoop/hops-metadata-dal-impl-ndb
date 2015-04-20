@@ -423,7 +423,7 @@ CREATE TABLE `yarn_rmnode` (
   `nodemanager_version` VARCHAR(45) NULL,
   `uci_id` INT NULL,
   PRIMARY KEY (`rmnodeid`))
-ENGINE = ndbcluster
+ENGINE = ndbcluster DEFAULT CHARSET=latin1
 PACK_KEYS = DEFAULT PARTITION BY KEY(rmnodeid)$$
 
 
@@ -812,7 +812,7 @@ CREATE TABLE `yarn_nextheartbeat` (
     REFERENCES `yarn_rmnode` (`rmnodeid`)
     ON DELETE CASCADE
     ON UPDATE NO ACTION)
-ENGINE = ndbcluster$$
+ENGINE = ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(rmnodeid)$$
 
 delimiter $$
 
