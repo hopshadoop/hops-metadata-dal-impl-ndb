@@ -65,8 +65,12 @@ public class INodeAttributesClusterj implements
     long getDiskspace();
 
     void setDiskspace(long diskspace);
-  }
+    
+    @Column(name = STATUS)
+    int getStatus();
 
+    void setStatus(int status);
+  }
   private ClusterjConnector connector = ClusterjConnector.getInstance();
 
   @Override
@@ -133,6 +137,7 @@ public class INodeAttributesClusterj implements
     dto.setNSCount(attribute.getNsCount());
     dto.setDSQuota(attribute.getDsQuota());
     dto.setDiskspace(attribute.getDiskspace());
+    dto.setStatus(attribute.getStatus());
     return dto;
   }
 
@@ -142,7 +147,7 @@ public class INodeAttributesClusterj implements
     }
     INodeAttributes iNodeAttributes =
         new INodeAttributes(dto.getId(), dto.getNSQuota(), dto.getNSCount(),
-            dto.getDSQuota(), dto.getDiskspace());
+            dto.getDSQuota(), dto.getDiskspace(),dto.getStatus());
     return iNodeAttributes;
   }
 }

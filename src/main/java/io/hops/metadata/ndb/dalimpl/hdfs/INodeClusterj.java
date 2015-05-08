@@ -29,6 +29,7 @@ import io.hops.metadata.hdfs.dal.INodeDataAccess;
 import io.hops.metadata.hdfs.entity.INode;
 import io.hops.metadata.hdfs.entity.INodeIdentifier;
 import io.hops.metadata.hdfs.entity.ProjectedINode;
+import io.hops.metadata.hdfs.snapshots.SnapShotConstants;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.NdbBoolean;
 import io.hops.metadata.ndb.mysqlserver.HopsSQLExceptionHelper;
@@ -149,6 +150,16 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     long getSubtreeLockOwner();
 
     void setSubtreeLockOwner(long leaderId);
+     
+    @Column(name = ISDELETED)
+    int getIsDeleted();
+
+    void setIsDeleted(int isdeleted);
+
+    @Column(name = STATUS)
+    int getStatus();
+
+    void setStatus(int Status);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -222,7 +233,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         qb.createQueryDefinition(InodeDTO.class);
     HopsPredicate pred1 =
         dobj.get("parentId").equal(dobj.param("parentIDParam"));
-    dobj.where(pred1);
+      dobj.where(pred1);
     HopsQuery<InodeDTO> query = session.createQuery(dobj);
     query.setParameter("parentIDParam", parentId);
 
@@ -230,14 +241,73 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     explain(query);
     return createInodeList(results);
   }
+    
+    @Override
+    public List<INode> indexScanFindInodesByParentIdIncludeDeletes(int parentId) throws StorageException {
+        try {
 
+            HopsSession session = connector.obtainSession();
+            HopsQueryBuilder qb = session.getQueryBuilder();
+            HopsQueryDomainType<InodeDTO> dobj = qb.createQueryDefinition(InodeDTO.class);
+            HopsPredicate pred1 = dobj.get("parentId").equal(dobj.param("parentIDParam1"));
+            HopsPredicate pred2 = dobj.get("parentId").equal(dobj.param("parentIDParam2"));
+            HopsPredicate pred3 = dobj.get("isdeleted").equal(dobj.param("isdeletedParam"));
+            dobj.where(pred1.or(pred2.and(pred3)));
+
+            HopsQuery<InodeDTO> query = session.createQuery(dobj);
+            query.setParameter("parentIDParam1", parentId);
+            query.setParameter("parentIDParam2", -parentId);
+            query.setParameter("parentIDParam3", 1);
+
+            List<InodeDTO> results = query.getResultList();
+            explain(query);
+            return createInodeList(results);
+        } catch (Exception e) {
+            throw new StorageException(e);
+        }
+    }
+    @Override
+    public List<ProjectedINode> findInodesByParentIdForSubTreeOpsWithReadLockIncludeDeletes(
+            int parentId) throws StorageException {
+        final String query = String.format(
+                "SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s FROM %s WHERE  %s=%d or (%s=%d and %s=%d) LOCK IN SHARE MODE",
+                ID, NAME, PARENT_ID, PERMISSION, HEADER, SYMLINK, QUOTA_ENABLED,
+                UNDER_CONSTRUCTION, SUBTREE_LOCKED, SUBTREE_LOCK_OWNER,STATUS,ISDELETED,TABLE_NAME,
+                PARENT_ID,PARENT_ID,ISDELETED, parentId,-parentId,SnapShotConstants.isDeleted);
+        ArrayList<ProjectedINode> resultList;
+        try {
+            Connection conn = mysqlConnector.obtainSession();
+            PreparedStatement s = conn.prepareStatement(query);
+            ResultSet result = s.executeQuery();
+            resultList = new ArrayList<ProjectedINode>();
+
+            while (result.next()) {
+                resultList.add(
+                        new ProjectedINode(result.getInt(ID), result.getInt(PARENT_ID),
+                                result.getString(NAME), result.getBytes(PERMISSION),
+                                result.getLong(HEADER),
+                                result.getString(SYMLINK) == null ? false : true,
+                                result.getBoolean(QUOTA_ENABLED),
+                                result.getBoolean(UNDER_CONSTRUCTION),
+                                result.getBoolean(SUBTREE_LOCKED),
+                                result.getLong(SUBTREE_LOCK_OWNER),
+                                result.getInt(STATUS),
+                                result.getInt(ISDELETED)));
+            }
+        } catch (SQLException ex) {
+            throw HopsSQLExceptionHelper.wrap(ex);
+        } finally {
+            mysqlConnector.closeSession();
+        }
+        return resultList;
+    }
   @Override
   public List<ProjectedINode> findInodesForSubtreeOperationsWithReadLock(
       int parentId) throws StorageException {
     final String query = String.format(
-        "SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s FROM %s WHERE %s=%d LOCK IN SHARE MODE",
+        "SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s FROM %s WHERE  %s=%d  LOCK IN SHARE MODE",
         ID, NAME, PARENT_ID, PERMISSION, HEADER, SYMLINK, QUOTA_ENABLED,
-        UNDER_CONSTRUCTION, SUBTREE_LOCKED, SUBTREE_LOCK_OWNER, TABLE_NAME,
+        UNDER_CONSTRUCTION, SUBTREE_LOCKED, SUBTREE_LOCK_OWNER,STATUS,ISDELETED,TABLE_NAME,
         PARENT_ID, parentId);
     ArrayList<ProjectedINode> resultList;
     try {
@@ -255,7 +325,9 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
                 result.getBoolean(QUOTA_ENABLED),
                 result.getBoolean(UNDER_CONSTRUCTION),
                 result.getBoolean(SUBTREE_LOCKED),
-                result.getLong(SUBTREE_LOCK_OWNER)));
+                result.getLong(SUBTREE_LOCK_OWNER),
+				result.getInt(STATUS),
+				result.getInt(ISDELETED)));
       }
     } catch (SQLException ex) {
       throw HopsSQLExceptionHelper.wrap(ex);
@@ -377,7 +449,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         persistable.getClientNode(), persistable.getGenerationStamp(),
         persistable.getHeader(), persistable.getSymlink(),
         NdbBoolean.convert(persistable.getSubtreeLocked()),
-        persistable.getSubtreeLockOwner());
+        persistable.getSubtreeLockOwner(),
+    persistable.getIsDeleted(),persistable.getStatus());
   }
 
   private void createPersistable(INode inode, InodeDTO persistable) {
@@ -397,6 +470,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setSymlink(inode.getSymlink());
     persistable.setSubtreeLocked(NdbBoolean.convert(inode.isSubtreeLocked()));
     persistable.setSubtreeLockOwner(inode.getSubtreeLockOwner());
+      persistable.setIsDeleted(inode.getIsDeleted());
+      persistable.setStatus(inode.getStatus());
   }
 
   private void explain(HopsQuery<InodeDTO> query) {

@@ -10,6 +10,7 @@ CREATE TABLE `hdfs_block_infos` (
   `time_stamp` bigint(20) DEFAULT NULL,
   `primary_node_index` int(11) DEFAULT NULL,
   `block_recovery_id` bigint(20) DEFAULT NULL,
+  `status` int(11) DEFAULT 0,
   PRIMARY KEY (`inode_id`,`block_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1
 /*!50100 PARTITION BY KEY (inode_id) */$$
@@ -57,6 +58,7 @@ CREATE TABLE `hdfs_inode_attributes` (
   `dsquota` bigint(20) DEFAULT NULL,
   `nscount` bigint(20) DEFAULT NULL,
   `diskspace` bigint(20) DEFAULT NULL,
+  `status` int(11) DEFAULT 0,
   PRIMARY KEY (`inodeId`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
@@ -80,6 +82,8 @@ CREATE TABLE `hdfs_inodes` (
   `under_construction` bit(8) NOT NULL,
   `subtree_locked` bit(8) DEFAULT NULL,
   `subtree_lock_owner` bigint(20) DEFAULT NULL,
+  `isdeleted` int(11) DEFAULT 0,
+  `status` int(11) DEFAULT 0,
   PRIMARY KEY (`parent_id`,`name`),
   KEY `inode_idx` (`id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1

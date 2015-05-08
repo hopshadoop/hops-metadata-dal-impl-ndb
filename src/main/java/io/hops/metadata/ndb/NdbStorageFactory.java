@@ -44,6 +44,8 @@ import io.hops.metadata.hdfs.dal.SafeBlocksDataAccess;
 import io.hops.metadata.hdfs.dal.StorageIdMapDataAccess;
 import io.hops.metadata.hdfs.dal.UnderReplicatedBlockDataAccess;
 import io.hops.metadata.hdfs.dal.VariableDataAccess;
+import io.hops.metadata.rollBack.dal.RollBackAccess;
+import io.hops.metadata.ndb.dalimpl.rollBack.RollBackImpl;
 import io.hops.metadata.ndb.dalimpl.election.HdfsLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.election.YarnLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.BlockChecksumClusterj;
@@ -280,6 +282,7 @@ public class NdbStorageFactory implements DalStorageFactory {
         .put(NextHeartbeatDataAccess.class, new NextHeartbeatClusterJ());
     dataAccessMap.put(RMLoadDataAccess.class, new RMLoadClusterJ());
     dataAccessMap.put(FullRMNodeDataAccess.class, new FullRMNodeClusterJ());
+    dataAccessMap.put(RollBackAccess.class,new RollBackImpl());
   }
 
   @Override

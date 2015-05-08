@@ -95,9 +95,13 @@ public class BlockInfoClusterj
     long getBlockRecoveryId();
 
     void setBlockRecoveryId(long recoveryId);
-  }
-
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
+        
+    @Column(name=STATUS)
+    int getStatus();
+        
+    void setStatus(int status);
+    }
+    private ClusterjConnector connector = ClusterjConnector.getInstance();
   private final static int NOT_FOUND_ROW = -1000;
 
   @Override
@@ -310,7 +314,7 @@ public class BlockInfoClusterj
         new BlockInfo(bDTO.getBlockId(), bDTO.getBlockIndex(),
             bDTO.getINodeId(), bDTO.getNumBytes(), bDTO.getGenerationStamp(),
             bDTO.getBlockUCState(), bDTO.getTimestamp(),
-            bDTO.getPrimaryNodeIndex(), bDTO.getBlockRecoveryId());
+            bDTO.getPrimaryNodeIndex(), bDTO.getBlockRecoveryId(),bDTO.getStatus());
     return hopBlockInfo;
   }
 
@@ -325,5 +329,6 @@ public class BlockInfoClusterj
     persistable.setBlockUCState(block.getBlockUCState());
     persistable.setPrimaryNodeIndex(block.getPrimaryNodeIndex());
     persistable.setBlockRecoveryId(block.getBlockRecoveryId());
+    persistable.setStatus(block.getStatus());
   }
 }
