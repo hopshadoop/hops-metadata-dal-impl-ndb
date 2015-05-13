@@ -39,6 +39,7 @@ import io.hops.metadata.hdfs.dal.LeaseDataAccess;
 import io.hops.metadata.hdfs.dal.LeasePathDataAccess;
 import io.hops.metadata.hdfs.dal.MetadataLogDataAccess;
 import io.hops.metadata.hdfs.dal.MisReplicatedRangeQueueDataAccess;
+import io.hops.metadata.hdfs.dal.OngoingSubTreeOpsDataAccess;
 import io.hops.metadata.hdfs.dal.PendingBlockDataAccess;
 import io.hops.metadata.hdfs.dal.QuotaUpdateDataAccess;
 import io.hops.metadata.hdfs.dal.RepairJobsDataAccess;
@@ -66,6 +67,7 @@ import io.hops.metadata.ndb.dalimpl.hdfs.LeaseClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.LeasePathClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.MetadataLogClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.MisReplicatedRangeQueueClusterj;
+import io.hops.metadata.ndb.dalimpl.hdfs.OnGoingSubTreeOpsClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.PendingBlockClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.QuotaUpdateClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.RepairJobsClusterj;
@@ -254,6 +256,7 @@ public class NdbStorageFactory implements DalStorageFactory {
         .put(INodeAttributesDataAccess.class, new INodeAttributesClusterj());
     dataAccessMap.put(LeaseDataAccess.class, new LeaseClusterj());
     dataAccessMap.put(LeasePathDataAccess.class, new LeasePathClusterj());
+    dataAccessMap.put(OngoingSubTreeOpsDataAccess.class, new OnGoingSubTreeOpsClusterj());
     dataAccessMap
         .put(HdfsLeDescriptorDataAccess.class, new HdfsLeaderClusterj());
     dataAccessMap

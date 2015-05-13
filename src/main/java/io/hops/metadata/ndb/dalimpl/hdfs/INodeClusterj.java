@@ -367,6 +367,38 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         .countWithCriterion(TABLE_NAME, String.format("%s<>0", HEADER));
   }
   
+  @Override
+  public List<INode> allINodes() throws StorageException { // only for testing
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQuery<InodeDTO> query =
+        session.createQuery(qb.createQueryDefinition(InodeDTO.class));
+    return createInodeList(query.getResultList());
+  }
+  
+  @Override
+  public boolean hasChildren(int parentId) throws StorageException {
+    HopsSession session = connector.obtainSession();
+
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<InodeDTO> dobj =
+        qb.createQueryDefinition(InodeDTO.class);
+    HopsPredicate pred1 =
+        dobj.get("parentId").equal(dobj.param("parentIDParam"));
+    dobj.where(pred1);
+    HopsQuery<InodeDTO> query = session.createQuery(dobj);
+    query.setParameter("parentIDParam", parentId);
+    query.setLimits(0, 1);
+
+    List<InodeDTO> results = query.getResultList();
+    if(results.isEmpty()){
+      return false;
+    }else{
+      return true;
+    }
+  }
+
+  
   private List<INode> createInodeList(List<InodeDTO> list) {
     List<INode> inodes = new ArrayList<INode>();
     for (InodeDTO persistable : list) {
