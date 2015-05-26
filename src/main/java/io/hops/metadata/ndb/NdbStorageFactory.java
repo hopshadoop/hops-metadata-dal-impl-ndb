@@ -24,6 +24,7 @@ import io.hops.exception.StorageInitializtionException;
 import io.hops.metadata.common.EntityDataAccess;
 import io.hops.metadata.election.dal.HdfsLeDescriptorDataAccess;
 import io.hops.metadata.election.dal.YarnLeDescriptorDataAccess;
+import io.hops.metadata.hdfs.dal.AccessTimeLogDataAccess;
 import io.hops.metadata.hdfs.dal.BlockChecksumDataAccess;
 import io.hops.metadata.hdfs.dal.BlockInfoDataAccess;
 import io.hops.metadata.hdfs.dal.BlockLookUpDataAccess;
@@ -35,17 +36,20 @@ import io.hops.metadata.hdfs.dal.INodeDataAccess;
 import io.hops.metadata.hdfs.dal.InvalidateBlockDataAccess;
 import io.hops.metadata.hdfs.dal.LeaseDataAccess;
 import io.hops.metadata.hdfs.dal.LeasePathDataAccess;
+import io.hops.metadata.hdfs.dal.MetadataLogDataAccess;
 import io.hops.metadata.hdfs.dal.MisReplicatedRangeQueueDataAccess;
 import io.hops.metadata.hdfs.dal.PendingBlockDataAccess;
 import io.hops.metadata.hdfs.dal.QuotaUpdateDataAccess;
 import io.hops.metadata.hdfs.dal.ReplicaDataAccess;
 import io.hops.metadata.hdfs.dal.ReplicaUnderConstructionDataAccess;
 import io.hops.metadata.hdfs.dal.SafeBlocksDataAccess;
+import io.hops.metadata.hdfs.dal.SizeLogDataAccess;
 import io.hops.metadata.hdfs.dal.StorageIdMapDataAccess;
 import io.hops.metadata.hdfs.dal.UnderReplicatedBlockDataAccess;
 import io.hops.metadata.hdfs.dal.VariableDataAccess;
 import io.hops.metadata.ndb.dalimpl.election.HdfsLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.election.YarnLeaderClusterj;
+import io.hops.metadata.ndb.dalimpl.hdfs.AccessTimeLogClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.BlockChecksumClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.BlockInfoClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.BlockLookUpClusterj;
@@ -57,12 +61,14 @@ import io.hops.metadata.ndb.dalimpl.hdfs.INodeClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.InvalidatedBlockClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.LeaseClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.LeasePathClusterj;
+import io.hops.metadata.ndb.dalimpl.hdfs.MetadataLogClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.MisReplicatedRangeQueueClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.PendingBlockClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.QuotaUpdateClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.ReplicaClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.ReplicaUnderConstructionClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.SafeBlocksClusterj;
+import io.hops.metadata.ndb.dalimpl.hdfs.SizeLogClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.StorageIdMapClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.UnderReplicatedBlockClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.VariableClusterj;
@@ -280,6 +286,10 @@ public class NdbStorageFactory implements DalStorageFactory {
         .put(NextHeartbeatDataAccess.class, new NextHeartbeatClusterJ());
     dataAccessMap.put(RMLoadDataAccess.class, new RMLoadClusterJ());
     dataAccessMap.put(FullRMNodeDataAccess.class, new FullRMNodeClusterJ());
+    dataAccessMap.put(MetadataLogDataAccess.class, new MetadataLogClusterj());
+    dataAccessMap.put(AccessTimeLogDataAccess.class,
+        new AccessTimeLogClusterj());
+    dataAccessMap.put(SizeLogDataAccess.class, new SizeLogClusterj());
   }
 
   @Override
