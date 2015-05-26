@@ -825,7 +825,7 @@ CREATE TABLE `yarn_pendingevents` (
   `status` TINYINT NULL,
   `last_hb` INT NULL,
   PRIMARY KEY (`id`, `rmnodeid`))
-ENGINE = ndbcluster$$
+ENGINE = ndbcluster DEFAULT CHARSET=latin1$$
 
 delimiter $$
 
@@ -837,6 +837,8 @@ CREATE TABLE `hdfs_metadata_log` (
   PRIMARY KEY (`dataset_id` ,`inode_id` , `logical_time`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
+delimiter $$
+
 CREATE TABLE `hdfs_access_log` (
   `inode_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
@@ -844,8 +846,12 @@ CREATE TABLE `hdfs_access_log` (
   PRIMARY KEY (`inode_id` , `user_id` , `access_time`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
+delimiter $$
+
 CREATE TABLE `hdfs_size_log` (
   `inode_id` int(11) NOT NULL,
   `size` bigint(20) NOT NULL,
   PRIMARY KEY (`inode_id` , `size`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+
+delimiter $$
