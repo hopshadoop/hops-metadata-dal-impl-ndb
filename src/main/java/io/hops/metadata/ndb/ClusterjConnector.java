@@ -98,13 +98,16 @@ import io.hops.metadata.yarn.dal.RMLoadDataAccess;
 import io.hops.metadata.yarn.dal.RMNodeDataAccess;
 import io.hops.metadata.yarn.dal.ResourceDataAccess;
 import io.hops.metadata.yarn.dal.ResourceRequestDataAccess;
+import io.hops.metadata.yarn.dal.FiCaSchedulerAppLastScheduledContainerDataAccess;
+import io.hops.metadata.yarn.dal.FiCaSchedulerAppReservationsDataAccess;
+import io.hops.metadata.yarn.dal.FiCaSchedulerAppSchedulingOpportunitiesDataAccess;
 import io.hops.metadata.yarn.dal.SchedulerApplicationDataAccess;
 import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
 import io.hops.metadata.yarn.dal.YarnVariablesDataAccess;
-import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppLastScheduledContainerDataAccess;
-import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservationsDataAccess;
+import io.hops.metadata.yarn.dal.capacity.CSQueueDataAccess;
 import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservedContainersDataAccess;
-import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppSchedulingOpportunitiesDataAccess;
+import io.hops.metadata.yarn.dal.fair.LocalityLevelDataAccess;
+import io.hops.metadata.yarn.dal.fair.RunnableAppsDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.AllocateResponseDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.ApplicationAttemptStateDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.ApplicationStateDataAccess;
@@ -381,7 +384,10 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         RMContextActiveNodesDataAccess.class,
         UpdatedContainerInfoDataAccess.class, YarnLeDescriptorDataAccess.class,
         SecretMamagerKeysDataAccess.class, AllocateResponseDataAccess.class,
-        RMLoadDataAccess.class, PendingEventDataAccess.class);
+        RMLoadDataAccess.class, PendingEventDataAccess.class,
+        LocalityLevelDataAccess.class,
+        RunnableAppsDataAccess.class,
+        CSQueueDataAccess.class);
   }
 
   private boolean format(boolean transactional,
@@ -598,6 +604,12 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.PendingEventTableDef.TABLE_NAME);
           } else if (e == NextHeartbeatDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.NextHeartbeatTableDef.TABLE_NAME);
+          } else if (e==LocalityLevelDataAccess.class){
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.LocalityLevelTableDef.TABLE_NAME);
+          } else if (e== RunnableAppsDataAccess.class){
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.RunnableAppsTableDef.TABLE_NAME);
+          } else if (e==CSQueueDataAccess.class){
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.CSQueueTableDef.TABLE_NAME);
           }
         }
         MysqlServerConnector.truncateTable(transactional,

@@ -89,6 +89,25 @@ public class RMContainerClusterJ
 
     void setexitstatus(int exitstatus);
 
+      @Column(name = RESERVED_NODE_ID)
+    String getreservednodeid();
+
+    void setreservednodeid(String reservednodeid);
+
+        @Column(name = RESERVED_PRIORITY)
+    int getreservedpriority();
+
+    void setreservedpriority(int reservedpriority);
+    
+        @Column(name = RESERVED_MEMORY)
+    int getreservedmemory();
+    
+    void setreservedmemory(int reservedmemory);
+    
+        @Column(name = RESERVED_VCORES)
+    int getreservedvcores();
+    
+    void setreservedvcores(int reservedvcores);
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -112,7 +131,7 @@ public class RMContainerClusterJ
     HopsSession session = connector.obtainSession();
 
     List<RMContainerDTO> toPersist =
-        new ArrayList<RMContainerDTO>(toAdd.size());
+        new ArrayList<RMContainerDTO>();
     for (RMContainer hop : toAdd) {
       toPersist.add(createPersistable(hop, session));
     }
@@ -143,9 +162,16 @@ public class RMContainerClusterJ
   private RMContainer createHopRMContainer(RMContainerDTO rMContainerDTO) {
 
     return new RMContainer(rMContainerDTO.getcontaineridid(),
-        rMContainerDTO.getappattemptidid(), rMContainerDTO.getnodeidid(),
-        rMContainerDTO.getuser(), rMContainerDTO.getstarttime(),
-        rMContainerDTO.getfinishtime(), rMContainerDTO.getstate(),
+        rMContainerDTO.getappattemptidid(),
+            rMContainerDTO.getnodeidid(),
+            rMContainerDTO.getuser(),
+            rMContainerDTO.getreservednodeid(),
+            rMContainerDTO.getreservedpriority(),
+            rMContainerDTO.getreservedmemory(),
+            rMContainerDTO.getreservedvcores(),
+            rMContainerDTO.getstarttime(),
+            rMContainerDTO.getfinishtime(),
+            rMContainerDTO.getstate(),
         rMContainerDTO.getfinishedstatusstate(),
         rMContainerDTO.getexitstatus());
 
@@ -165,6 +191,10 @@ public class RMContainerClusterJ
     rMContainerDTO.setstate(hop.getState());
     rMContainerDTO.setfinishedstatusstate(hop.getFinishedStatusState());
     rMContainerDTO.setexitstatus(hop.getExitStatus());
+    rMContainerDTO.setreservednodeid(hop.getReservedNodeIdID());
+    rMContainerDTO.setreservedpriority(hop.getReservedPriorityID());
+    rMContainerDTO.setreservedmemory(hop.getReservedMemory());
+    rMContainerDTO.setreservedvcores(hop.getReservedVCores());
 
     return rMContainerDTO;
   }
