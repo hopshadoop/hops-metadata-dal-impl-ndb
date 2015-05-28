@@ -22,11 +22,14 @@ import com.mysql.clusterj.ClusterJDatastoreException;
 import com.mysql.clusterj.ClusterJException;
 import io.hops.exception.StorageException;
 import io.hops.exception.TransientStorageException;
+import io.hops.exception.TupleAlreadyExistedException;
 
 public class HopsExceptionHelper {
   public static StorageException wrap(ClusterJException e) {
     if (isTransient(e)) {
       return new TransientStorageException(e);
+    } else if (isTupleAlreadyExisted(e)) {
+      return new TupleAlreadyExistedException(e);
     } else {
       return new StorageException(e);
     }
@@ -53,6 +56,15 @@ public class HopsExceptionHelper {
         return true;
       } else if (e.getMessage().contains("classification 18")) {
         // Internal temporary (IT)
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean isTupleAlreadyExisted(ClusterJException e) {
+    if (e instanceof  ClusterJDatastoreException) {
+      if (e.getMessage().contains("code 630")) {
         return true;
       }
     }

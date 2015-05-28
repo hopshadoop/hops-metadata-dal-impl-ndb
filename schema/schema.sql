@@ -80,6 +80,8 @@ CREATE TABLE `hdfs_inodes` (
   `under_construction` bit(8) NOT NULL,
   `subtree_locked` bit(8) DEFAULT NULL,
   `subtree_lock_owner` bigint(20) DEFAULT NULL,
+  `meta_enabled` bit(8) DEFAULT '0',
+  `size` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`parent_id`,`name`),
   KEY `inode_idx` (`id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1
@@ -824,3 +826,32 @@ CREATE TABLE `yarn_pendingevents` (
   `last_hb` INT NULL,
   PRIMARY KEY (`id`, `rmnodeid`))
 ENGINE = ndbcluster DEFAULT CHARSET=latin1$$
+
+delimiter $$
+
+CREATE TABLE `hdfs_metadata_log` (
+  `dataset_id` int(11) NOT NULL,
+  `inode_id` int(11) NOT NULL,
+  `logical_time` int(11) NOT NULL,
+  `operation` smallint(11) NOT NULL,
+  PRIMARY KEY (`dataset_id` ,`inode_id` , `logical_time`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+
+delimiter $$
+
+CREATE TABLE `hdfs_access_log` (
+  `inode_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `access_time` bigint(20) NOT NULL,
+  PRIMARY KEY (`inode_id` , `user_id` , `access_time`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+
+delimiter $$
+
+CREATE TABLE `hdfs_size_log` (
+  `inode_id` int(11) NOT NULL,
+  `size` bigint(20) NOT NULL,
+  PRIMARY KEY (`inode_id` , `size`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+
+delimiter $$

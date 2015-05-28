@@ -149,6 +149,16 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     long getSubtreeLockOwner();
 
     void setSubtreeLockOwner(long leaderId);
+
+    @Column(name = META_ENABLED)
+    byte getMetaEnabled();
+
+    void setMetaEnabled(byte metaEnabled);
+
+    @Column(name = SIZE)
+    int getSize();
+
+    void setSize(int size);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -368,7 +378,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   }
 
   private INode createInode(InodeDTO persistable) {
-    return new INode(persistable.getId(), persistable.getName(),
+    INode node = new INode(persistable.getId(), persistable.getName(),
         persistable.getParentId(),
         NdbBoolean.convert(persistable.getQuotaEnabled()),
         persistable.getModificationTime(), persistable.getATime(),
@@ -377,7 +387,14 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         persistable.getClientNode(), persistable.getGenerationStamp(),
         persistable.getHeader(), persistable.getSymlink(),
         NdbBoolean.convert(persistable.getSubtreeLocked()),
-        persistable.getSubtreeLockOwner());
+        persistable.getSubtreeLockOwner(),
+        NdbBoolean.convert(persistable.getMetaEnabled()),
+        persistable.getSize());
+    if (node.getId() == 6) {
+      int size = node.getSize();
+      size++;
+    }
+    return node;
   }
 
   private void createPersistable(INode inode, InodeDTO persistable) {
@@ -397,6 +414,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setSymlink(inode.getSymlink());
     persistable.setSubtreeLocked(NdbBoolean.convert(inode.isSubtreeLocked()));
     persistable.setSubtreeLockOwner(inode.getSubtreeLockOwner());
+    persistable.setMetaEnabled(NdbBoolean.convert(inode.isMetaEnabled()));
+    persistable.setSize(inode.getSize());
   }
 
   private void explain(HopsQuery<InodeDTO> query) {
