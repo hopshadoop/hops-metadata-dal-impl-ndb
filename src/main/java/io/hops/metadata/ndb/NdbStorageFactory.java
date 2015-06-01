@@ -29,6 +29,7 @@ import io.hops.metadata.hdfs.dal.BlockChecksumDataAccess;
 import io.hops.metadata.hdfs.dal.BlockInfoDataAccess;
 import io.hops.metadata.hdfs.dal.BlockLookUpDataAccess;
 import io.hops.metadata.hdfs.dal.CorruptReplicaDataAccess;
+import io.hops.metadata.hdfs.dal.EncodingJobsDataAccess;
 import io.hops.metadata.hdfs.dal.EncodingStatusDataAccess;
 import io.hops.metadata.hdfs.dal.ExcessReplicaDataAccess;
 import io.hops.metadata.hdfs.dal.INodeAttributesDataAccess;
@@ -40,6 +41,7 @@ import io.hops.metadata.hdfs.dal.MetadataLogDataAccess;
 import io.hops.metadata.hdfs.dal.MisReplicatedRangeQueueDataAccess;
 import io.hops.metadata.hdfs.dal.PendingBlockDataAccess;
 import io.hops.metadata.hdfs.dal.QuotaUpdateDataAccess;
+import io.hops.metadata.hdfs.dal.RepairJobsDataAccess;
 import io.hops.metadata.hdfs.dal.ReplicaDataAccess;
 import io.hops.metadata.hdfs.dal.ReplicaUnderConstructionDataAccess;
 import io.hops.metadata.hdfs.dal.SafeBlocksDataAccess;
@@ -54,6 +56,7 @@ import io.hops.metadata.ndb.dalimpl.hdfs.BlockChecksumClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.BlockInfoClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.BlockLookUpClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.CorruptReplicaClusterj;
+import io.hops.metadata.ndb.dalimpl.hdfs.EncodingJobsClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.EncodingStatusClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.ExcessReplicaClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.INodeAttributesClusterj;
@@ -65,6 +68,7 @@ import io.hops.metadata.ndb.dalimpl.hdfs.MetadataLogClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.MisReplicatedRangeQueueClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.PendingBlockClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.QuotaUpdateClusterj;
+import io.hops.metadata.ndb.dalimpl.hdfs.RepairJobsClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.ReplicaClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.ReplicaUnderConstructionClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.SafeBlocksClusterj;
@@ -290,6 +294,8 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(AccessTimeLogDataAccess.class,
         new AccessTimeLogClusterj());
     dataAccessMap.put(SizeLogDataAccess.class, new SizeLogClusterj());
+    dataAccessMap.put(EncodingJobsDataAccess.class, new EncodingJobsClusterj());
+    dataAccessMap.put(RepairJobsDataAccess.class, new RepairJobsClusterj());
   }
 
   @Override

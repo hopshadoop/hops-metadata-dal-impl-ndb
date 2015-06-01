@@ -291,6 +291,27 @@ CREATE TABLE `hdfs_block_checksum` (
 
 delimiter $$
 
+CREATE TABLE `hdfs_encoding_jobs` (
+  `jt_identifier` varchar(50) NOT NULL,
+  `job_id` int(11) NOT NULL,
+  `path` varchar(3000) NOT NULL,
+  `job_dir` varchar(200) NOT NULL,
+  PRIMARY KEY (`jt_identifier`,`job_id`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+
+delimiter $$
+
+CREATE TABLE `hdfs_repair_jobs` (
+  `jt_identifier` varchar(50) NOT NULL,
+  `job_id` int(11) NOT NULL,
+  `path` varchar(3000) NOT NULL,
+  `in_dir` varchar(3000) NOT NULL,
+  `out_dir` varchar(3000) NOT NULL,
+  PRIMARY KEY (`jt_identifier`,`job_id`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+
+delimiter $$
+
 CREATE TABLE `yarn_applicationstate` (
   `applicationid` VARCHAR(45) NOT NULL,
   `appstate` VARBINARY(13500) NULL,
