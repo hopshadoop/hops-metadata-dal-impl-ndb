@@ -79,7 +79,7 @@ public class BlockChecksumClusterj
     HopsSession session = clusterjConnector.obtainSession();
     BlockChecksumDto dto = session.newInstance(BlockChecksumDto.class);
     copyState(blockChecksum, dto);
-    session.savePersistent(dto);
+    session.makePersistent(dto);
   }
 
   @Override
