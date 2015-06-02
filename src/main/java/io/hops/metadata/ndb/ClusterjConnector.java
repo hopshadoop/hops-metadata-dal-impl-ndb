@@ -32,6 +32,7 @@ import io.hops.metadata.hdfs.dal.BlockChecksumDataAccess;
 import io.hops.metadata.hdfs.dal.BlockInfoDataAccess;
 import io.hops.metadata.hdfs.dal.BlockLookUpDataAccess;
 import io.hops.metadata.hdfs.dal.CorruptReplicaDataAccess;
+import io.hops.metadata.hdfs.dal.EncodingJobsDataAccess;
 import io.hops.metadata.hdfs.dal.EncodingStatusDataAccess;
 import io.hops.metadata.hdfs.dal.ExcessReplicaDataAccess;
 import io.hops.metadata.hdfs.dal.INodeAttributesDataAccess;
@@ -43,6 +44,7 @@ import io.hops.metadata.hdfs.dal.MetadataLogDataAccess;
 import io.hops.metadata.hdfs.dal.MisReplicatedRangeQueueDataAccess;
 import io.hops.metadata.hdfs.dal.PendingBlockDataAccess;
 import io.hops.metadata.hdfs.dal.QuotaUpdateDataAccess;
+import io.hops.metadata.hdfs.dal.RepairJobsDataAccess;
 import io.hops.metadata.hdfs.dal.ReplicaDataAccess;
 import io.hops.metadata.hdfs.dal.ReplicaUnderConstructionDataAccess;
 import io.hops.metadata.hdfs.dal.SafeBlocksDataAccess;
@@ -347,7 +349,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         MisReplicatedRangeQueueDataAccess.class, QuotaUpdateDataAccess.class,
         EncodingStatusDataAccess.class, BlockChecksumDataAccess.class,
         MetadataLogDataAccess.class, AccessTimeLogDataAccess.class,
-        SizeLogDataAccess.class,
+        SizeLogDataAccess.class, EncodingJobsDataAccess.class,
+        RepairJobsDataAccess.class,
         // YARN
         RPCDataAccess.class, ApplicationStateDataAccess.class,
         ApplicationAttemptStateDataAccess.class, DelegationKeyDataAccess.class,
@@ -463,6 +466,12 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
           } else if (e == SizeLogDataAccess.class) {
             MysqlServerConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.SizeLogTableDef.TABLE_NAME);
+          } else if (e == EncodingJobsDataAccess.class) {
+            MysqlServerConnector
+                .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.EncodingJobsTableDef.TABLE_NAME);
+          } else if (e == RepairJobsDataAccess.class) {
+            MysqlServerConnector
+                .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.RepairJobsTableDef.TABLE_NAME);
           } else if (e == YarnLeDescriptorDataAccess.class) {
             MysqlServerConnector
                 .truncateTable(transactional,
