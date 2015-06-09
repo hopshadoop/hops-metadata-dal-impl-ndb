@@ -42,6 +42,7 @@ import io.hops.metadata.hdfs.dal.LeaseDataAccess;
 import io.hops.metadata.hdfs.dal.LeasePathDataAccess;
 import io.hops.metadata.hdfs.dal.MetadataLogDataAccess;
 import io.hops.metadata.hdfs.dal.MisReplicatedRangeQueueDataAccess;
+import io.hops.metadata.hdfs.dal.OngoingSubTreeOpsDataAccess;
 import io.hops.metadata.hdfs.dal.PendingBlockDataAccess;
 import io.hops.metadata.hdfs.dal.QuotaUpdateDataAccess;
 import io.hops.metadata.hdfs.dal.RepairJobsDataAccess;
@@ -64,6 +65,7 @@ import io.hops.metadata.ndb.dalimpl.hdfs.INodeClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.InvalidatedBlockClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.LeaseClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.LeasePathClusterj;
+import io.hops.metadata.ndb.dalimpl.hdfs.OnGoingSubTreeOpsClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.PendingBlockClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.QuotaUpdateClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.ReplicaClusterj;
@@ -321,6 +323,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       cls = EncodingStatusClusterj.EncodingStatusDto.class;
     } else if (className == BlockChecksumDataAccess.class) {
       cls = BlockChecksumClusterj.BlockChecksumDto.class;
+    } else if (className == OngoingSubTreeOpsDataAccess.class) {
+      cls = OnGoingSubTreeOpsClusterj.OnGoingSubTreeOpsDTO.class;
     }
 
     HopsSession session = obtainSession();
@@ -348,6 +352,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         BlockLookUpDataAccess.class, SafeBlocksDataAccess.class,
         MisReplicatedRangeQueueDataAccess.class, QuotaUpdateDataAccess.class,
         EncodingStatusDataAccess.class, BlockChecksumDataAccess.class,
+        OngoingSubTreeOpsDataAccess.class,
         MetadataLogDataAccess.class, AccessTimeLogDataAccess.class,
         SizeLogDataAccess.class, EncodingJobsDataAccess.class,
         RepairJobsDataAccess.class,
@@ -397,6 +402,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
           } else if (e == LeasePathDataAccess.class) {
             MysqlServerConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.LeasePathTableDef.TABLE_NAME);
+          } else if (e == OngoingSubTreeOpsDataAccess.class) {
+            MysqlServerConnector
+                .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.OnGoingSubTreeOpsDef.TABLE_NAME);
           } else if (e == ReplicaDataAccess.class) {
             MysqlServerConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.ReplicaTableDef.TABLE_NAME);
@@ -572,8 +580,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
           } else if (e == RPCDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.RPCTableDef.TABLE_NAME);
           } else if (e == RMLoadDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.RMLoadTableDef.TABLE_NAME);
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.RMLoadTableDef.TABLE_NAME);
           } else if (e == YarnVariablesDataAccess.class) {
             HopsSession session = obtainSession();
             session.currentTransaction().begin();
