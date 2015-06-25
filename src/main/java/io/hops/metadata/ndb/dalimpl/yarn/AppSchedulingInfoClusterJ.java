@@ -106,6 +106,7 @@ public class AppSchedulingInfoClusterJ implements
     AppSchedulingInfoClusterJ.AppSchedulingInfoDTO persistable =
         createPersistable(toAdd, session);
     session.savePersistent(persistable);
+    session.flush();
   }
   
   public void remove(AppSchedulingInfo toRemove) throws StorageException {
