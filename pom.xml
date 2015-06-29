@@ -22,10 +22,11 @@
       <version>4.12</version>
       <scope>test</scope>
     </dependency>
+    
     <dependency>
-      <groupId>com.mysql.ndb</groupId>
-      <artifactId>clusterj</artifactId>
-      <version>7.4.4</version>
+    <groupId>se.kth</groupId>
+    <artifactId>kth_clusterj</artifactId>
+    <version>1.0</version>
     </dependency>
     <dependency>
       <groupId>mysql</groupId>
