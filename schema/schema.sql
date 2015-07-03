@@ -81,7 +81,7 @@ CREATE TABLE `hdfs_inodes` (
   `subtree_locked` bit(8) DEFAULT NULL,
   `subtree_lock_owner` bigint(20) DEFAULT NULL,
   `meta_enabled` bit(8) DEFAULT '0',
-  `size` int(11) NOT NULL DEFAULT '0',
+  `size` bigint(20) NOT NULL DEFAULT '0',
   PRIMARY KEY (`parent_id`,`name`),
   KEY `inode_idx` (`id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1

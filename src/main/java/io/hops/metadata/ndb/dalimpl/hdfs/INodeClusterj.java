@@ -156,9 +156,9 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     void setMetaEnabled(byte metaEnabled);
 
     @Column(name = SIZE)
-    int getSize();
+    long getSize();
 
-    void setSize(int size);
+    void setSize(long size);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -422,10 +422,6 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         persistable.getSubtreeLockOwner(),
         NdbBoolean.convert(persistable.getMetaEnabled()),
         persistable.getSize());
-    if (node.getId() == 6) {
-      int size = node.getSize();
-      size++;
-    }
     return node;
   }
 
