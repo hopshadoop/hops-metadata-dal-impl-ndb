@@ -166,7 +166,7 @@ public class DBSessionProvider implements Runnable {
         int toGCSize = toGC.size();
 
         if (toGCSize > 0) {
-          LOG.info("Going to CG " + toGCSize);
+          LOG.debug("Renewing a session(s) " + toGCSize);
           for (int i = 0; i < toGCSize; i++) {
             DBSession session = toGC.remove();
             session.getSession().close();
