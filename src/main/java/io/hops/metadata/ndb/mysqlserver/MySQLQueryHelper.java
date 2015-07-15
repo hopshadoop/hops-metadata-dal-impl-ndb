@@ -107,9 +107,13 @@ public class MySQLQueryHelper {
 
   private static int executeIntAggrQuery(final String query)
       throws StorageException {
-    return (Integer) execute(query, new ResultSetHandler() {
+    return execute(query, new ResultSetHandler<Integer>() {
       @Override
-      public Object checkResults(ResultSet result) throws SQLException {
+      public Integer handle(ResultSet result) throws SQLException, StorageException {
+        if (!result.next()) {
+          throw new StorageException(
+              String.format("result set is empty. Query: %s", query));
+        }
         return result.getInt(1);
       }
     });
@@ -117,29 +121,29 @@ public class MySQLQueryHelper {
   
   private static boolean executeBooleanQuery(final String query)
       throws StorageException {
-    return (Boolean) execute(query, new ResultSetHandler() {
+    return execute(query, new ResultSetHandler<Boolean>() {
       @Override
-      public Object checkResults(ResultSet result) throws SQLException {
+      public Boolean handle(ResultSet result) throws SQLException, StorageException {
+        if (!result.next()) {
+          throw new StorageException(
+              String.format("result set is empty. Query: %s", query));
+        }
         return result.getBoolean(1);
       }
     });
   }
   
-  private static interface ResultSetHandler {
-    Object checkResults(ResultSet result) throws SQLException;
+  public static interface ResultSetHandler<R> {
+    R handle(ResultSet result) throws SQLException, StorageException;
   }
   
-  private static Object execute(String query, ResultSetHandler handler)
+  public static <R> R execute(String query, ResultSetHandler<R> handler)
       throws StorageException {
     try {
       Connection conn = connector.obtainSession();
       PreparedStatement s = conn.prepareStatement(query);
       ResultSet result = s.executeQuery();
-      if (!result.next()) {
-        throw new StorageException(
-            String.format("result set is empty. Query: %s", query));
-      }
-      return handler.checkResults(result);
+      return handler.handle(result);
     } catch (SQLException ex) {
       throw new StorageException(ex);
     } finally {

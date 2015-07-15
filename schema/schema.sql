@@ -190,7 +190,6 @@ CREATE TABLE `hdfs_replica_under_constructions` (
   `block_id` bigint(20) NOT NULL,
   `storage_id` int(11) NOT NULL,
   `state` int(11) DEFAULT NULL,
-  `replica_index` int(11) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1
 /*!50100 PARTITION BY KEY (inode_id) */$$
@@ -202,7 +201,6 @@ CREATE TABLE `hdfs_replicas` (
   `inode_id` int(11) NOT NULL,
   `block_id` bigint(20) NOT NULL,
   `storage_id` int(11) NOT NULL,
-  `replica_index` int(11) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`),
   KEY `storage_idx` (`storage_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1
