@@ -64,11 +64,6 @@ public class ReplicaUnderConstructionClusterj
 
     void setStorageId(int id);
 
-    @Column(name = REPLICA_INDEX)
-    int getIndex();
-
-    void setIndex(int index);
-
     @Column(name = STATE)
     int getState();
 
@@ -150,7 +145,7 @@ public class ReplicaUnderConstructionClusterj
         new ArrayList<ReplicaUnderConstruction>(replicaUc.size());
     for (ReplicaUcDTO t : replicaUc) {
       replicas.add(new ReplicaUnderConstruction(t.getState(), t.getStorageId(),
-          t.getBlockId(), t.getINodeId(), t.getIndex()));
+          t.getBlockId(), t.getINodeId()));
     }
     return replicas;
   }
@@ -158,7 +153,6 @@ public class ReplicaUnderConstructionClusterj
   private void createPersistable(ReplicaUnderConstruction replica,
       ReplicaUcDTO newInstance) {
     newInstance.setBlockId(replica.getBlockId());
-    newInstance.setIndex(replica.getIndex());
     newInstance.setStorageId(replica.getStorageId());
     newInstance.setState(replica.getState());
     newInstance.setINodeId(replica.getInodeId());

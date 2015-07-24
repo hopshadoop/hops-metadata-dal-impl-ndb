@@ -241,24 +241,19 @@ public class BlockInfoClusterj
     List<ReplicaClusterj.ReplicaDTO> replicas =
         ReplicaClusterj.getReplicas(session, storageId);
     long[] blockIds = new long[replicas.size()];
+    int[] inodeIds = new int[replicas.size()];
     for (int i = 0; i < blockIds.length; i++) {
       blockIds[i] = replicas.get(i).getBlockId();
+      inodeIds[i] = replicas.get(i).getINodeId();
     }
-    List<BlockInfo> ret = readBlockInfoBatch(session, blockIds);
+    List<BlockInfo> ret = readBlockInfoBatch(session, inodeIds, blockIds);
     return ret;
   }
-  
+
   @Override
   public Set<Long> findByStorageIdOnlyIds(int storageId)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
-    List<ReplicaClusterj.ReplicaDTO> replicas =
-        ReplicaClusterj.getReplicas(session, storageId);
-    Set<Long> blks = new HashSet<Long>();
-    for (ReplicaClusterj.ReplicaDTO replica : replicas) {
-      blks.add(replica.getBlockId());
-    }
-    return blks;
+    return ReplicaClusterj.getReplicas(storageId);
   }
 
   @Override
@@ -268,14 +263,7 @@ public class BlockInfoClusterj
     List<BlockInfo> blks = readBlockInfoBatch(session, inodeIds, blockIds);
     return blks;
   }
-  
-  private List<BlockInfo> readBlockInfoBatch(final HopsSession session,
-      final long[] blockIds) throws StorageException {
-    int[] inodeIds =
-        BlockLookUpClusterj.readINodeIdsByBlockIds(session, blockIds);
-    return readBlockInfoBatch(session, inodeIds, blockIds);
-  }
-  
+
   private List<BlockInfo> readBlockInfoBatch(final HopsSession session,
       final int[] inodeIds, final long[] blockIds) throws StorageException {
     final List<BlockInfoClusterj.BlockInfoDTO> bdtos =
