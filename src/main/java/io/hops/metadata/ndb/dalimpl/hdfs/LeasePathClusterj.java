@@ -95,6 +95,8 @@ public class LeasePathClusterj
     }
     dbSession.deletePersistentAll(deletions);
     dbSession.savePersistentAll(changes);
+    dbSession.release(deletions);
+    dbSession.release(changes);
   }
 
   @Override
@@ -110,7 +112,11 @@ public class LeasePathClusterj
     HopsQuery<LeasePathsDTO> query = dbSession.createQuery(dobj);
     query.setParameter("param1", holderId);
     query.setParameter("param2", PART_KEY_VAL);
-    return createList(query.getResultList());
+    
+    Collection<LeasePathsDTO> dtos = query.getResultList();
+    Collection<LeasePath> lpl = createList(dtos);
+    dbSession.release(dtos);
+    return lpl;
   }
 
   @Override
@@ -123,6 +129,7 @@ public class LeasePathClusterj
     LeasePath lPath = null;
     if (lPTable != null) {
       lPath = createLeasePath(lPTable);
+      dbSession.release(lPTable);
     }
     return lPath;
   }
@@ -142,7 +149,11 @@ public class LeasePathClusterj
     HopsQuery query = dbSession.createQuery(dobj);
     query.setParameter(param, prefix + "%");
     query.setParameter("partKeyParam", PART_KEY_VAL);
-    return createList(query.getResultList());
+    
+    Collection<LeasePathsDTO> dtos = query.getResultList();
+    Collection<LeasePath> lpl = createList(dtos);
+    dbSession.release(dtos);
+    return lpl;
   }
 
   @Override
@@ -154,7 +165,11 @@ public class LeasePathClusterj
     dobj.where(pred);
     HopsQuery query = dbSession.createQuery(dobj);
     query.setParameter("param", PART_KEY_VAL);
-    return createList(query.getResultList());
+    
+    Collection<LeasePathsDTO> dtos = query.getResultList();
+    Collection<LeasePath> lpl = createList(dtos);
+    dbSession.release(dtos);
+    return lpl;
   }
 
   @Override

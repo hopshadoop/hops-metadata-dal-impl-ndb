@@ -32,6 +32,7 @@ import io.hops.metadata.ndb.wrapper.HopsSession;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class AccessTimeLogClusterj implements TablesDef.AccessTimeLogTableDef,
     AccessTimeLogDataAccess<AccessTimeLogEntry> {
@@ -68,6 +69,7 @@ public class AccessTimeLogClusterj implements TablesDef.AccessTimeLogTableDef,
     dto.setUserId(logEntry.getUserId());
     dto.setAccessTime(logEntry.getAccessTime());
     session.savePersistent(dto);
+    session.release(dto);
   }
 
   @Override
@@ -80,7 +82,11 @@ public class AccessTimeLogClusterj implements TablesDef.AccessTimeLogTableDef,
     dobj.where(pred1);
     HopsQuery<AccessTimeLogEntryDto> query = session.createQuery(dobj);
     query.setParameter("inodeIdParam", fileId);
-    return createCollection(query.getResultList());
+
+    Collection<AccessTimeLogEntryDto> dtos = query.getResultList();
+    Collection<AccessTimeLogEntry> ivl = createCollection(dtos);
+    session.release(dtos);
+    return ivl;
   }
 
   private Collection<AccessTimeLogEntry> createCollection(

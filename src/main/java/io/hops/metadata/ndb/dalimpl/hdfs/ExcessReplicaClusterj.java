@@ -97,6 +97,8 @@ public class ExcessReplicaClusterj
     }
     session.deletePersistentAll(deletions);
     session.savePersistentAll(changes);
+    session.release(deletions);
+    session.release(changes);
   }
 
   @Override
@@ -109,7 +111,10 @@ public class ExcessReplicaClusterj
     qdt.where(qdt.get("storageId").equal(qdt.param("param")));
     HopsQuery<ExcessReplicaDTO> query = session.createQuery(qdt);
     query.setParameter("param", storageId);
-    return createList(query.getResultList());
+    List<ExcessReplicaDTO> dtos = query.getResultList();
+    List<ExcessReplica> ler = createList(dtos);
+    session.release(dtos);
+    return ler;
   }
 
   @Override
@@ -125,7 +130,11 @@ public class ExcessReplicaClusterj
     HopsQuery<ExcessReplicaDTO> query = session.createQuery(qdt);
     query.setParameter("blockIdParam", bId);
     query.setParameter("iNodeIdParam", inodeId);
-    return createList(query.getResultList());
+    
+    List<ExcessReplicaDTO> dtos = query.getResultList();
+    List<ExcessReplica> ler = createList(dtos);
+    session.release(dtos);
+    return ler;
   }
   
   @Override
@@ -139,7 +148,11 @@ public class ExcessReplicaClusterj
     qdt.where(pred1);
     HopsQuery<ExcessReplicaDTO> query = session.createQuery(qdt);
     query.setParameter("iNodeIdParam", inodeId);
-    return createList(query.getResultList());
+    
+    List<ExcessReplicaDTO> dtos = query.getResultList();
+    List<ExcessReplica> ler = createList(dtos);
+    session.release(dtos);
+    return ler;
   }
 
   @Override
@@ -153,7 +166,11 @@ public class ExcessReplicaClusterj
     qdt.where(pred1);
     HopsQuery<ExcessReplicaDTO> query = session.createQuery(qdt);
     query.setParameter("iNodeIdParam", Ints.asList(inodeIds));
-    return createList(query.getResultList());
+    
+    List<ExcessReplicaDTO> dtos = query.getResultList();
+    List<ExcessReplica> ler = createList(dtos);
+    session.release(dtos);
+    return ler;
   }
 
   @Override
@@ -170,6 +187,7 @@ public class ExcessReplicaClusterj
       return null;
     }
     ExcessReplica result = createReplica(invTable);
+    session.release(invTable);
     return result;
   }
 

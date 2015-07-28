@@ -68,6 +68,7 @@ public class VariableClusterj
     HopsSession session = connector.obtainSession();
     VariableDTO vd = createVariableDTO(session, var);
     session.savePersistent(vd);
+    session.release(vd);
   }
 
   @Override
@@ -90,6 +91,7 @@ public class VariableClusterj
         removed.add(vd);
       }
       session.deletePersistentAll(removed);
+      session.release(removed);
     }
   }
 
@@ -100,6 +102,7 @@ public class VariableClusterj
       changes.add(createVariableDTO(session, var));
     }
     session.savePersistentAll(changes);
+    session.release(changes);
   }
 
   private VariableDTO createVariableDTO(HopsSession session, Variable var)

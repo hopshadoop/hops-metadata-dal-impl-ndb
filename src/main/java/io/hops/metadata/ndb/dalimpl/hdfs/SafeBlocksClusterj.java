@@ -60,6 +60,7 @@ public class SafeBlocksClusterj
       dtos.add(dto);
     }
     session.savePersistentAll(dtos);
+    session.release(dtos);
   }
   
   @Override
@@ -67,6 +68,7 @@ public class SafeBlocksClusterj
     HopsSession session = connector.obtainSession();
     SafeBlockDTO dto = create(session, safeBlock);
     session.deletePersistent(dto);
+    session.release(dto);
   }
 
 

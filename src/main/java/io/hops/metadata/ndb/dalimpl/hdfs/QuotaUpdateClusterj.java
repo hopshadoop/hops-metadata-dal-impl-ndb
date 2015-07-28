@@ -95,6 +95,9 @@ public class QuotaUpdateClusterj
     }
     session.deletePersistentAll(deletions);
     session.savePersistentAll(changes);
+
+    session.release(deletions);
+    session.release(changes);
   }
 
   private static final String FIND_QUERY =
@@ -135,11 +138,13 @@ public class QuotaUpdateClusterj
     return dto;
   }
 
-  private List<QuotaUpdate> createResultList(List<QuotaUpdateDTO> list) {
+  private List<QuotaUpdate> convertAndRelease(HopsSession session,
+      List<QuotaUpdateDTO> list) throws StorageException {
     List<QuotaUpdate> result = new ArrayList<QuotaUpdate>();
     for (QuotaUpdateDTO dto : list) {
       result.add(new QuotaUpdate(dto.getId(), dto.getInodeId(),
           dto.getNamespaceDelta(), dto.getDiskspaceDelta()));
+      session.release(dto);
     }
     return result;
   }
@@ -158,6 +163,6 @@ public class QuotaUpdateClusterj
     query.setParameter(INODE_ID_PARAM, inodeId);
 
     List<QuotaUpdateDTO> results = query.getResultList();
-    return createResultList(results);
+    return convertAndRelease(session, results);
   }
 }

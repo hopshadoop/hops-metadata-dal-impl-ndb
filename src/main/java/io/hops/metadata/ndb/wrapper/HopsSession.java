@@ -25,6 +25,7 @@ import com.mysql.clusterj.Session;
 import com.mysql.clusterj.Transaction;
 import com.mysql.clusterj.query.QueryBuilder;
 import io.hops.exception.StorageException;
+import java.util.Collection;
 
 public class HopsSession {
   private final Session session;
@@ -255,6 +256,24 @@ public class HopsSession {
   public String unloadSchema(Class<?> aClass) throws StorageException {
     try {
       return session.unloadSchema(aClass);
+    } catch (ClusterJException e) {
+      throw HopsExceptionHelper.wrap(e);
+    }
+  }
+  
+  public <T> void release(T t)  throws StorageException {
+    try {
+      session.release(t);
+    } catch (ClusterJException e) {
+      throw HopsExceptionHelper.wrap(e);
+    }
+  }
+  
+  public <T> void release(Collection<T> t)  throws StorageException {
+    try {
+      for(T dto : t)  {
+          session.release(dto);
+      }
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);
     }

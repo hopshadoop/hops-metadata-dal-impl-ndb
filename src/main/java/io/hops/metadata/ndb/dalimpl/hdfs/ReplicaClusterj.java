@@ -89,7 +89,7 @@ public class ReplicaClusterj
     HopsQuery<ReplicaDTO> query = session.createQuery(dobj);
     query.setParameter("blockIdParam", blockId);
     query.setParameter("iNodeIdParam", inodeId);
-    return createReplicaList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
   
   
@@ -104,7 +104,7 @@ public class ReplicaClusterj
     dobj.where(pred1);
     HopsQuery<ReplicaDTO> query = session.createQuery(dobj);
     query.setParameter("iNodeIdParam", inodeId);
-    return createReplicaList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
   
 
@@ -119,7 +119,7 @@ public class ReplicaClusterj
     dobj.where(pred1);
     HopsQuery<ReplicaDTO> query = session.createQuery(dobj);
     query.setParameter("iNodeIdParam", Ints.asList(inodeIds));
-    return createReplicaList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
   
   @Override
@@ -128,7 +128,7 @@ public class ReplicaClusterj
     HopsSession session = connector.obtainSession();
     List<ReplicaDTO> res = getReplicas(session, storageId);
     //ClusterjConnector.LOG.error("xxxa: got replicas " + res.size() + " in " + (System.currentTimeMillis() - t));
-    return createReplicaList(res);
+    return convertAndRelease(session, res);
   }
 
   @Override
@@ -157,6 +157,9 @@ public class ReplicaClusterj
     }
     session.deletePersistentAll(deletions);
     session.savePersistentAll(changes);
+
+    session.release(deletions);
+    session.release(changes);
   }
 
   @Override
@@ -193,12 +196,14 @@ public class ReplicaClusterj
   }
 
 
-  private List<Replica> createReplicaList(List<ReplicaDTO> triplets) {
+  private List<Replica> convertAndRelease(HopsSession session,
+      List<ReplicaDTO> triplets) throws StorageException {
     List<Replica> replicas =
         new ArrayList<Replica>(triplets.size());
     for (ReplicaDTO t : triplets) {
         replicas.add(
             new Replica(t.getStorageId(), t.getBlockId(), t.getINodeId()));
+      session.release(t);
     }
     return replicas;
   }

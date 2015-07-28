@@ -64,7 +64,7 @@ public class PendingBlockClusterj
     HopsQuery<PendingBlockDTO> query = session.createQuery(qdt);
     query.setParameter("idParam", inodeId);
 
-    return createList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
 
   @Override
@@ -82,7 +82,7 @@ public class PendingBlockClusterj
     HopsQuery<PendingBlockDTO> query = session.createQuery(qdt);
     query.setParameter("idParam", Ints.asList(inodeIds));
 
-    return createList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
 
   @PersistenceCapable(table = TABLE_NAME)
@@ -139,6 +139,9 @@ public class PendingBlockClusterj
     }
     session.deletePersistentAll(deletions);
     session.savePersistentAll(changes);
+
+    session.release(deletions);
+    session.release(changes);
   }
 
   @Override
@@ -152,7 +155,7 @@ public class PendingBlockClusterj
     PendingBlockDTO pendingTable = session.find(PendingBlockDTO.class, pk);
     PendingBlockInfo pendingBlock = null;
     if (pendingTable != null) {
-      pendingBlock = createHopPendingBlockInfo(pendingTable);
+      pendingBlock = convertAndRelease(session, pendingTable);
     }
 
     return pendingBlock;
@@ -164,7 +167,7 @@ public class PendingBlockClusterj
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQuery<PendingBlockDTO> query =
         session.createQuery(qb.createQueryDefinition(PendingBlockDTO.class));
-    return createList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
 
   @Override
@@ -181,7 +184,7 @@ public class PendingBlockClusterj
     qdt.where(lessThan);
     HopsQuery query = session.createQuery(qdt);
     query.setParameter(paramName, timeLimit);
-    return createList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
 
   @Override
@@ -190,19 +193,22 @@ public class PendingBlockClusterj
     session.deletePersistentAll(PendingBlockDTO.class);
   }
 
-  private List<PendingBlockInfo> createList(Collection<PendingBlockDTO> dtos) {
+  private List<PendingBlockInfo> convertAndRelease(HopsSession session,
+      Collection<PendingBlockDTO> dtos) throws StorageException {
     List<PendingBlockInfo> list = new ArrayList<PendingBlockInfo>();
     for (PendingBlockDTO dto : dtos) {
-      list.add(createHopPendingBlockInfo(dto));
+      list.add(convertAndRelease(session, dto));
     }
     return list;
   }
 
-  private PendingBlockInfo createHopPendingBlockInfo(
-      PendingBlockDTO pendingTable) {
-    return new PendingBlockInfo(pendingTable.getBlockId(),
+  private PendingBlockInfo convertAndRelease(HopsSession session,
+      PendingBlockDTO pendingTable) throws StorageException {
+    PendingBlockInfo pendingBlockInfo =  new PendingBlockInfo(pendingTable.getBlockId(),
         pendingTable.getINodeId(), pendingTable.getTimestamp(),
         pendingTable.getNumReplicasInProgress());
+    session.release(pendingTable);
+    return pendingBlockInfo;
   }
 
   private void createPersistableHopPendingBlockInfo(

@@ -193,6 +193,9 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     }
     session.deletePersistentAll(deletions);
     session.savePersistentAll(changes);
+    
+    session.release(deletions);
+    session.release(changes);
   }
 
   @Override
@@ -210,12 +213,15 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     query.setParameter("idParam", inodeId);
 
     List<InodeDTO> results = query.getResultList();
-    explain(query);
+
     if (results.size() > 1) {
       throw new StorageException("Only one record was expected");
     }
+    
     if (results.size() == 1) {
-      return createInode(results.get(0));
+      INode inode = createInode(results.get(0));
+      session.release(results);
+      return inode;
     } else {
       return null;
     }
@@ -237,17 +243,18 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     query.setParameter("parentIDParam", parentId);
 
     List<InodeDTO> results = query.getResultList();
-    explain(query);
-    return createInodeList(results);
+    List<INode> inodeList = createInodeList(results);
+    session.release(results);
+    return inodeList;
   }
 
   @Override
-  public List<ProjectedINode> findInodesForSubtreeOperationsWithReadLock(
+  public List<ProjectedINode> findInodesForSubtreeOperationsWithWriteLock(
       int parentId) throws StorageException {
     final String query = String.format(
-        "SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s FROM %s WHERE %s=%d LOCK IN SHARE MODE",
+        "SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s FROM %s WHERE %s=%d FOR UPDATE ",
         ID, NAME, PARENT_ID, PERMISSION, HEADER, SYMLINK, QUOTA_ENABLED,
-        UNDER_CONSTRUCTION, SUBTREE_LOCKED, SUBTREE_LOCK_OWNER, TABLE_NAME,
+        UNDER_CONSTRUCTION, SUBTREE_LOCKED, SUBTREE_LOCK_OWNER, SIZE, TABLE_NAME,
         PARENT_ID, parentId);
     ArrayList<ProjectedINode> resultList;
     try {
@@ -265,7 +272,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
                 result.getBoolean(QUOTA_ENABLED),
                 result.getBoolean(UNDER_CONSTRUCTION),
                 result.getBoolean(SUBTREE_LOCKED),
-                result.getLong(SUBTREE_LOCK_OWNER)));
+                result.getLong(SUBTREE_LOCK_OWNER),
+                result.getLong(SIZE)));
       }
     } catch (SQLException ex) {
       throw HopsSQLExceptionHelper.wrap(ex);
@@ -286,7 +294,9 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 
     InodeDTO result = session.find(InodeDTO.class, pk);
     if (result != null) {
-      return createInode(result);
+      INode inode = createInode(result);
+      session.release(result);
+      return inode;
     } else {
       return null;
     }
@@ -305,7 +315,9 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
       dtos.add(dto);
     }
     session.flush();
-    return createInodeList(dtos);
+    List<INode> inodeList = createInodeList(dtos);
+    session.release(dtos);
+    return inodeList;
   }
   
   @Override
@@ -331,6 +343,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
       res.add(
           new INodeIdentifier(dto.getId(), dto.getParentId(), dto.getName()));
     }
+    session.release(dtos);
     return res;
   }
   
@@ -394,6 +407,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     if(results.isEmpty()){
       return false;
     }else{
+      session.release(results);
       return true;
     }
   }

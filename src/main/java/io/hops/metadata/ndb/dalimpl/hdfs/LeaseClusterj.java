@@ -91,6 +91,7 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
     LeaseDTO lTable = session.find(LeaseDTO.class, key);
     if (lTable != null) {
       Lease lease = createLease(lTable);
+      session.release(lTable);
       return lease;
     }
     return null;
@@ -116,9 +117,11 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
     if (leaseTables.size() > 1) {
       log.error(
           "Error in selectLeaseTableInternal: Multiple rows with same holderID");
+      session.release(leaseTables);
       return null;
     } else if (leaseTables.size() == 1) {
       Lease lease = createLease(leaseTables.get(0));
+      session.release(leaseTables);
       return lease;
     } else {
       log.info("No rows found for holderID:" + holderId + " in Lease table");
@@ -136,7 +139,11 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
     dobj.where(pred);
     HopsQuery<LeaseDTO> query = session.createQuery(dobj);
     query.setParameter("param", PART_KEY_VAL);
-    return createList(query.getResultList());
+    
+    List<LeaseDTO> dtos = query.getResultList();
+    Collection<Lease> ll = createList(dtos);
+    session.release(dtos);
+    return ll;
   }
 
   @Override
@@ -154,7 +161,11 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
     HopsQuery query = session.createQuery(dobj);
     query.setParameter(param, new Long(timeLimit));
     query.setParameter("partKeyParam", PART_KEY_VAL);
-    return createList(query.getResultList());
+
+    List<LeaseDTO> dtos = query.getResultList();
+    Collection<Lease> ll = createList(dtos);
+    session.release(dtos);
+    return ll;
   }
 
   @Override
@@ -184,6 +195,8 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
     }
     session.deletePersistentAll(deletions);
     session.savePersistentAll(changes);
+    session.release(deletions);
+    session.release(changes);
   }
 
   private Collection<Lease> createList(List<LeaseDTO> list) {

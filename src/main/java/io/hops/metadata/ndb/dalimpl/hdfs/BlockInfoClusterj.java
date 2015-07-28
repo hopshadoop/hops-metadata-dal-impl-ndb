@@ -168,6 +168,11 @@ public class BlockInfoClusterj
     session.deletePersistentAll(luDeletions);
     session.savePersistentAll(blkChanges);
     session.savePersistentAll(luChanges);
+    
+    session.release(blkDeletions);
+    session.release(luDeletions);
+    session.release(blkChanges);
+    session.release(luChanges);
   }
 
   @Override
@@ -182,7 +187,11 @@ public class BlockInfoClusterj
     if (bit == null) {
       return null;
     }
-    return createBlockInfo(bit);
+    
+    BlockInfo bi = createBlockInfo(bit);
+    session.release(bit);
+    
+    return bi;
   }
 
   @Override
@@ -195,7 +204,10 @@ public class BlockInfoClusterj
     dobj.where(pred1);
     HopsQuery<BlockInfoDTO> query = session.createQuery(dobj);
     query.setParameter("iNodeParam", inodeId);
-    return createBlockInfoList(query.getResultList());
+    List<BlockInfoDTO> dtos = query.getResultList();
+    List<BlockInfo> lbis = createBlockInfoList(dtos);
+    session.release(dtos);
+    return lbis;
   }
 
   @Override
@@ -209,7 +221,11 @@ public class BlockInfoClusterj
     dobj.where(pred1);
     HopsQuery<BlockInfoClusterj.BlockInfoDTO> query = session.createQuery(dobj);
     query.setParameter("iNodeParam", Ints.asList(inodeIds));
-    return createBlockInfoList(query.getResultList());
+    
+    List<BlockInfoDTO> biDtos = query.getResultList();
+    List<BlockInfo> lbis = createBlockInfoList(biDtos);
+    session.release(biDtos);
+    return lbis;
   }
 
   public BlockInfo scanByBlockId(long blockId) throws StorageException {
@@ -221,7 +237,10 @@ public class BlockInfoClusterj
     dobj.where(pred1);
     HopsQuery<BlockInfoClusterj.BlockInfoDTO> query = session.createQuery(dobj);
     query.setParameter("blockIdParam", blockId);
-    return createBlockInfo(query.getResultList().get(0));
+    List<BlockInfoDTO> biDtos = query.getResultList();
+    BlockInfo bi = createBlockInfo(biDtos.get(0));
+    session.release(biDtos);
+    return bi;
   }
 
   @Override
@@ -231,7 +250,11 @@ public class BlockInfoClusterj
     HopsQueryDomainType<BlockInfoClusterj.BlockInfoDTO> dobj =
         qb.createQueryDefinition(BlockInfoClusterj.BlockInfoDTO.class);
     HopsQuery<BlockInfoClusterj.BlockInfoDTO> query = session.createQuery(dobj);
-    return createBlockInfoList(query.getResultList());
+    
+    List<BlockInfoDTO> biDtos = query.getResultList();
+    List<BlockInfo> lbis = createBlockInfoList(biDtos);
+    session.release(biDtos);
+    return lbis;
   }
 
   @Override
@@ -247,6 +270,7 @@ public class BlockInfoClusterj
       inodeIds[i] = replicas.get(i).getINodeId();
     }
     List<BlockInfo> ret = readBlockInfoBatch(session, inodeIds, blockIds);
+    session.release(replicas);
     return ret;
   }
 
@@ -277,7 +301,9 @@ public class BlockInfoClusterj
       bdtos.add(bdto);
     }
     session.flush();
-    return createBlockInfoList(bdtos);
+    List<BlockInfo> lbis = createBlockInfoList(bdtos);
+    session.release(bdtos);
+    return lbis;
   }
   
   private List<BlockInfo> createBlockInfoList(
@@ -289,7 +315,6 @@ public class BlockInfoClusterj
         list.add(createBlockInfo(blockInfoDTO));
       }
     }
-
     return list;
   }
 
