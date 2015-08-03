@@ -132,6 +132,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     EncodingStatusDto dto = session.newInstance(EncodingStatusDto.class);
     copyState(status, dto);
     session.savePersistent(dto);
+    session.release(dto);
   }
 
   @Override
@@ -141,6 +142,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     EncodingStatusDto dto = session.newInstance(EncodingStatusDto.class);
     copyState(status, dto);
     session.savePersistent(dto);
+    session.release(dto);
   }
 
   @Override
@@ -150,6 +152,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     copyState(status, dto);
     LOG.info("Delte " + status);
     session.deletePersistent(dto);
+    session.release(dto);
   }
 
   private void copyState(EncodingStatus status, EncodingStatusDto dto) {
@@ -211,7 +214,9 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     if (dto == null) {
       return null;
     }
-    return createHopEncoding(dto);
+    EncodingStatus es = createHopEncoding(dto);
+    session.release(dto);
+    return es;
   }
 
   @Override
@@ -233,7 +238,9 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
       return null;
     }
 
-    return createHopEncoding(results.get(0));
+    EncodingStatus es = createHopEncoding(results.get(0));
+    session.release(results);
+    return es;
   }
 
   @Override
@@ -395,7 +402,9 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     query.setParameter(REVOKED, NdbBoolean.convert(true));
 
     List<EncodingStatusDto> results = query.getResultList();
-    return createHopEncodings(results);
+    List<EncodingStatus> esl = createHopEncodings(results);
+    session.release(results);
+    return esl;
   }
 
   private List<EncodingStatus> createHopEncodings(

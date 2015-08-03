@@ -64,6 +64,7 @@ public class BlockLookUpClusterj
           .newInstance(BlockLookUpClusterj.BlockLookUpDTO.class,
               block_lookup.getBlockId());
       session.deletePersistent(bTable);
+      session.release(bTable);
     }
 
     for (BlockLookUp block_lookup : modified) {
@@ -71,6 +72,7 @@ public class BlockLookUpClusterj
           session.newInstance(BlockLookUpClusterj.BlockLookUpDTO.class);
       createPersistable(block_lookup, bTable);
       session.savePersistent(bTable);
+      session.release(bTable);
     }
   }
 
@@ -82,7 +84,9 @@ public class BlockLookUpClusterj
     if (lookup == null) {
       return null;
     }
-    return createBlockInfo(lookup);
+    BlockLookUp blu = createBlockInfo(lookup);
+    session.release(lookup);
+    return blu;
   }
 
   @Override
@@ -121,6 +125,7 @@ public class BlockLookUpClusterj
         }
       }
     }
+    session.release(bldtos);
     bldtos.clear();
     return Ints.toArray(inodeIds);
   }

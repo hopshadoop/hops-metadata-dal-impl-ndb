@@ -70,13 +70,17 @@ public class RepairJobsClusterj implements TablesDef.RepairJobsTableDef,
   @Override
   public void add(RepairJob repairJob) throws StorageException {
     HopsSession session = connector.obtainSession();
-    session.makePersistent(createPersistable(repairJob));
+    RepairJobDto dto = createPersistable(repairJob);
+    session.makePersistent(dto);
+    session.release(dto);
   }
 
   @Override
   public void delete(RepairJob encodingJob) throws StorageException {
     HopsSession session = connector.obtainSession();
-    session.deletePersistent(createPersistable(encodingJob));
+    RepairJobDto dto = createPersistable(encodingJob);
+    session.deletePersistent(dto);
+    session.release(dto);
   }
 
   @Override
@@ -86,7 +90,7 @@ public class RepairJobsClusterj implements TablesDef.RepairJobsTableDef,
     HopsQueryDomainType<RepairJobDto> dobj =
         qb.createQueryDefinition(RepairJobDto.class);
     HopsQuery<RepairJobDto> query = session.createQuery(dobj);
-    return createList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
 
   private RepairJobDto createPersistable(RepairJob repairJob)
@@ -101,21 +105,24 @@ public class RepairJobsClusterj implements TablesDef.RepairJobsTableDef,
     return dto;
   }
 
-  private RepairJob create(RepairJobDto dto) {
+  private RepairJob convertAndRelease(HopsSession session, RepairJobDto dto)
+      throws StorageException {
     RepairJob job = new RepairJob();
     job.setJtIdentifier(dto.getJtidentifier());
     job.setJobId(dto.getJobId());
     job.setPath(dto.getPath());
     job.setInDir(dto.getInDir());
     job.setOutDir(dto.getOutDir());
+    session.release(dto);
     return job;
   }
 
-  private List<RepairJob> createList(List<RepairJobDto> dtos) {
+  private List<RepairJob> convertAndRelease(HopsSession session,
+      List<RepairJobDto> dtos) throws StorageException {
     ArrayList<RepairJob> list =
         new ArrayList<RepairJob>(dtos.size());
     for (RepairJobDto dto : dtos) {
-      list.add(create(dto));
+      list.add(convertAndRelease(session, dto));
     }
     return list;
   }

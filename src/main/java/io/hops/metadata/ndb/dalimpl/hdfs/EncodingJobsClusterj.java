@@ -65,13 +65,17 @@ public class EncodingJobsClusterj implements TablesDef.EncodingJobsTableDef,
   @Override
   public void add(EncodingJob encodingJob) throws StorageException {
     HopsSession session = connector.obtainSession();
-    session.makePersistent(createPersistable(encodingJob));
+    EncodingJobDto dto = createPersistable(encodingJob);
+    session.makePersistent(dto);
+    session.release(dto);
   }
 
   @Override
   public void delete(EncodingJob encodingJob) throws StorageException {
     HopsSession session = connector.obtainSession();
-    session.deletePersistent(createPersistable(encodingJob));
+    EncodingJobDto dto = createPersistable(encodingJob);
+    session.deletePersistent(dto);
+    session.release(dto);
   }
 
   @Override
@@ -81,7 +85,11 @@ public class EncodingJobsClusterj implements TablesDef.EncodingJobsTableDef,
     HopsQueryDomainType<EncodingJobDto> dobj =
         qb.createQueryDefinition(EncodingJobDto.class);
     HopsQuery<EncodingJobDto> query = session.createQuery(dobj);
-    return createList(query.getResultList());
+    
+    List<EncodingJobDto> dtos = query.getResultList();
+    Collection<EncodingJob> ivl = createList(dtos);
+    session.release(dtos);
+    return ivl;
   }
 
   private EncodingJobDto createPersistable(EncodingJob encodingJob)

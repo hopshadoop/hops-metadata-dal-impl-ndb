@@ -107,6 +107,8 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     }
     dbSession.deletePersistentAll(deletions);
     dbSession.savePersistentAll(changes);
+    dbSession.release(deletions);
+    dbSession.release(changes);
   }
 
   @Override
@@ -121,7 +123,9 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     CorruptReplicaDTO corruptReplicaTable =
         dbSession.find(CorruptReplicaDTO.class, keys);
     if (corruptReplicaTable != null) {
-      return createReplica(corruptReplicaTable);
+      CorruptReplica cr = createReplica(corruptReplicaTable);
+      dbSession.release(corruptReplicaTable);
+      return cr;
     } else {
       return null;
     }
@@ -136,7 +140,9 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     HopsQuery<CorruptReplicaDTO> query = dbSession.createQuery(dobj);
     query.setOrdering(Query.Ordering.ASCENDING, "timestamp");
     List<CorruptReplicaDTO> ibts = query.getResultList();
-    return createCorruptReplicaList(ibts);
+    List<CorruptReplica> lcr = createCorruptReplicaList(ibts);
+    dbSession.release(ibts);
+    return lcr;
   }
 
   @Override
@@ -153,7 +159,9 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     query.setParameter("blockId", blockId);
     query.setParameter("iNodeIdParam", inodeId);
     List<CorruptReplicaDTO> creplicas = query.getResultList();
-    return createCorruptReplicaList(creplicas);
+    List<CorruptReplica> lcr = createCorruptReplicaList(creplicas);
+    dbSession.release(creplicas);
+    return lcr;
   }
   
   @Override
@@ -167,7 +175,10 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     dobj.where(pred1);
     HopsQuery<CorruptReplicaDTO> query = dbSession.createQuery(dobj);
     query.setParameter("iNodeIdParam", inodeId);
-    return createCorruptReplicaList(query.getResultList());
+    List<CorruptReplicaDTO> dtos = query.getResultList();
+    List<CorruptReplica>  lcr =  createCorruptReplicaList(dtos);
+    dbSession.release(dtos);
+    return lcr;
   }
 
   @Override
@@ -181,7 +192,10 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     dobj.where(pred1);
     HopsQuery<CorruptReplicaDTO> query = dbSession.createQuery(dobj);
     query.setParameter("iNodeIdParam", Ints.asList(inodeIds));
-    return createCorruptReplicaList(query.getResultList());
+    List<CorruptReplicaDTO> dtos = query.getResultList();
+    List<CorruptReplica> crl = createCorruptReplicaList(dtos);
+    dbSession.release(dtos);
+    return crl;
   }
 
   private CorruptReplica createReplica(CorruptReplicaDTO corruptReplicaTable) {

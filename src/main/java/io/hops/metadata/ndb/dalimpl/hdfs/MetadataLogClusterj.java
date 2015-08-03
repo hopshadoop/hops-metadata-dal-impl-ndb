@@ -76,12 +76,16 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
       added.add(createPersistable(logEntry));
     }
     session.makePersistentAll(added);
+    session.release(added);
   }
 
   @Override
   public void add(MetadataLogEntry metadataLogEntry) throws StorageException {
     HopsSession session = connector.obtainSession();
-    session.makePersistent(createPersistable(metadataLogEntry));
+    MetadataLogEntryDto dto = createPersistable(metadataLogEntry);
+    session.makePersistent(dto);
+    session.release(dto);
+    
   }
 
   private MetadataLogEntryDto createPersistable(MetadataLogEntry logEntry)
@@ -105,7 +109,11 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     dobj.where(pred1);
     HopsQuery<MetadataLogEntryDto> query = session.createQuery(dobj);
     query.setParameter("inodeIdParam", fileId);
-    return createCollection(query.getResultList());
+    
+    Collection<MetadataLogEntryDto> dtos = query.getResultList();
+    Collection<MetadataLogEntry> mlel = createCollection(dtos);
+    session.release(dtos);
+    return mlel;
   }
 
   private Collection<MetadataLogEntry> createCollection(
@@ -141,6 +149,8 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
       dtos.add(dto);
     }
     session.flush();
-    return createCollection(dtos);
+    Collection<MetadataLogEntry> mlel = createCollection(dtos);
+    session.release(dtos);
+    return mlel;
   }
 }

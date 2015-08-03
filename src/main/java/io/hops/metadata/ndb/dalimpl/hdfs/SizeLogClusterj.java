@@ -59,6 +59,7 @@ public class SizeLogClusterj implements TablesDef.SizeLogTableDef,
     dto.setInodeId(logEntry.getInodeId());
     dto.setSize(logEntry.getSize());
     session.savePersistent(dto);
+    session.release(dto);
   }
 
   @Override
@@ -71,15 +72,16 @@ public class SizeLogClusterj implements TablesDef.SizeLogTableDef,
     dobj.where(pred1);
     HopsQuery<SizeLogEntryDto> query = session.createQuery(dobj);
     query.setParameter("inodeIdParam", fileId);
-    return createCollection(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
 
-  private Collection<SizeLogEntry> createCollection(
-      Collection<SizeLogEntryDto> dtos) {
+  private Collection<SizeLogEntry> convertAndRelease(HopsSession session,
+      Collection<SizeLogEntryDto> dtos) throws StorageException {
     ArrayList<SizeLogEntry> list = new ArrayList<SizeLogEntry>(dtos.size());
     for (SizeLogEntryDto dto : dtos) {
       SizeLogEntry logEntry = new SizeLogEntry(dto.getInodeId(), dto.getSize());
       list.add(logEntry);
+      session.release(dto);
     }
     return list;
   }

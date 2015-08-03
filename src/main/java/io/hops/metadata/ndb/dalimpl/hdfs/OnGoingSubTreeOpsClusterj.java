@@ -24,7 +24,6 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
-import static io.hops.metadata.hdfs.TablesDef.OnGoingSubTreeOpsDef.PART_KEY;
 import io.hops.metadata.hdfs.dal.OngoingSubTreeOpsDataAccess;
 import io.hops.metadata.hdfs.entity.SubTreeOperation;
 import io.hops.metadata.ndb.ClusterjConnector;
@@ -95,9 +94,11 @@ public class OnGoingSubTreeOpsClusterj
     }
     if(!deletions.isEmpty()){
       dbSession.deletePersistentAll(deletions);
+      dbSession.release(deletions);
     }
     if(!changes.isEmpty()){
       dbSession.savePersistentAll(changes);
+      dbSession.release(changes);
     }
   }
   
@@ -107,7 +108,7 @@ public class OnGoingSubTreeOpsClusterj
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQuery<OnGoingSubTreeOpsDTO> query =
         session.createQuery(qb.createQueryDefinition(OnGoingSubTreeOpsDTO.class));
-    return createList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
 
 //  @Override
@@ -119,7 +120,7 @@ public class OnGoingSubTreeOpsClusterj
 //    OnGoingSubTreeOpsDTO lPTable = dbSession.find(OnGoingSubTreeOpsDTO.class, key);
 //    SubTeeOperation lPath = null;
 //    if (lPTable != null) {
-//      lPath = createSubTreeOp(lPTable);
+//      lPath = convertAndRelease(lPTable);
 //    }
 //    return lPath;
 //  }
@@ -140,21 +141,25 @@ public class OnGoingSubTreeOpsClusterj
     query.setParameter(param, prefix + "%");
     query.setParameter("partKeyParam", PART_KEY_VAL);
     //query.setLimits(0, LIMIT);
-    return createList(query.getResultList());
+    return convertAndRelease(dbSession, query.getResultList());
   }
 
-  private List<SubTreeOperation> createList(Collection<OnGoingSubTreeOpsDTO> dtos) {
+  private List<SubTreeOperation> convertAndRelease(HopsSession session,
+      Collection<OnGoingSubTreeOpsDTO> dtos) throws StorageException {
     List<SubTreeOperation> list = new ArrayList<SubTreeOperation>();
     for (OnGoingSubTreeOpsDTO dto : dtos) {
-      list.add(createSubTreeOp(dto));
+      list.add(convertAndRelease(session, dto));
     }
     return list;
   }
 
-  private SubTreeOperation createSubTreeOp(OnGoingSubTreeOpsDTO opsDto) {
-    return new SubTreeOperation(opsDto.getPath(), opsDto.getNamenodeId()
-            ,SubTreeOperation.StoOperationType.values()[opsDto.getOpName()] );
-    
+  private SubTreeOperation convertAndRelease(HopsSession session,
+      OnGoingSubTreeOpsDTO opsDto) throws StorageException {
+    SubTreeOperation subTreeOperation = new SubTreeOperation(opsDto.getPath(),
+        opsDto.getNamenodeId(),SubTreeOperation.StoOperationType.values()
+        [opsDto.getOpName()] );
+    session.release(opsDto);
+    return subTreeOperation;
   }
 
   private void createPersistableSubTreeOp(SubTreeOperation op,
