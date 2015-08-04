@@ -23,6 +23,9 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.wrapper.HopsQuery;
+import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
+import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.fair.FSSchedulerNodeDataAccess;
@@ -79,29 +82,18 @@ public class FSSchedulerNodeClusterJ implements
 
     return createHopFSSchedulerNode(fsschedulernodeDTO);
   }
-
+  
   @Override
-  public void prepare(Collection<FSSchedulerNode> modified,
-      Collection<FSSchedulerNode> removed) throws StorageException {
+  public void addAll(Collection<FSSchedulerNode> modified) throws
+          StorageException {
     HopsSession session = connector.obtainSession();
     try {
-      if (removed != null) {
-        List<FSSchedulerNodeClusterJ.FSSchedulerNodeDTO> toRemove =
-            new ArrayList<FSSchedulerNodeClusterJ.FSSchedulerNodeDTO>();
-        for (FSSchedulerNode hop : removed) {
-          FSSchedulerNodeClusterJ.FSSchedulerNodeDTO persistable = session
-              .newInstance(FSSchedulerNodeClusterJ.FSSchedulerNodeDTO.class,
-                  hop.getRmnodeid());
-          toRemove.add(persistable);
-        }
-        session.deletePersistentAll(toRemove);
-      }
       if (modified != null) {
-        List<FSSchedulerNodeClusterJ.FSSchedulerNodeDTO> toModify =
-            new ArrayList<FSSchedulerNodeClusterJ.FSSchedulerNodeDTO>();
+        List<FSSchedulerNodeClusterJ.FSSchedulerNodeDTO> toModify
+                = new ArrayList<FSSchedulerNodeClusterJ.FSSchedulerNodeDTO>();
         for (FSSchedulerNode hop : modified) {
-          FSSchedulerNodeClusterJ.FSSchedulerNodeDTO persistable =
-              createPersistable(hop, session);
+          FSSchedulerNodeClusterJ.FSSchedulerNodeDTO persistable
+                  = createPersistable(hop, session);
           toModify.add(persistable);
         }
         session.savePersistentAll(toModify);
@@ -109,6 +101,40 @@ public class FSSchedulerNodeClusterJ implements
     } catch (Exception e) {
       throw new StorageException(e);
     }
+  }
+
+  public void removeAll(Collection<FSSchedulerNode> removed) throws
+          StorageException {
+    HopsSession session = connector.obtainSession();
+    try {
+      if (removed != null) {
+        List<FSSchedulerNodeClusterJ.FSSchedulerNodeDTO> toRemove
+                = new ArrayList<FSSchedulerNodeClusterJ.FSSchedulerNodeDTO>();
+        for (FSSchedulerNode hop : removed) {
+          FSSchedulerNodeClusterJ.FSSchedulerNodeDTO persistable = session
+                  .newInstance(FSSchedulerNodeClusterJ.FSSchedulerNodeDTO.class,
+                          hop.getRmnodeid());
+          toRemove.add(persistable);
+        }
+        session.deletePersistentAll(toRemove);
+      }
+    } catch (Exception e) {
+      throw new StorageException(e);
+    }
+  }
+
+  @Override
+  public List<FSSchedulerNode> getAll() throws StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<FSSchedulerNodeDTO> dobj
+            = qb.createQueryDefinition(
+                    FSSchedulerNodeDTO.class);
+    HopsQuery<FSSchedulerNodeDTO> query = session.
+            createQuery(dobj);
+    List<FSSchedulerNodeDTO> results = query.
+            getResultList();
+    return createList(results);
   }
 
   @Override
@@ -138,5 +164,12 @@ public class FSSchedulerNodeClusterJ implements
 
     return fssDTO;
   }
-
+  
+  private List<FSSchedulerNode> createList(List<FSSchedulerNodeDTO> entries) {
+    List<FSSchedulerNode> result = new ArrayList<FSSchedulerNode>();
+    for (FSSchedulerNodeDTO nodeDTO : entries) {
+      result.add(createHopFSSchedulerNode(nodeDTO));
+    }
+    return result;
+  }
 }

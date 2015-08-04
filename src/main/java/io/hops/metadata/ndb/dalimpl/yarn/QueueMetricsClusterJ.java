@@ -43,11 +43,10 @@ public class QueueMetricsClusterJ
   public interface QueueMetricsDTO {
 
     @PrimaryKey
-    @Column(name = ID)
-    int getid();
+    @Column(name = QUEUE_NAME)
+    String getqueuename();
 
-    void setid(int id);
-
+    void setqueuename(String queuename);
     @Column(name = APPS_SUBMITTED)
     int getappssubmitted();
 
@@ -158,11 +157,6 @@ public class QueueMetricsClusterJ
 
     void setparentid(int parentid);
 
-    @Column(name = QUEUE_NAME)
-    String getqueuename();
-
-    void setqueuename(String queuename);
-
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -204,7 +198,7 @@ public class QueueMetricsClusterJ
 
 
   private QueueMetrics createHopQueueMetrics(QueueMetricsDTO queueMetricsDTO) {
-    return new QueueMetrics(queueMetricsDTO.getid(),
+    return new QueueMetrics(queueMetricsDTO.getqueuename(),
         queueMetricsDTO.getappssubmitted(), queueMetricsDTO.getappsrunning(),
         queueMetricsDTO.getappspending(), queueMetricsDTO.getappscompleted(),
         queueMetricsDTO.getappskilled(), queueMetricsDTO.getappsfailed(),
@@ -218,8 +212,7 @@ public class QueueMetricsClusterJ
         queueMetricsDTO.getreservedvcores(),
         queueMetricsDTO.getreservedcontainers(),
         queueMetricsDTO.getactiveusers(),
-        queueMetricsDTO.getactiveapplications(), queueMetricsDTO.getparentid(),
-        queueMetricsDTO.getqueuename());
+        queueMetricsDTO.getactiveapplications(), queueMetricsDTO.getparentid());
   }
 
   private QueueMetricsDTO createPersistable(QueueMetrics hop,
@@ -227,6 +220,7 @@ public class QueueMetricsClusterJ
     QueueMetricsClusterJ.QueueMetricsDTO queueMetricsDTO =
         session.newInstance(QueueMetricsClusterJ.QueueMetricsDTO.class);
 
+    queueMetricsDTO.setqueuename(hop.getQueuename());
     queueMetricsDTO.setactiveapplications(hop.getActiveapplications());
     queueMetricsDTO.setactiveusers(hop.getActiveusers());
     queueMetricsDTO.setaggregatecontainersallocated(hop.
@@ -244,11 +238,9 @@ public class QueueMetricsClusterJ
     queueMetricsDTO.setappssubmitted(hop.getAppssubmitted());
     queueMetricsDTO.setavailablemb(hop.getAvailablemb());
     queueMetricsDTO.setavailablevcores(hop.getAvailablevcores());
-    queueMetricsDTO.setid(hop.getId());
     queueMetricsDTO.setparentid(hop.getParentid());
     queueMetricsDTO.setpendingmb(hop.getPendingmb());
     queueMetricsDTO.setpendingvcores(hop.getPendingvcores());
-    queueMetricsDTO.setqueuename(hop.getQueuename());
     queueMetricsDTO.setreservedcontainers(hop.getReservedcontainers());
     queueMetricsDTO.setreservedmb(hop.getReservedmb());
     queueMetricsDTO.setreservedvcores(hop.getReservedvcores());

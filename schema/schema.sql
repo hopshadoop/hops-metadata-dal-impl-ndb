@@ -410,7 +410,7 @@ CREATE TABLE `yarn_variables` (
 delimiter $$
 
 CREATE TABLE `yarn_queuemetrics` (
-  `id` INT NOT NULL,
+  `queue_name` VARCHAR(45) NOT NULL,
   `apps_submitted` INT NULL,
   `apps_running` INT NULL,
   `apps_pending` INT NULL,
@@ -432,9 +432,8 @@ CREATE TABLE `yarn_queuemetrics` (
   `active_users` INT NULL,
   `active_applications` INT NULL,
   `parent_id` INT NULL,
-  `queue_name` VARCHAR(45) NULL,
   `pending_containers` INT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`queue_name`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
 
@@ -496,6 +495,7 @@ CREATE TABLE `yarn_ficascheduler_node` (
   `rmnodeid` VARCHAR(45) NOT NULL,
   `nodename` VARCHAR(45) NULL,
   `numcontainers` INT NULL,
+  `rmcontainerid` VARCHAR(45) NULL,
   PRIMARY KEY (`rmnodeid`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
@@ -602,6 +602,10 @@ CREATE TABLE `yarn_rmcontainer` (
   `state` VARCHAR(45) NULL,
   `finishedstatusstate` VARCHAR(45) NULL,
   `exitstatus` INT NULL,
+  `reservednode_id` VARCHAR(45) NULL,
+  `reservedpriority` INT NULL,
+  `reservedmemory` INT NULL,
+  `reservedvcores` INT NULL,
   PRIMARY KEY (`containerid_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
@@ -691,7 +695,7 @@ delimiter $$
 CREATE TABLE `yarn_schedulerapp_reservedcontainers` (
   `schedulerapp_id` VARCHAR(45) NOT NULL,
   `priority_id` INT NULL,
-  `nodeid_id` INT NULL,
+  `nodeid` VARCHAR(45) NULL,
   `rmcontainer_id` VARCHAR(45) NULL,
 PRIMARY KEY (`schedulerapp_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
@@ -713,18 +717,10 @@ CREATE TABLE `yarn_schedulerapp_newlyallocatedcontainers` (
 
 delimiter $$
 
-CREATE TABLE `yarn_schedulerapp_reservations` (
-  `schedulerapp_id` VARCHAR(45) NOT NULL,
-  `priority_id` INT NULL,
-PRIMARY KEY (`schedulerapp_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
-
-
-delimiter $$
-
 CREATE TABLE `yarn_schedulerapp_schedulingopportunities` (
   `schedulerapp_id` VARCHAR(45) NOT NULL,
   `priority_id` INT NULL,
+  `counter` INT NULL,
 PRIMARY KEY (`schedulerapp_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
@@ -884,3 +880,71 @@ CREATE TABLE `hdfs_size_log` (
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
 delimiter $$
+
+CREATE TABLE `yarn_schedulerapp_reservations` (
+  `schedulerapp_id` VARCHAR(45) NOT NULL,
+  `priority_id` INT NOT NULL,
+  `counter` INT NULL,
+  PRIMARY KEY (`schedulerapp_id`, `priority_id`))
+ENGINE = ndbcluster$$
+
+delimiter $$
+
+CREATE TABLE `yarn_localitylevel` (
+  `schedulerapp_id` VARCHAR(45) NOT NULL,
+  `priority_id` INT NOT NULL,
+  `nodetype` VARCHAR(45) NULL,
+  PRIMARY KEY (`schedulerapp_id`, `priority_id`))
+ENGINE = ndbcluster$$
+
+delimiter $$
+
+CREATE TABLE `yarn_csleafqueueuserinfo` (
+  `username` VARCHAR(45) NOT NULL,
+  `consumed_memory` INT NULL,
+  `consumed_vcores` INT NULL,
+  `pending_applications` INT NULL,
+  `active_applications` INT NULL,
+  PRIMARY KEY (`username`))
+ENGINE = ndbcluster$$
+
+delimiter $$
+
+CREATE TABLE `yarn_csqueue` (
+  `path` VARCHAR(45) NOT NULL,
+  `name` VARCHAR(45) NULL,
+  `used_capacity` FLOAT NULL,
+  `used_resource_memory` INT NULL,
+  `used_resource_vcores` INT NULL,
+  `absolute_used_capacity` FLOAT NULL,
+  `is_parent` INT NULL,
+  `num_containers` INT NULL,
+  PRIMARY KEY (`path`))
+ENGINE = ndbcluster$$
+
+delimiter $$
+
+CREATE TABLE `yarn_appschedulable` (
+  `schedulerapp_id` VARCHAR(45) NOT NULL,
+  `starttime` BIGINT NULL,
+  `fsqueuename` VARCHAR(45) NULL,
+  PRIMARY KEY (`schedulerapp_id`))
+ENGINE = ndbcluster$$
+
+delimiter $$
+
+CREATE TABLE `yarn_preemptionmap` (
+  `schedulerapp_id` VARCHAR(45) NOT NULL,
+  `rmcontainer_id` VARCHAR(45) NOT NULL,
+  `value` BIGINT NULL,
+  PRIMARY KEY (`schedulerapp_id`, `rmcontainer_id`))
+ENGINE = ndbcluster$$
+
+delimiter $$
+
+CREATE TABLE `yarn_runnable_apps` (
+  `queuename` VARCHAR(45) NOT NULL,
+  `schedulerapp_id` VARCHAR(45) NOT NULL,
+  `isrunnable` BIT NOT NULL,
+  PRIMARY KEY (`queuename`, `schedulerapp_id`))
+ENGINE = ndbcluster$$
