@@ -133,26 +133,21 @@ delimiter $$
 CREATE TABLE `hdfs_lease_paths` (
   `holder_id` int(11) NOT NULL,
   `path` varchar(3000) NOT NULL,
-  `part_key` int(11) NOT NULL,
-  PRIMARY KEY (`path`,`part_key`),
-  KEY `holder_idx` (`holder_id`)
+  PRIMARY KEY (`holder_id`,`path`),
+  KEY `path_idx` (`path`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1
-/*!50100 PARTITION BY KEY (part_key) */$$
-
+/*!50100 PARTITION BY KEY (holder_id) */$$
 
 delimiter $$
 
 CREATE TABLE `hdfs_leases` (
-`holder` varchar(255) NOT NULL,
-`part_key` int(11) NOT NULL,
-`last_update` bigint(20) DEFAULT NULL,
-`holder_id` int(11) DEFAULT NULL,
-PRIMARY KEY (`holder`,`part_key`),
-KEY `holderid_idx` (`holder_id`),
-KEY `update_idx` (`last_update`)
+  `holder_id` int(11) NOT NULL DEFAULT '0',
+  `holder` varchar(255) NOT NULL,
+  `last_update` bigint(20) DEFAULT NULL,
+  PRIMARY KEY (`holder_id`,`holder`),
+  KEY `update_idx` (`last_update`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1
-/*!50100 PARTITION BY KEY (part_key) */$$
-
+/*!50100 PARTITION BY KEY (holder_id) */$$
 
 delimiter $$
 
