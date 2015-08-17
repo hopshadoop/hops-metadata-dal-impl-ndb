@@ -80,12 +80,13 @@ CREATE TABLE `hdfs_inodes` (
   `under_construction` bit(8) NOT NULL,
   `subtree_locked` bit(8) DEFAULT NULL,
   `subtree_lock_owner` bigint(20) DEFAULT NULL,
-  `meta_enabled` bit(8) DEFAULT '0',
+  `meta_enabled` bit(8) DEFAULT b'110000',
   `size` bigint(20) NOT NULL DEFAULT '0',
   PRIMARY KEY (`parent_id`,`name`),
+  KEY `pidex` (`parent_id`),
   KEY `inode_idx` (`id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1
-/*!50100 PARTITION BY KEY (parent_id) */$$
+/*!50100 PARTITION BY KEY (parent_id) */ $$
 
 
 delimiter $$
