@@ -57,24 +57,22 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 
   @PersistenceCapable(table = TABLE_NAME)
   @PartitionKey(column = PARENT_ID)
-  @Index(name = "inode_idx")
   public interface InodeDTO {
     @Column(name = ID)
+    @Index(name = "inode_idx")
     int getId();     // id of the inode
-
     void setId(int id);
 
     @PrimaryKey
     @Column(name = NAME)
     String getName();     //name of the inode
-
     void setName(String name);
 
     //id of the parent inode 
     @PrimaryKey
     @Column(name = PARENT_ID)
+    @Index(name = "pidex")
     int getParentId();     // id of the inode
-
     void setParentId(int parentid);
 
     // Inode
