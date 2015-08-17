@@ -286,13 +286,11 @@ CREATE TABLE `hdfs_block_checksum` (
 delimiter $$
 
 CREATE TABLE `hdfs_on_going_sub_tree_ops` (
-  `part_key` int(11) NOT NULL,
   `path` varchar(3000) NOT NULL,
   `namenode_id` bigint(20) NOT NULL,
   `op_name` int(11) NOT NULL,
-  PRIMARY KEY (`part_key`,`path`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
-/*!50100 PARTITION BY KEY (part_key) */$$
+  PRIMARY KEY (`path`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
 delimiter $$
 
