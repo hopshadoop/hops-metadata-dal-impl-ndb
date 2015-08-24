@@ -42,13 +42,7 @@ public class OnGoingSubTreeOpsClusterj
     implements TablesDef.OnGoingSubTreeOpsDef, OngoingSubTreeOpsDataAccess<SubTreeOperation> {
 
   @PersistenceCapable(table = TABLE_NAME)
-  @PartitionKey(column = PART_KEY)
   public interface OnGoingSubTreeOpsDTO {
-    @PrimaryKey
-    @Column(name = PART_KEY)
-    int getPartKey();
-    void setPartKey(int partKey);
-
     @PrimaryKey
     @Column(name = PATH)
     String getPath();
@@ -86,10 +80,7 @@ public class OnGoingSubTreeOpsClusterj
     }
 
     for (SubTreeOperation ops : removed) {
-      Object[] key = new Object[2];
-      key[0] = PART_KEY_VAL;
-      key[1] = ops.getPath();
-      OnGoingSubTreeOpsDTO opsTable = dbSession.newInstance(OnGoingSubTreeOpsDTO.class, key);
+      OnGoingSubTreeOpsDTO opsTable = dbSession.newInstance(OnGoingSubTreeOpsDTO.class, ops.getPath());
       deletions.add(opsTable);
     }
     if(!deletions.isEmpty()){
@@ -132,15 +123,12 @@ public class OnGoingSubTreeOpsClusterj
     HopsQueryBuilder qb = dbSession.getQueryBuilder();
     HopsQueryDomainType dobj = qb.createQueryDefinition(OnGoingSubTreeOpsDTO.class);
     HopsPredicateOperand propertyPredicate = dobj.get("path");
-    String param = "prefix";
-    HopsPredicateOperand propertyLimit = dobj.param(param);
-    HopsPredicate like = propertyPredicate.like(propertyLimit)
-        .and(dobj.get("partKey").equal(dobj.param("partKeyParam")));
+    HopsPredicateOperand propertyLimit = dobj.param("prefix");
+    HopsPredicate like = propertyPredicate.like(propertyLimit);
     dobj.where(like);
     HopsQuery query = dbSession.createQuery(dobj);
-    query.setParameter(param, prefix + "%");
-    query.setParameter("partKeyParam", PART_KEY_VAL);
-    //query.setLimits(0, LIMIT);
+    query.setParameter("prefix", prefix + "%");
+    query.setLimits(0, LIMIT);
     return convertAndRelease(dbSession, query.getResultList());
   }
 
@@ -166,7 +154,6 @@ public class OnGoingSubTreeOpsClusterj
       OnGoingSubTreeOpsDTO opDto) {
     opDto.setPath(op.getPath());
     opDto.setNamenodeId(op.getNameNodeId());
-    opDto.setPartKey(PART_KEY_VAL);
     opDto.setOpName(op.getOpType().ordinal());
   }
 }

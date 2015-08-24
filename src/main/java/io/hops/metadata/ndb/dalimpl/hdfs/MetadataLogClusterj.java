@@ -75,7 +75,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     for (MetadataLogEntry logEntry : logEntries) {
       added.add(createPersistable(logEntry));
     }
-    session.makePersistentAll(added);
+    session.savePersistentAll(added);
     session.release(added);
   }
 
