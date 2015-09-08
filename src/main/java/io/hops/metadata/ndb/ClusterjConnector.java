@@ -386,6 +386,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
 
   private boolean format(boolean transactional,
       Class<? extends EntityDataAccess>... das) throws StorageException {
+    
     final int RETRIES = 5; // in test
     for (int i = 0; i < RETRIES; i++) {
       try {
@@ -614,5 +615,10 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   private void truncate(boolean transactional, String tableName)
       throws StorageException, SQLException {
     MysqlServerConnector.truncateTable(transactional, tableName);
+  }
+
+  @Override
+  public void dropAndRecreateDB() throws StorageException {
+    MysqlServerConnector.getInstance().dropAndRecreateDB();
   }
 }
