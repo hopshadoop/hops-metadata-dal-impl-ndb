@@ -66,7 +66,7 @@ delimiter $$
 CREATE TABLE `hdfs_inodes` (
   `id` int(11) NOT NULL,
   `parent_id` int(11) NOT NULL DEFAULT '0',
-  `name` varchar(256) NOT NULL DEFAULT '',
+  `name` varchar(255) NOT NULL DEFAULT '',
   `modification_time` bigint(20) DEFAULT NULL,
   `access_time` bigint(20) DEFAULT NULL,
   `permission` varbinary(128) DEFAULT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE `hdfs_inodes` (
   `client_node` varchar(100) DEFAULT NULL,
   `generation_stamp` int(11) DEFAULT NULL,
   `header` bigint(20) DEFAULT NULL,
-  `symlink` varchar(256) DEFAULT NULL,
+  `symlink` varchar(255) DEFAULT NULL,
   `quota_enabled` bit(8) NOT NULL,
   `under_construction` bit(8) NOT NULL,
   `subtree_locked` bit(8) DEFAULT NULL,
