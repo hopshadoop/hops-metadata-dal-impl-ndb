@@ -263,7 +263,9 @@ public class HopsSession {
   
   public <T> void release(T t)  throws StorageException {
     try {
-      session.release(t);
+      if(t!=null){
+        session.release(t);
+      }
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);
     }
@@ -271,8 +273,10 @@ public class HopsSession {
   
   public <T> void release(Collection<T> t)  throws StorageException {
     try {
-      for(T dto : t)  {
+      if(t!=null){
+        for(T dto : t)  {
           session.release(dto);
+        }
       }
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);
