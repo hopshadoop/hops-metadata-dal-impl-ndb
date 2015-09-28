@@ -45,33 +45,22 @@ import java.util.List;
 public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<Lease> {
 
   @PersistenceCapable(table = TABLE_NAME)
-  @PartitionKey(column = PART_KEY)
-  
+  @PartitionKey(column = HOLDER_ID)
   public interface LeaseDTO {
-
+    @PrimaryKey
+    @Column(name = HOLDER_ID)
+    int getHolderId();
+    void setHolderId(int holder_id);
+    
     @PrimaryKey
     @Column(name = HOLDER)
     String getHolder();
-
     void setHolder(String holder);
-    
-    @PrimaryKey
-    @Column(name = PART_KEY)
-    int getPartKey();
-
-    void setPartKey(int partKey);
 
     @Column(name = LAST_UPDATE)
     @Index(name = "update_idx")
     long getLastUpdate();
-
     void setLastUpdate(long last_upd);
-
-    @Column(name = HOLDER_ID)
-    @Index(name = "holderid_idx")
-    int getHolderId();
-
-    void setHolderId(int holder_id);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -83,14 +72,15 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
   }
 
   @Override
-  public Lease findByPKey(String holder) throws StorageException {
+  public Lease findByPKey(String holder, int holderId) throws StorageException {
     HopsSession session = connector.obtainSession();
     Object[] key = new Object[2];
-    key[0] = holder;
-    key[1] = PART_KEY_VAL;
+    key[0] = holderId;
+    key[1] = holder;
     LeaseDTO lTable = session.find(LeaseDTO.class, key);
     if (lTable != null) {
       Lease lease = createLease(lTable);
+      session.release(lTable);
       return lease;
     }
     return null;
@@ -104,21 +94,21 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
         qb.createQueryDefinition(LeaseDTO.class);
 
     HopsPredicate pred1 = dobj.get("holderId").equal(dobj.param("param1"));
-    HopsPredicate pred2 = dobj.get("partKey").equal(dobj.param("param2"));
 
-    dobj.where(pred1/*.and(pred2)*/);
+    dobj.where(pred1);
 
     HopsQuery<LeaseDTO> query = session.createQuery(dobj);
-    query.setParameter("param1", holderId); //the WHERE clause of SQL
-    query.setParameter("param2", PART_KEY_VAL);
+    query.setParameter("param1", holderId); 
     List<LeaseDTO> leaseTables = query.getResultList();
 
     if (leaseTables.size() > 1) {
       log.error(
           "Error in selectLeaseTableInternal: Multiple rows with same holderID");
+      session.release(leaseTables);
       return null;
     } else if (leaseTables.size() == 1) {
       Lease lease = createLease(leaseTables.get(0));
+      session.release(leaseTables);
       return lease;
     } else {
       log.info("No rows found for holderID:" + holderId + " in Lease table");
@@ -130,13 +120,12 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
   public Collection<Lease> findAll() throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
-    HopsQueryDomainType<LeaseDTO> dobj =
-        qb.createQueryDefinition(LeaseDTO.class);
-    HopsPredicate pred = dobj.get("partKey").equal(dobj.param("param"));
-    dobj.where(pred);
-    HopsQuery<LeaseDTO> query = session.createQuery(dobj);
-    query.setParameter("param", PART_KEY_VAL);
-    return createList(query.getResultList());
+    HopsQuery<LeaseDTO> query = session.createQuery(
+            qb.createQueryDefinition(LeaseDTO.class));    
+    List<LeaseDTO> dtos = query.getResultList();
+    Collection<Lease> ll = createList(dtos);
+    session.release(dtos);
+    return ll;
   }
 
   @Override
@@ -149,12 +138,14 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
     String param = "timelimit";
     HopsPredicateOperand propertyLimit = dobj.param(param);
     HopsPredicate lessThan = propertyPredicate.lessThan(propertyLimit);
-    dobj.where(
-        lessThan.and(dobj.get("partKey").equal(dobj.param("partKeyParam"))));
+    dobj.where(lessThan);
     HopsQuery query = session.createQuery(dobj);
     query.setParameter(param, new Long(timeLimit));
-    query.setParameter("partKeyParam", PART_KEY_VAL);
-    return createList(query.getResultList());
+    
+    List<LeaseDTO> dtos = query.getResultList();
+    Collection<Lease> ll = createList(dtos);
+    session.release(dtos);
+    return ll;
   }
 
   @Override
@@ -177,13 +168,15 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
 
     for (Lease l : removed) {
       Object[] key = new Object[2];
-      key[0] = l.getHolder();
-      key[1] = PART_KEY_VAL;
+      key[0] = l.getHolderId();
+      key[1] = l.getHolder();
       LeaseDTO lTable = session.newInstance(LeaseDTO.class, key);
       deletions.add(lTable);
     }
     session.deletePersistentAll(deletions);
     session.savePersistentAll(changes);
+    session.release(deletions);
+    session.release(changes);
   }
 
   private Collection<Lease> createList(List<LeaseDTO> list) {
@@ -210,6 +203,5 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
     lTable.setHolder(lease.getHolder());
     lTable.setHolderId(lease.getHolderId());
     lTable.setLastUpdate(lease.getLastUpdate());
-    lTable.setPartKey(PART_KEY_VAL);
   }
 }

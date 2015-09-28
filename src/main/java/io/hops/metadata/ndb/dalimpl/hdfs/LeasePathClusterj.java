@@ -25,6 +25,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
+import static io.hops.metadata.hdfs.TablesDef.LeasePathTableDef.HOLDER_ID;
 import io.hops.metadata.hdfs.dal.LeasePathDataAccess;
 import io.hops.metadata.hdfs.entity.LeasePath;
 import io.hops.metadata.ndb.ClusterjConnector;
@@ -43,26 +44,18 @@ public class LeasePathClusterj
     implements TablesDef.LeasePathTableDef, LeasePathDataAccess<LeasePath> {
 
   @PersistenceCapable(table = TABLE_NAME)
-  @PartitionKey(column = PART_KEY)
-  @Index(name = "holder_idx")
+  @PartitionKey(column = HOLDER_ID)
   public interface LeasePathsDTO {
-
+    @PrimaryKey  
     @Column(name = HOLDER_ID)
     int getHolderId();
-
     void setHolderId(int holder_id);
 
     @PrimaryKey
     @Column(name = PATH)
+    @Index(name = "path_idx")
     String getPath();
-
     void setPath(String path);
-
-    @PrimaryKey
-    @Column(name = PART_KEY)
-    int getPartKey();
-
-    void setPartKey(int partKey);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -88,13 +81,15 @@ public class LeasePathClusterj
 
     for (LeasePath lp : removed) {
       Object[] key = new Object[2];
-      key[0] = lp.getPath();
-      key[1] = PART_KEY_VAL;
+      key[0] = lp.getHolderId();
+      key[1] = lp.getPath();
       LeasePathsDTO lTable = dbSession.newInstance(LeasePathsDTO.class, key);
       deletions.add(lTable);
     }
     dbSession.deletePersistentAll(deletions);
     dbSession.savePersistentAll(changes);
+    dbSession.release(deletions);
+    dbSession.release(changes);
   }
 
   @Override
@@ -105,26 +100,36 @@ public class LeasePathClusterj
     HopsQueryDomainType<LeasePathsDTO> dobj =
         qb.createQueryDefinition(LeasePathsDTO.class);
     HopsPredicate pred1 = dobj.get("holderId").equal(dobj.param("param1"));
-    HopsPredicate pred2 = dobj.get("partKey").equal(dobj.param("param2"));
     dobj.where(pred1);
     HopsQuery<LeasePathsDTO> query = dbSession.createQuery(dobj);
     query.setParameter("param1", holderId);
-    query.setParameter("param2", PART_KEY_VAL);
-    return createList(query.getResultList());
+    
+    Collection<LeasePathsDTO> dtos = query.getResultList();
+    Collection<LeasePath> lpl = createList(dtos);
+    dbSession.release(dtos);
+    return lpl;
   }
 
   @Override
-  public LeasePath findByPKey(String path) throws StorageException {
-    Object[] key = new Object[2];
-    key[0] = path;
-    key[1] = PART_KEY_VAL;
+  public LeasePath findByPath(String path) throws StorageException {
     HopsSession dbSession = connector.obtainSession();
-    LeasePathsDTO lPTable = dbSession.find(LeasePathsDTO.class, key);
-    LeasePath lPath = null;
-    if (lPTable != null) {
-      lPath = createLeasePath(lPTable);
+    HopsQueryBuilder qb = dbSession.getQueryBuilder();
+    HopsQueryDomainType<LeasePathsDTO> dobj =
+        qb.createQueryDefinition(LeasePathsDTO.class);
+    HopsPredicate pred1 = dobj.get("path").equal(dobj.param("param1"));
+    dobj.where(pred1);
+    HopsQuery<LeasePathsDTO> query = dbSession.createQuery(dobj);
+    query.setParameter("param1", path);
+    
+    List<LeasePathsDTO> dtos = query.getResultList();
+    if(dtos == null || dtos.size() == 0){
+        return null;
+    }else if(dtos.size() == 1){
+        LeasePath lp = createLeasePath(dtos.get(0));
+        return lp;
+    } else {
+        throw new StorageException("Found more than one paths");
     }
-    return lPath;
   }
 
   @Override
@@ -136,25 +141,27 @@ public class LeasePathClusterj
     HopsPredicateOperand propertyPredicate = dobj.get("path");
     String param = "prefix";
     HopsPredicateOperand propertyLimit = dobj.param(param);
-    HopsPredicate like = propertyPredicate.like(propertyLimit)
-        .and(dobj.get("partKey").equal(dobj.param("partKeyParam")));
+    HopsPredicate like = propertyPredicate.like(propertyLimit);
     dobj.where(like);
     HopsQuery query = dbSession.createQuery(dobj);
     query.setParameter(param, prefix + "%");
-    query.setParameter("partKeyParam", PART_KEY_VAL);
-    return createList(query.getResultList());
+    
+    Collection<LeasePathsDTO> dtos = query.getResultList();
+    Collection<LeasePath> lpl = createList(dtos);
+    dbSession.release(dtos);
+    return lpl;
   }
 
   @Override
   public Collection<LeasePath> findAll() throws StorageException {
     HopsSession dbSession = connector.obtainSession();
     HopsQueryBuilder qb = dbSession.getQueryBuilder();
-    HopsQueryDomainType dobj = qb.createQueryDefinition(LeasePathsDTO.class);
-    HopsPredicate pred = dobj.get("partKey").equal(dobj.param("param"));
-    dobj.where(pred);
-    HopsQuery query = dbSession.createQuery(dobj);
-    query.setParameter("param", PART_KEY_VAL);
-    return createList(query.getResultList());
+    HopsQuery query = dbSession.createQuery(
+            qb.createQueryDefinition(LeasePathsDTO.class));    
+    Collection<LeasePathsDTO> dtos = query.getResultList();
+    Collection<LeasePath> lpl = createList(dtos);
+    dbSession.release(dtos);
+    return lpl;
   }
 
   @Override
@@ -180,6 +187,5 @@ public class LeasePathClusterj
       LeasePathsDTO lTable) {
     lTable.setHolderId(lp.getHolderId());
     lTable.setPath(lp.getPath());
-    lTable.setPartKey(PART_KEY_VAL);
   }
 }

@@ -61,6 +61,7 @@ public class StorageIdMapClusterj
     sdto.setSId(s.getsId());
     sdto.setStorageId(s.getStorageId());
     session.savePersistent(sdto);
+    session.release(sdto);
   }
 
   @Override
@@ -70,7 +71,7 @@ public class StorageIdMapClusterj
     if (sdto == null) {
       return null;
     }
-    return convert(sdto);
+    return convertAndRelease(session, sdto);
   }
 
   @Override
@@ -80,18 +81,22 @@ public class StorageIdMapClusterj
     HopsQueryDomainType<StorageIdDTO> qdt =
         qb.createQueryDefinition(StorageIdDTO.class);
     HopsQuery<StorageIdDTO> q = session.createQuery(qdt);
-    return convert(q.getResultList());
+    return convertAndRelease(session, q.getResultList());
   }
 
-  private Collection<StorageId> convert(List<StorageIdDTO> dtos) {
+  private Collection<StorageId> convertAndRelease(HopsSession session,
+      List<StorageIdDTO> dtos) throws StorageException {
     List<StorageId> hopstorageId = new ArrayList<StorageId>();
     for (StorageIdDTO sdto : dtos) {
-      hopstorageId.add(convert(sdto));
+      hopstorageId.add(convertAndRelease(session, sdto));
     }
     return hopstorageId;
   }
 
-  private StorageId convert(StorageIdDTO sdto) {
-    return new StorageId(sdto.getStorageId(), sdto.getSId());
+  private StorageId convertAndRelease(HopsSession session, StorageIdDTO sdto)
+      throws StorageException {
+    StorageId storageId = new StorageId(sdto.getStorageId(), sdto.getSId());
+    session.release(sdto);
+    return storageId;
   }
 }

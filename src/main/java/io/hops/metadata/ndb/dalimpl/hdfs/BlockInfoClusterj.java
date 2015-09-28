@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Set;
 
 public class BlockInfoClusterj
-    implements TablesDef.BlockInfoTableDef, BlockInfoDataAccess<BlockInfo> {
+        implements TablesDef.BlockInfoTableDef, BlockInfoDataAccess<BlockInfo> {
 
   @PersistenceCapable(table = TABLE_NAME)
   @PartitionKey(column = INODE_ID)
@@ -96,7 +96,6 @@ public class BlockInfoClusterj
 
     void setBlockRecoveryId(long recoveryId);
   }
-
   private ClusterjConnector connector = ClusterjConnector.getInstance();
   private final static int NOT_FOUND_ROW = -1000;
 
@@ -108,18 +107,18 @@ public class BlockInfoClusterj
   @Override
   public int countAllCompleteBlocks() throws StorageException {
     return MySQLQueryHelper.countWithCriterion(TABLE_NAME,
-        String.format("%s=%d", BLOCK_UNDER_CONSTRUCTION_STATE, 0));
+            String.format("%s=%d", BLOCK_UNDER_CONSTRUCTION_STATE, 0));
   }
-  
+
   @Override
   public void prepare(Collection<BlockInfo> removed, Collection<BlockInfo> news,
-      Collection<BlockInfo> modified) throws StorageException {
+          Collection<BlockInfo> modified) throws StorageException {
     List<BlockInfoDTO> blkChanges = new ArrayList<BlockInfoDTO>();
     List<BlockInfoDTO> blkDeletions = new ArrayList<BlockInfoDTO>();
     List<BlockLookUpClusterj.BlockLookUpDTO> luChanges =
-        new ArrayList<BlockLookUpClusterj.BlockLookUpDTO>();
+            new ArrayList<BlockLookUpClusterj.BlockLookUpDTO>();
     List<BlockLookUpClusterj.BlockLookUpDTO> luDeletions =
-        new ArrayList<BlockLookUpClusterj.BlockLookUpDTO>();
+            new ArrayList<BlockLookUpClusterj.BlockLookUpDTO>();
     HopsSession session = connector.obtainSession();
     for (BlockInfo block : removed) {
       Object[] pk = new Object[2];
@@ -127,47 +126,52 @@ public class BlockInfoClusterj
       pk[1] = block.getBlockId();
 
       BlockInfoClusterj.BlockInfoDTO bTable =
-          session.newInstance(BlockInfoClusterj.BlockInfoDTO.class, pk);
+              session.newInstance(BlockInfoClusterj.BlockInfoDTO.class, pk);
       blkDeletions.add(bTable);
 
       //delete the row from persistance table
       BlockLookUpClusterj.BlockLookUpDTO lookupDTO = session
-          .newInstance(BlockLookUpClusterj.BlockLookUpDTO.class,
+              .newInstance(BlockLookUpClusterj.BlockLookUpDTO.class,
               block.getBlockId());
       luDeletions.add(lookupDTO);
     }
 
     for (BlockInfo block : news) {
       BlockInfoClusterj.BlockInfoDTO bTable =
-          session.newInstance(BlockInfoClusterj.BlockInfoDTO.class);
+              session.newInstance(BlockInfoClusterj.BlockInfoDTO.class);
       createPersistable(block, bTable);
       blkChanges.add(bTable);
 
       //save a new row in the lookup table
       BlockLookUpClusterj.BlockLookUpDTO lookupDTO =
-          session.newInstance(BlockLookUpClusterj.BlockLookUpDTO.class);
+              session.newInstance(BlockLookUpClusterj.BlockLookUpDTO.class);
       BlockLookUpClusterj.createPersistable(
-          new BlockLookUp(block.getBlockId(), block.getInodeId()), lookupDTO);
+              new BlockLookUp(block.getBlockId(), block.getInodeId()), lookupDTO);
       luChanges.add(lookupDTO);
     }
 
     for (BlockInfo block : modified) {
       BlockInfoClusterj.BlockInfoDTO bTable =
-          session.newInstance(BlockInfoClusterj.BlockInfoDTO.class);
+              session.newInstance(BlockInfoClusterj.BlockInfoDTO.class);
       createPersistable(block, bTable);
       blkChanges.add(bTable);
 
       //save a new row in the lookup table
       BlockLookUpClusterj.BlockLookUpDTO lookupDTO =
-          session.newInstance(BlockLookUpClusterj.BlockLookUpDTO.class);
+              session.newInstance(BlockLookUpClusterj.BlockLookUpDTO.class);
       BlockLookUpClusterj.createPersistable(
-          new BlockLookUp(block.getBlockId(), block.getInodeId()), lookupDTO);
+              new BlockLookUp(block.getBlockId(), block.getInodeId()), lookupDTO);
       luChanges.add(lookupDTO);
     }
     session.deletePersistentAll(blkDeletions);
     session.deletePersistentAll(luDeletions);
     session.savePersistentAll(blkChanges);
     session.savePersistentAll(luChanges);
+
+    session.release(blkDeletions);
+    session.release(luDeletions);
+    session.release(blkChanges);
+    session.release(luChanges);
   }
 
   @Override
@@ -178,11 +182,15 @@ public class BlockInfoClusterj
 
     HopsSession session = connector.obtainSession();
     BlockInfoClusterj.BlockInfoDTO bit =
-        session.find(BlockInfoClusterj.BlockInfoDTO.class, pk);
+            session.find(BlockInfoClusterj.BlockInfoDTO.class, pk);
     if (bit == null) {
       return null;
     }
-    return createBlockInfo(bit);
+
+    BlockInfo bi = createBlockInfo(bit);
+    session.release(bit);
+
+    return bi;
   }
 
   @Override
@@ -190,38 +198,48 @@ public class BlockInfoClusterj
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<BlockInfoDTO> dobj =
-        qb.createQueryDefinition(BlockInfoClusterj.BlockInfoDTO.class);
+            qb.createQueryDefinition(BlockInfoClusterj.BlockInfoDTO.class);
     HopsPredicate pred1 = dobj.get("iNodeId").equal(dobj.param("iNodeParam"));
     dobj.where(pred1);
     HopsQuery<BlockInfoDTO> query = session.createQuery(dobj);
     query.setParameter("iNodeParam", inodeId);
-    return createBlockInfoList(query.getResultList());
+    List<BlockInfoDTO> dtos = query.getResultList();
+    List<BlockInfo> lbis = createBlockInfoList(dtos);
+    session.release(dtos);
+    return lbis;
   }
 
   @Override
   public List<BlockInfo> findByInodeIds(int[] inodeIds)
-      throws StorageException {
+          throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<BlockInfoClusterj.BlockInfoDTO> dobj =
-        qb.createQueryDefinition(BlockInfoClusterj.BlockInfoDTO.class);
+            qb.createQueryDefinition(BlockInfoClusterj.BlockInfoDTO.class);
     HopsPredicate pred1 = dobj.get("iNodeId").in(dobj.param("iNodeParam"));
     dobj.where(pred1);
     HopsQuery<BlockInfoClusterj.BlockInfoDTO> query = session.createQuery(dobj);
     query.setParameter("iNodeParam", Ints.asList(inodeIds));
-    return createBlockInfoList(query.getResultList());
+
+    List<BlockInfoDTO> biDtos = query.getResultList();
+    List<BlockInfo> lbis = createBlockInfoList(biDtos);
+    session.release(biDtos);
+    return lbis;
   }
 
   public BlockInfo scanByBlockId(long blockId) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<BlockInfoClusterj.BlockInfoDTO> dobj =
-        qb.createQueryDefinition(BlockInfoClusterj.BlockInfoDTO.class);
+            qb.createQueryDefinition(BlockInfoClusterj.BlockInfoDTO.class);
     HopsPredicate pred1 = dobj.get("blockId").equal(dobj.param("blockIdParam"));
     dobj.where(pred1);
     HopsQuery<BlockInfoClusterj.BlockInfoDTO> query = session.createQuery(dobj);
     query.setParameter("blockIdParam", blockId);
-    return createBlockInfo(query.getResultList().get(0));
+    List<BlockInfoDTO> biDtos = query.getResultList();
+    BlockInfo bi = createBlockInfo(biDtos.get(0));
+    session.release(biDtos);
+    return bi;
   }
 
   @Override
@@ -229,85 +247,80 @@ public class BlockInfoClusterj
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<BlockInfoClusterj.BlockInfoDTO> dobj =
-        qb.createQueryDefinition(BlockInfoClusterj.BlockInfoDTO.class);
+            qb.createQueryDefinition(BlockInfoClusterj.BlockInfoDTO.class);
     HopsQuery<BlockInfoClusterj.BlockInfoDTO> query = session.createQuery(dobj);
-    return createBlockInfoList(query.getResultList());
+
+    List<BlockInfoDTO> biDtos = query.getResultList();
+    List<BlockInfo> lbis = createBlockInfoList(biDtos);
+    session.release(biDtos);
+    return lbis;
   }
 
   @Override
   public List<BlockInfo> findByStorageId(int storageId)
-      throws StorageException {
+          throws StorageException {
     HopsSession session = connector.obtainSession();
     List<ReplicaClusterj.ReplicaDTO> replicas =
-        ReplicaClusterj.getReplicas(session, storageId);
+            ReplicaClusterj.getReplicas(session, storageId);
     long[] blockIds = new long[replicas.size()];
+    int[] inodeIds = new int[replicas.size()];
     for (int i = 0; i < blockIds.length; i++) {
       blockIds[i] = replicas.get(i).getBlockId();
+      inodeIds[i] = replicas.get(i).getINodeId();
     }
-    List<BlockInfo> ret = readBlockInfoBatch(session, blockIds);
+    List<BlockInfo> ret = readBlockInfoBatch(session, inodeIds, blockIds);
+    session.release(replicas);
     return ret;
   }
-  
+
   @Override
   public Set<Long> findByStorageIdOnlyIds(int storageId)
-      throws StorageException {
-    HopsSession session = connector.obtainSession();
-    List<ReplicaClusterj.ReplicaDTO> replicas =
-        ReplicaClusterj.getReplicas(session, storageId);
-    Set<Long> blks = new HashSet<Long>();
-    for (ReplicaClusterj.ReplicaDTO replica : replicas) {
-      blks.add(replica.getBlockId());
-    }
-    return blks;
+          throws StorageException {
+    return ReplicaClusterj.getReplicas(storageId);
   }
 
   @Override
   public List<BlockInfo> findByIds(long[] blockIds, int[] inodeIds)
-      throws StorageException {
+          throws StorageException {
     HopsSession session = connector.obtainSession();
     List<BlockInfo> blks = readBlockInfoBatch(session, inodeIds, blockIds);
     return blks;
   }
-  
+
   private List<BlockInfo> readBlockInfoBatch(final HopsSession session,
-      final long[] blockIds) throws StorageException {
-    int[] inodeIds =
-        BlockLookUpClusterj.readINodeIdsByBlockIds(session, blockIds);
-    return readBlockInfoBatch(session, inodeIds, blockIds);
-  }
-  
-  private List<BlockInfo> readBlockInfoBatch(final HopsSession session,
-      final int[] inodeIds, final long[] blockIds) throws StorageException {
+          final int[] inodeIds, final long[] blockIds) throws StorageException {
     final List<BlockInfoClusterj.BlockInfoDTO> bdtos =
-        new ArrayList<BlockInfoDTO>();
+            new ArrayList<BlockInfoDTO>();
     for (int i = 0; i < blockIds.length; i++) {
       Object[] pk = new Object[]{inodeIds[i], blockIds[i]};
       BlockInfoClusterj.BlockInfoDTO bdto =
-          session.newInstance(BlockInfoClusterj.BlockInfoDTO.class, pk);
+              session.newInstance(BlockInfoClusterj.BlockInfoDTO.class, pk);
       bdto.setBlockIndex(NOT_FOUND_ROW);
       bdto = session.load(bdto);
       bdtos.add(bdto);
     }
     session.flush();
-    return createBlockInfoList(bdtos);
+    List<BlockInfo> lbis = createBlockInfoList(bdtos);
+    session.release(bdtos);
+    return lbis;
   }
-  
-  private List<BlockInfo> createBlockInfoList(
-      List<BlockInfoClusterj.BlockInfoDTO> bitList) {
-    List<BlockInfo> list = new ArrayList<BlockInfo>();
 
-    for (BlockInfoClusterj.BlockInfoDTO blockInfoDTO : bitList) {
-      if (blockInfoDTO.getBlockIndex() != NOT_FOUND_ROW) {
-        list.add(createBlockInfo(blockInfoDTO));
+  private List<BlockInfo> createBlockInfoList(
+          List<BlockInfoClusterj.BlockInfoDTO> bitList) {
+    List<BlockInfo> list = new ArrayList<BlockInfo>();
+    if (bitList != null) {
+      for (BlockInfoClusterj.BlockInfoDTO blockInfoDTO : bitList) {
+        if (blockInfoDTO.getBlockIndex() != NOT_FOUND_ROW) {
+          list.add(createBlockInfo(blockInfoDTO));
+        }
       }
     }
-
     return list;
   }
 
   private BlockInfo createBlockInfo(BlockInfoClusterj.BlockInfoDTO bDTO) {
     BlockInfo hopBlockInfo =
-        new BlockInfo(bDTO.getBlockId(), bDTO.getBlockIndex(),
+            new BlockInfo(bDTO.getBlockId(), bDTO.getBlockIndex(),
             bDTO.getINodeId(), bDTO.getNumBytes(), bDTO.getGenerationStamp(),
             bDTO.getBlockUCState(), bDTO.getTimestamp(),
             bDTO.getPrimaryNodeIndex(), bDTO.getBlockRecoveryId());
@@ -315,7 +328,7 @@ public class BlockInfoClusterj
   }
 
   private void createPersistable(BlockInfo block,
-      BlockInfoClusterj.BlockInfoDTO persistable) {
+          BlockInfoClusterj.BlockInfoDTO persistable) {
     persistable.setBlockId(block.getBlockId());
     persistable.setNumBytes(block.getNumBytes());
     persistable.setGenerationStamp(block.getGenerationStamp());

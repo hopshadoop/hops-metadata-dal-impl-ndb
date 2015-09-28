@@ -88,6 +88,7 @@ public class SchedulerApplicationClusterJ
       toPersist.add(createPersistable(req, session));
     }
     session.savePersistentAll(toPersist);
+    session.flush();
   }
 
   @Override

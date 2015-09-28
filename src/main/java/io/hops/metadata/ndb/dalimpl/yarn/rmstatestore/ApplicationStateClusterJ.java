@@ -115,6 +115,7 @@ public class ApplicationStateClusterJ implements
       toPersist.add(createPersistable(req, session));
     }
     session.savePersistentAll(toPersist);
+    session.flush();
   }
 
   @Override
@@ -133,6 +134,7 @@ public class ApplicationStateClusterJ implements
   public void add(ApplicationState toAdd) throws StorageException {
     HopsSession session = connector.obtainSession();
     session.savePersistent(createPersistable(toAdd, session));
+    session.flush();
   }
 
   @Override
