@@ -32,6 +32,7 @@ import io.hops.metadata.hdfs.dal.CorruptReplicaDataAccess;
 import io.hops.metadata.hdfs.dal.EncodingJobsDataAccess;
 import io.hops.metadata.hdfs.dal.EncodingStatusDataAccess;
 import io.hops.metadata.hdfs.dal.ExcessReplicaDataAccess;
+import io.hops.metadata.hdfs.dal.GroupDataAccess;
 import io.hops.metadata.hdfs.dal.INodeAttributesDataAccess;
 import io.hops.metadata.hdfs.dal.INodeDataAccess;
 import io.hops.metadata.hdfs.dal.InvalidateBlockDataAccess;
@@ -49,6 +50,8 @@ import io.hops.metadata.hdfs.dal.SafeBlocksDataAccess;
 import io.hops.metadata.hdfs.dal.SizeLogDataAccess;
 import io.hops.metadata.hdfs.dal.StorageIdMapDataAccess;
 import io.hops.metadata.hdfs.dal.UnderReplicatedBlockDataAccess;
+import io.hops.metadata.hdfs.dal.UserDataAccess;
+import io.hops.metadata.hdfs.dal.UserGroupDataAccess;
 import io.hops.metadata.hdfs.dal.VariableDataAccess;
 import io.hops.metadata.ndb.dalimpl.election.HdfsLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.election.YarnLeaderClusterj;
@@ -60,6 +63,7 @@ import io.hops.metadata.ndb.dalimpl.hdfs.CorruptReplicaClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.EncodingJobsClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.EncodingStatusClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.ExcessReplicaClusterj;
+import io.hops.metadata.ndb.dalimpl.hdfs.GroupClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.INodeAttributesClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.INodeClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.InvalidatedBlockClusterj;
@@ -77,6 +81,8 @@ import io.hops.metadata.ndb.dalimpl.hdfs.SafeBlocksClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.SizeLogClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.StorageIdMapClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.UnderReplicatedBlockClusterj;
+import io.hops.metadata.ndb.dalimpl.hdfs.UserClusterj;
+import io.hops.metadata.ndb.dalimpl.hdfs.UserGroupCluterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.VariableClusterj;
 import io.hops.metadata.ndb.dalimpl.yarn.AppSchedulingInfoBlacklistClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.AppSchedulingInfoClusterJ;
@@ -299,6 +305,10 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(SizeLogDataAccess.class, new SizeLogClusterj());
     dataAccessMap.put(EncodingJobsDataAccess.class, new EncodingJobsClusterj());
     dataAccessMap.put(RepairJobsDataAccess.class, new RepairJobsClusterj());
+
+    dataAccessMap.put(UserDataAccess.class, new UserClusterj());
+    dataAccessMap.put(GroupDataAccess.class, new GroupClusterj());
+    dataAccessMap.put(UserGroupDataAccess.class, new UserGroupCluterj());
   }
 
   @Override
