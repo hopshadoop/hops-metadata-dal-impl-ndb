@@ -69,7 +69,9 @@ CREATE TABLE `hdfs_inodes` (
   `name` varchar(255) NOT NULL DEFAULT '',
   `modification_time` bigint(20) DEFAULT NULL,
   `access_time` bigint(20) DEFAULT NULL,
-  `permission` varbinary(128) DEFAULT NULL,
+  `user_id` binary(16) DEFAULT NULL,
+  `group_id` binary(16) DEFAULT NULL,
+  `permission` smallint DEFAULT NULL,
   `client_name` varchar(100) DEFAULT NULL,
   `client_machine` varchar(100) DEFAULT NULL,
   `client_node` varchar(100) DEFAULT NULL,
@@ -88,6 +90,39 @@ CREATE TABLE `hdfs_inodes` (
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1
 /*!50100 PARTITION BY KEY (parent_id) */ $$
 
+delimiter $$
+
+CREATE TABLE `hdfs_users` (
+  `id` binary(16) NOT NULL,
+  `name` varchar(1000) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+
+delimiter $$
+
+CREATE TABLE `hdfs_groups` (
+  `id` binary(16) NOT NULL,
+  `name` varchar(1000) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+
+delimiter $$
+
+CREATE TABLE `hdfs_users_groups` (
+  `user_id` binary(16) NOT NULL,
+  `group_id` binary(16) NOT NULL,
+  PRIMARY KEY (`user_id`, `group_id`),
+  CONSTRAINT `user_id`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `hdfs_users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+ CONSTRAINT `group_id`
+    FOREIGN KEY (`group_id`)
+    REFERENCES `hdfs_groups` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
 delimiter $$
 
