@@ -18,15 +18,21 @@
  */
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.Index;
 import com.mysql.clusterj.annotation.PartitionKey;
 import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
+import io.hops.exception.HopsUserDoesNotExist;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.INodeDataAccess;
 import io.hops.metadata.hdfs.entity.INode;
+import io.hops.metadata.hdfs.entity.INodeBase;
 import io.hops.metadata.hdfs.entity.INodeIdentifier;
 import io.hops.metadata.hdfs.entity.ProjectedINode;
 import io.hops.metadata.ndb.ClusterjConnector;
@@ -39,6 +45,7 @@ import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.util.ByteArray;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -47,6 +54,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<INode> {
 
@@ -88,10 +96,22 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     void setATime(long modificationTime);
 
     // Inode
-    @Column(name = PERMISSION)
-    byte[] getPermission();
+    @Column(name = USER_ID)
+    byte[] getUserID();
 
-    void setPermission(byte[] permission);
+    void setUserID(byte[] userID);
+
+    // Inode
+    @Column(name = GROUP_ID)
+    byte[] getGroupID();
+
+    void setGroupID(byte[] groupID);
+
+    // Inode
+    @Column(name = PERMISSION)
+    short getPermission();
+
+    void setPermission(short permission);
 
     // InodeFileUnderConstruction
     @Column(name = CLIENT_NAME)
@@ -217,7 +237,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     }
     
     if (results.size() == 1) {
-      INode inode = createInode(results.get(0));
+      INode inode = convertAndUpdateUsers(session, results.get(0));
       session.release(results);
       return inode;
     } else {
@@ -241,7 +261,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     query.setParameter("parentIDParam", parentId);
 
     List<InodeDTO> results = query.getResultList();
-    List<INode> inodeList = createInodeList(results);
+    List<INode> inodeList = convertAndUpdateUsers(session, results);
     session.release(results);
     return inodeList;
   }
@@ -250,8 +270,10 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   public List<ProjectedINode> findInodesForSubtreeOperationsWithWriteLock(
       int parentId) throws StorageException {
     final String query = String.format(
-        "SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s FROM %s WHERE %s=%d FOR UPDATE ",
-        ID, NAME, PARENT_ID, PERMISSION, HEADER, SYMLINK, QUOTA_ENABLED,
+        "SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s FROM %s " +
+            "WHERE %s=%d LOCK IN SHARE MODE",
+        ID, NAME, PARENT_ID, PERMISSION, USER_ID, GROUP_ID, HEADER, SYMLINK,
+        QUOTA_ENABLED,
         UNDER_CONSTRUCTION, SUBTREE_LOCKED, SUBTREE_LOCK_OWNER, SIZE, TABLE_NAME,
         PARENT_ID, parentId);
     ArrayList<ProjectedINode> resultList;
@@ -264,7 +286,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
       while (result.next()) {
         resultList.add(
             new ProjectedINode(result.getInt(ID), result.getInt(PARENT_ID),
-                result.getString(NAME), result.getBytes(PERMISSION),
+                result.getString(NAME), result.getShort(PERMISSION),
+                result.getBytes(USER_ID), result.getBytes(GROUP_ID),
                 result.getLong(HEADER),
                 result.getString(SYMLINK) == null ? false : true,
                 result.getBoolean(QUOTA_ENABLED),
@@ -278,6 +301,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     } finally {
       mysqlConnector.closeSession();
     }
+    updateUsersAndGroups(connector.obtainSession(), resultList);
     return resultList;
   }
 
@@ -292,7 +316,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 
     InodeDTO result = session.find(InodeDTO.class, pk);
     if (result != null) {
-      INode inode = createInode(result);
+      INode inode = convertAndUpdateUsers(session, result);
       session.release(result);
       return inode;
     } else {
@@ -313,7 +337,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
       dtos.add(dto);
     }
     session.flush();
-    List<INode> inodeList = createInodeList(dtos);
+    List<INode> inodeList = convertAndUpdateUsers(session, dtos);
     session.release(dtos);
     return inodeList;
   }
@@ -384,7 +408,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQuery<InodeDTO> query =
         session.createQuery(qb.createQueryDefinition(InodeDTO.class));
-    return createInodeList(query.getResultList());
+    return convertAndUpdateUsers(session, query.getResultList());
   }
   
   @Override
@@ -411,21 +435,31 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   }
 
   
-  private List<INode> createInodeList(List<InodeDTO> list) {
+  private List<INode> convertAndUpdateUsers(HopsSession session,
+      List<InodeDTO> list) throws StorageException {
     List<INode> inodes = new ArrayList<INode>();
     for (InodeDTO persistable : list) {
       if (persistable.getId() != NOT_FOUND_ROW) {
-        inodes.add(createInode(persistable));
+        inodes.add(convert(persistable));
       }
     }
+    updateUsersAndGroups(session, inodes);
     return inodes;
   }
 
-  private INode createInode(InodeDTO persistable) {
+  private INode convertAndUpdateUsers(HopsSession session, InodeDTO inodeDTO)
+      throws StorageException {
+    INode iNode = convert(inodeDTO);
+    updateUsersAndGroups(session, Lists.newArrayList(iNode));
+    return iNode;
+  }
+
+  private INode convert(InodeDTO persistable) {
     INode node = new INode(persistable.getId(), persistable.getName(),
         persistable.getParentId(),
         NdbBoolean.convert(persistable.getQuotaEnabled()),
         persistable.getModificationTime(), persistable.getATime(),
+        persistable.getUserID(), persistable.getGroupID(),
         persistable.getPermission(), persistable.getUnderConstruction(),
         persistable.getClientName(), persistable.getClientMachine(),
         persistable.getClientNode(), persistable.getGenerationStamp(),
@@ -444,6 +478,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setQuotaEnabled(NdbBoolean.convert(inode.isDirWithQuota()));
     persistable.setModificationTime(inode.getModificationTime());
     persistable.setATime(inode.getAccessTime());
+    persistable.setUserID(inode.getUserID());
+    persistable.setGroupID(inode.getGroupID());
     persistable.setPermission(inode.getPermission());
     persistable.setUnderConstruction(inode.isUnderConstruction());
     persistable.setClientName(inode.getClientName());
@@ -455,7 +491,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setSubtreeLocked(NdbBoolean.convert(inode.isSubtreeLocked()));
     persistable.setSubtreeLockOwner(inode.getSubtreeLockOwner());
     persistable.setMetaEnabled(NdbBoolean.convert(inode.isMetaEnabled()));
-    persistable.setSize(inode.getSize());
+    persistable.setSize(inode.getFileSize());
   }
 
   private void explain(HopsQuery<InodeDTO> query) {
@@ -465,4 +501,89 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     //      System.out.println("values "+ Arrays.toString(map.values().toArray()));
   }
 
+
+  private void updateUsersAndGroups(HopsSession session, final List<? extends
+      INodeBase> inodes) throws StorageException {
+    final Map<ByteArray, List<INodeBase>> userIdToInodes = Maps.newHashMap();
+    final Map<ByteArray, List<INodeBase>> groupIdsToInodes = Maps.newHashMap();
+
+    for (INodeBase inode : inodes) {
+      if (inode == null) {
+        continue;
+      }
+      ByteArray userId = new ByteArray(inode.getUserID());
+      ByteArray groupId = new ByteArray(inode.getGroupID());
+
+      List<INodeBase> uinodes = userIdToInodes.get(userId);
+      if (uinodes == null) {
+        uinodes = Lists.newArrayList();
+        userIdToInodes.put(userId, uinodes);
+      }
+      uinodes.add(inode);
+
+      List<INodeBase> ginodes = groupIdsToInodes.get(groupId);
+      if (ginodes == null) {
+        ginodes = Lists.newArrayList();
+        groupIdsToInodes.put(groupId, ginodes);
+      }
+      ginodes.add(inode);
+    }
+
+    boolean transactionActive = connector.isTransactionActive();
+
+    if(!transactionActive)
+      connector.beginTransaction();
+
+    Collection<UserClusterj.UserDTO> users = UserClusterj.getUsers(session, Collections2
+        .transform(userIdToInodes.keySet(),
+            new Function<ByteArray, byte[]>() {
+              @Override
+              public byte[] apply(ByteArray input) {
+                return input.getBytes();
+              }
+            }));
+
+    Collection<GroupClusterj.GroupDTO> groups = GroupClusterj.getGroups(session, Collections2
+        .transform(groupIdsToInodes.keySet(),
+            new Function<ByteArray, byte[]>() {
+              @Override
+              public byte[] apply(ByteArray input) {
+                return input.getBytes();
+              }
+            }));
+
+    if(!transactionActive)
+      connector.commit();
+
+    for (UserClusterj.UserDTO user : users) {
+      ByteArray userId = new ByteArray(user.getId());
+      List<INodeBase> uinodes = userIdToInodes.get(userId);
+      if (uinodes != null) {
+        for (INodeBase inode : uinodes) {
+          inode.setUserName(user.getName());
+        }
+      }
+
+      session.release(user);
+    }
+
+    for(INodeBase inode : inodes){
+      if(inode.getUserName() == null){
+        throw new HopsUserDoesNotExist("INode [Id=" + inode.getId() + ", " +
+            "name=" + inode.getName() + "] doesn't belong to a known user");
+      }
+    }
+
+    for (GroupClusterj.GroupDTO group : groups) {
+      ByteArray groupId = new ByteArray(group.getId());
+      List<INodeBase> ginodes = groupIdsToInodes.get(groupId);
+      if (ginodes != null) {
+        for (INodeBase inode : ginodes) {
+          inode.setGroupName(group.getName());
+        }
+      }
+
+      session.release(group);
+    }
+  }
 }

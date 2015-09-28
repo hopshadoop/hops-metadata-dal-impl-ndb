@@ -35,6 +35,7 @@ import io.hops.metadata.hdfs.dal.CorruptReplicaDataAccess;
 import io.hops.metadata.hdfs.dal.EncodingJobsDataAccess;
 import io.hops.metadata.hdfs.dal.EncodingStatusDataAccess;
 import io.hops.metadata.hdfs.dal.ExcessReplicaDataAccess;
+import io.hops.metadata.hdfs.dal.GroupDataAccess;
 import io.hops.metadata.hdfs.dal.INodeAttributesDataAccess;
 import io.hops.metadata.hdfs.dal.INodeDataAccess;
 import io.hops.metadata.hdfs.dal.InvalidateBlockDataAccess;
@@ -52,6 +53,8 @@ import io.hops.metadata.hdfs.dal.SafeBlocksDataAccess;
 import io.hops.metadata.hdfs.dal.SizeLogDataAccess;
 import io.hops.metadata.hdfs.dal.StorageIdMapDataAccess;
 import io.hops.metadata.hdfs.dal.UnderReplicatedBlockDataAccess;
+import io.hops.metadata.hdfs.dal.UserDataAccess;
+import io.hops.metadata.hdfs.dal.UserGroupDataAccess;
 import io.hops.metadata.hdfs.dal.VariableDataAccess;
 import io.hops.metadata.ndb.dalimpl.election.HdfsLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.election.YarnLeaderClusterj;
@@ -355,7 +358,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         OngoingSubTreeOpsDataAccess.class,
         MetadataLogDataAccess.class, AccessTimeLogDataAccess.class,
         SizeLogDataAccess.class, EncodingJobsDataAccess.class,
-        RepairJobsDataAccess.class,
+        RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
+        UserGroupDataAccess.class,
         // YARN
         RPCDataAccess.class, ApplicationStateDataAccess.class,
         ApplicationAttemptStateDataAccess.class, DelegationKeyDataAccess.class,
@@ -481,6 +485,15 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
           } else if (e == RepairJobsDataAccess.class) {
             MysqlServerConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.RepairJobsTableDef.TABLE_NAME);
+          } else if (e == UserDataAccess.class) {
+            MysqlServerConnector
+                .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.UsersTableDef.TABLE_NAME);
+          }else if (e == GroupDataAccess.class) {
+            MysqlServerConnector
+                .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.GroupsTableDef.TABLE_NAME);
+          }else if (e == UserGroupDataAccess.class) {
+            MysqlServerConnector
+                .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.UsersGroupsTableDef.TABLE_NAME);
           } else if (e == YarnLeDescriptorDataAccess.class) {
             MysqlServerConnector
                 .truncateTable(transactional,
@@ -581,7 +594,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
           } else if (e == RPCDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.RPCTableDef.TABLE_NAME);
           } else if (e == RMLoadDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.RMLoadTableDef.TABLE_NAME);
+            truncate(transactional,
+                io.hops.metadata.yarn.TablesDef.RMLoadTableDef.TABLE_NAME);
           } else if (e == YarnVariablesDataAccess.class) {
             HopsSession session = obtainSession();
             session.currentTransaction().begin();
@@ -596,7 +610,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             }
             session.currentTransaction().commit();
           } else if (e == PendingEventDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.PendingEventTableDef.TABLE_NAME);
+            truncate(transactional,
+                io.hops.metadata.yarn.TablesDef.PendingEventTableDef.TABLE_NAME);
           } else if (e == NextHeartbeatDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.NextHeartbeatTableDef.TABLE_NAME);
           }
