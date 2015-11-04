@@ -95,15 +95,15 @@ public class ApplicationAttemptStateClusterJ
     objarr[0] = applicationid;
     objarr[1] = applicationattemptid;
     ApplicationAttemptStateClusterJ.ApplicationAttemptStateDTO entry;
-    if (session != null) {
-      entry = session.find(
-          ApplicationAttemptStateClusterJ.ApplicationAttemptStateDTO.class,
-          objarr);
-      if (entry != null) {
-        return createHopApplicationAttemptState(entry);
-      }
+    entry = session.find(
+        ApplicationAttemptStateClusterJ.ApplicationAttemptStateDTO.class,
+        objarr);
+    ApplicationAttemptState result = null;
+    if (entry != null) {
+      result = createHopApplicationAttemptState(entry);
     }
-    return null;
+    session.release(entry);
+    return result;
   }
 
   @Override
@@ -114,9 +114,11 @@ public class ApplicationAttemptStateClusterJ
     HopsQueryDomainType<ApplicationAttemptStateDTO> dobj = qb.
         createQueryDefinition(ApplicationAttemptStateDTO.class);
     HopsQuery<ApplicationAttemptStateDTO> query = session.createQuery(dobj);
-    List<ApplicationAttemptStateDTO> results = query.getResultList();
+    List<ApplicationAttemptStateDTO> queryResults = query.getResultList();
 
-    return createMap(results);
+    Map<String, List<ApplicationAttemptState>> result = createMap(queryResults);
+    session.release(queryResults);
+    return result;
   }
 
   @Override
@@ -136,6 +138,7 @@ public class ApplicationAttemptStateClusterJ
       toPersist.add(createPersistable(req, session));
     }
     session.savePersistentAll(toPersist);
+    session.release(toPersist);
   }
 
   @Override
@@ -153,6 +156,7 @@ public class ApplicationAttemptStateClusterJ
           objarr));
     }
     session.deletePersistentAll(toRemove);
+    session.release(toRemove);
   }
 
   private ApplicationAttemptState createHopApplicationAttemptState(

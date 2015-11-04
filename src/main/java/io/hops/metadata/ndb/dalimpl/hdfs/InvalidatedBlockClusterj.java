@@ -35,10 +35,14 @@ import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class InvalidatedBlockClusterj implements
     TablesDef.InvalidatedBlockTableDef,
@@ -116,6 +120,21 @@ public class InvalidatedBlockClusterj implements
     List<InvalidatedBlock> ivl = createList(dtos);
     session.release(dtos);
     return ivl;
+  }
+  
+  @Override
+  public Map<Long, Long> findInvalidatedBlockByStorageIdUsingMySQLServer(int storageId) throws StorageException {
+  return MySQLQueryHelper.execute(String.format("SELECT %s, %s "
+            + "FROM %s WHERE %s='%d'", BLOCK_ID, GENERATION_STAMP, TABLE_NAME, STORAGE_ID, storageId), new MySQLQueryHelper.ResultSetHandler<Map<Long,Long>>() {
+      @Override
+      public Map<Long,Long> handle(ResultSet result) throws SQLException {
+        Map<Long,Long> blockInodeMap = new HashMap<Long,Long>();
+        while (result.next()) {
+          blockInodeMap.put(result.getLong(BLOCK_ID),result.getLong(GENERATION_STAMP));
+        }
+        return blockInodeMap;
+      }
+    });
   }
 
   @Override

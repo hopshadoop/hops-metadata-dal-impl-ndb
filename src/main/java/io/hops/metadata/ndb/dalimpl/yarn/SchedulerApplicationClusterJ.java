@@ -73,9 +73,11 @@ public class SchedulerApplicationClusterJ
             SchedulerApplicationClusterJ.SchedulerApplicationDTO.class);
     HopsQuery<SchedulerApplicationDTO> query = session.
         createQuery(dobj);
-    List<SchedulerApplicationClusterJ.SchedulerApplicationDTO> results = query.
+    List<SchedulerApplicationClusterJ.SchedulerApplicationDTO> queryResults = query.
         getResultList();
-    return createApplicationIdMap(results);
+    Map<String, SchedulerApplication> result = createApplicationIdMap(queryResults);
+    session.release(queryResults);
+    return result;
   }
 
   @Override
@@ -89,6 +91,7 @@ public class SchedulerApplicationClusterJ
     }
     session.savePersistentAll(toPersist);
     session.flush();
+    session.release(toPersist);
   }
 
   @Override
@@ -102,6 +105,7 @@ public class SchedulerApplicationClusterJ
           getAppid()));
     }
     session.deletePersistentAll(toPersist);
+    session.release(toPersist);
   }
 
   private Map<String, SchedulerApplication> createApplicationIdMap(

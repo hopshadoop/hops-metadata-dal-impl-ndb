@@ -71,6 +71,12 @@ public class NodeClusterJ implements TablesDef.NodeTableDef, NodeDataAccess<Node
     String getParent();
 
     void setParent(String parent);
+    
+    @Column(name = PENDING_EVENT_ID)
+    int getpendingeventid();
+
+    void setpendingeventid(int pendingid);
+    
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -80,14 +86,14 @@ public class NodeClusterJ implements TablesDef.NodeTableDef, NodeDataAccess<Node
     LOG.debug("HOP :: ClusterJ Node.findById - START:" + id);
     HopsSession session = connector.obtainSession();
     NodeDTO nodeDTO;
-    if (session != null) {
-      nodeDTO = session.find(NodeDTO.class, id);
-      LOG.debug("HOP :: ClusterJ Node.findById - FINISH:" + id);
-      if (nodeDTO != null) {
-        return createHopNode(nodeDTO);
-      }
+    nodeDTO = session.find(NodeDTO.class, id);
+    LOG.debug("HOP :: ClusterJ Node.findById - FINISH:" + id);
+    Node result = null;
+    if (nodeDTO != null) {
+      result = createHopNode(nodeDTO);
     }
-    return null;
+    session.release(nodeDTO);
+    return result;
   }
 
   @Override
@@ -99,9 +105,11 @@ public class NodeClusterJ implements TablesDef.NodeTableDef, NodeDataAccess<Node
     HopsQueryDomainType<NodeDTO> dobj = qb.createQueryDefinition(NodeDTO.class);
     HopsQuery<NodeDTO> query = session.createQuery(dobj);
 
-    List<NodeDTO> results = query.getResultList();
+    List<NodeDTO> queryResults = query.getResultList();
     LOG.debug("HOP :: ClusterJ Node.getAll - FINISH");
-    return createMap(results);
+    Map<String, Node> result = createMap(queryResults);
+    session.release(queryResults);
+    return result;
   }
 
   @Override
@@ -112,13 +120,15 @@ public class NodeClusterJ implements TablesDef.NodeTableDef, NodeDataAccess<Node
       toPersist.add(createPersistable(node, session));
     }
     session.savePersistentAll(toPersist);
-    session.flush();
+    session.release(toPersist);
   }
 
   @Override
   public void createNode(Node node) throws StorageException {
     HopsSession session = connector.obtainSession();
-    session.savePersistent(createPersistable(node, session));
+    NodeDTO dto = createPersistable(node, session);
+    session.savePersistent(dto);
+    session.release(dto);
   }
 
   private NodeDTO createPersistable(Node hopNode, HopsSession session)
@@ -130,6 +140,7 @@ public class NodeClusterJ implements TablesDef.NodeTableDef, NodeDataAccess<Node
     nodeDTO.setLocation(hopNode.getLocation());
     nodeDTO.setLevel(hopNode.getLevel());
     nodeDTO.setParent(hopNode.getParent());
+    nodeDTO.setpendingeventid(hopNode.getPendingEventId());
     return nodeDTO;
   }
 
@@ -143,7 +154,8 @@ public class NodeClusterJ implements TablesDef.NodeTableDef, NodeDataAccess<Node
    */
   public static Node createHopNode(NodeDTO nodeDTO) {
     return new Node(nodeDTO.getnodeid(), nodeDTO.getName(), nodeDTO.
-        getLocation(), nodeDTO.getLevel(), nodeDTO.getParent());
+            getLocation(), nodeDTO.getLevel(), nodeDTO.getParent(), nodeDTO.
+            getpendingeventid());
   }
 
   private Map<String, Node> createMap(List<NodeDTO> results) {

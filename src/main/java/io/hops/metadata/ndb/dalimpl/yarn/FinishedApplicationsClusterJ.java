@@ -61,6 +61,12 @@ public class FinishedApplicationsClusterJ
     String getapplicationid();
 
     void setapplicationid(String applicationid);
+    
+    @Column(name = PENDING_EVENT_ID)
+    int getpendingeventid();
+
+    void setpendingeventid(int pendingeventid);
+    
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -100,10 +106,12 @@ public class FinishedApplicationsClusterJ
         qb.createQueryDefinition(FinishedApplicationsDTO.class);
     HopsQuery<FinishedApplicationsDTO> query = session.
         createQuery(dobj);
-    List<FinishedApplicationsDTO> results = query.
+    List<FinishedApplicationsDTO> queryResults = query.
         getResultList();
     LOG.debug("HOP :: ClusterJ FinishedApplications.getAll - FINISH");
-    return createMap(results);
+    Map<String, List<FinishedApplications>> result = createMap(queryResults);
+    session.release(queryResults);
+      return result;
   }
 
   @Override
@@ -117,6 +125,7 @@ public class FinishedApplicationsClusterJ
     }
     session.savePersistentAll(toModify);
     session.flush();
+    session.release(toModify);
   }
 
   @Override
@@ -130,11 +139,13 @@ public class FinishedApplicationsClusterJ
     }
     session.deletePersistentAll(toRemove);
     session.flush();
+    session.release(toRemove);
   }
 
   private FinishedApplications createHopFinishedApplications(
-      FinishedApplicationsDTO dto) {
-    return new FinishedApplications(dto.getrmnodeid(), dto.getapplicationid());
+          FinishedApplicationsDTO dto) {
+    return new FinishedApplications(dto.getrmnodeid(), dto.getapplicationid(),
+            dto.getpendingeventid());
   }
 
   private FinishedApplicationsDTO createPersistable(FinishedApplications hop,
@@ -143,6 +154,7 @@ public class FinishedApplicationsClusterJ
         session.newInstance(FinishedApplicationsDTO.class);
     dto.setrmnodeid(hop.getRMNodeID());
     dto.setapplicationid(hop.getApplicationId());
+    dto.setpendingeventid(hop.getPendingEventId());
     return dto;
   }
 

@@ -257,7 +257,7 @@ public class BlockInfoClusterj
   }
 
   @Override
-  public List<BlockInfo> findByStorageId(int storageId)
+  public List<BlockInfo> findBlockInfosByStorageId(int storageId)
           throws StorageException {
     HopsSession session = connector.obtainSession();
     List<ReplicaClusterj.ReplicaDTO> replicas =
@@ -274,7 +274,7 @@ public class BlockInfoClusterj
   }
 
   @Override
-  public Set<Long> findByStorageIdOnlyIds(int storageId)
+  public Set<Long> findINodeIdsByStorageId(int storageId)
           throws StorageException {
     return ReplicaClusterj.getReplicas(storageId);
   }

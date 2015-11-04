@@ -16,6 +16,11 @@ deploys the jar file as an artifact to the kompics maven repository.
 ./deploy.sh
 ```
 
+Development Notes
+===
+Updates to schema/schema.sql should be copied to:
+hops-hadoop-chef/templates/default/hops.sql.erb
+
 
 # License
 
