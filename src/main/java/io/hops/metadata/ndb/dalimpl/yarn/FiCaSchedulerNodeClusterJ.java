@@ -33,7 +33,9 @@ import io.hops.metadata.yarn.entity.FiCaSchedulerNode;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FiCaSchedulerNodeClusterJ implements
     TablesDef.FiCaSchedulerNodeTableDef,
@@ -57,17 +59,21 @@ public class FiCaSchedulerNodeClusterJ implements
     int getnumcontainers();
 
     void setnumcontainers(int numcontainers);
+      
+    @Column(name = RMCONTAINERID)
+    String getrmcontainerid();
 
+    void setrmcontainerid(String rmcontainerid);
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
 
   @Override
-
   public void add(FiCaSchedulerNode toAdd) throws StorageException {
     HopsSession session = connector.obtainSession();
     FiCaSchedulerNodeDTO persistable = createPersistable(toAdd, session);
     session.savePersistent(persistable);
+    session.release(persistable);
     session.flush();
   }
 
@@ -82,6 +88,7 @@ public class FiCaSchedulerNodeClusterJ implements
       toPersist.add(persistable);
     }
       session.savePersistentAll(toPersist);
+      session.release(toPersist);
       session.flush();
   }
 
@@ -97,25 +104,25 @@ public class FiCaSchedulerNodeClusterJ implements
       toPersist.add(persistable);
     }
     session.deletePersistentAll(toPersist);
+    session.release(toPersist);
   }
 
   @Override
-  public List<FiCaSchedulerNode> getAll() throws StorageException {
-    try {
-      HopsSession session = connector.obtainSession();
-      HopsQueryBuilder qb = session.getQueryBuilder();
+  public Map<String, FiCaSchedulerNode> getAll() throws StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
 
-      HopsQueryDomainType<FiCaSchedulerNodeDTO> dobj = qb.createQueryDefinition(
-          FiCaSchedulerNodeClusterJ.FiCaSchedulerNodeDTO.class);
-      HopsQuery<FiCaSchedulerNodeClusterJ.FiCaSchedulerNodeDTO> query =
-          session.createQuery(dobj);
+    HopsQueryDomainType<FiCaSchedulerNodeDTO> dobj = qb.createQueryDefinition(
+            FiCaSchedulerNodeClusterJ.FiCaSchedulerNodeDTO.class);
+    HopsQuery<FiCaSchedulerNodeClusterJ.FiCaSchedulerNodeDTO> query = session.
+            createQuery(dobj);
 
-      List<FiCaSchedulerNodeClusterJ.FiCaSchedulerNodeDTO> results =
-          query.getResultList();
-      return createFiCaSchedulerNodeList(results);
-    } catch (Exception e) {
-      throw new StorageException(e);
-    }
+    List<FiCaSchedulerNodeClusterJ.FiCaSchedulerNodeDTO> queryResults = query.
+            getResultList();
+    Map<String, FiCaSchedulerNode> result = createFiCaSchedulerNodeMap(
+            queryResults);
+    session.release(queryResults);
+    return result;
   }
 
 
@@ -126,24 +133,27 @@ public class FiCaSchedulerNodeClusterJ implements
     ficaDTO.setrmnodeid(hop.getRmnodeId());
     ficaDTO.setnodename(hop.getNodeName());
     ficaDTO.setnumcontainers(hop.getNumOfContainers());
+    ficaDTO.setrmcontainerid(hop.getReservedContainerId());
     return ficaDTO;
   }
 
-  private List<FiCaSchedulerNode> createFiCaSchedulerNodeList(
+  private Map<String, FiCaSchedulerNode> createFiCaSchedulerNodeMap(
       List<FiCaSchedulerNodeClusterJ.FiCaSchedulerNodeDTO> results) {
-    List<FiCaSchedulerNode> fifoSchedulerNodes =
-        new ArrayList<FiCaSchedulerNode>();
+    Map<String, FiCaSchedulerNode> fifoSchedulerNodes =
+        new HashMap<String, FiCaSchedulerNode>();
     for (FiCaSchedulerNodeClusterJ.FiCaSchedulerNodeDTO persistable : results) {
-      fifoSchedulerNodes.add(createHopFiCaSchedulerNode(persistable));
+      FiCaSchedulerNode node = createHopFiCaSchedulerNode(persistable);
+      fifoSchedulerNodes.put(node.getRmnodeId(), node);
     }
     return fifoSchedulerNodes;
   }
 
   private FiCaSchedulerNode createHopFiCaSchedulerNode(
       FiCaSchedulerNodeDTO entry) {
-    FiCaSchedulerNode hop =
-        new FiCaSchedulerNode(entry.getrmnodeid(), entry.getnodename(),
-            entry.getnumcontainers());
+    FiCaSchedulerNode hop =new FiCaSchedulerNode(entry.getrmnodeid(),
+            entry.getnodename(), entry.getnumcontainers(), entry.
+            getrmcontainerid());
+
     return hop;
   }
 }

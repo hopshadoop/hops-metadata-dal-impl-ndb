@@ -56,13 +56,13 @@ public class RMContextActiveNodesClusterJ
   public RMContextActiveNodes findEntry(String nodeidId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
-    if (session != null) {
-      RMContextNodesDTO entry = session.find(RMContextNodesDTO.class, nodeidId);
-      if (entry != null) {
-        return createRMContextNodesEntry(entry);
-      }
+    RMContextNodesDTO entry = session.find(RMContextNodesDTO.class, nodeidId);
+    RMContextActiveNodes result = null;
+    if (entry != null) {
+      result = createRMContextNodesEntry(entry);
     }
-    return null;
+    session.release(entry);
+    return result;
   }
 
   @Override
@@ -74,11 +74,13 @@ public class RMContextActiveNodesClusterJ
         qb.createQueryDefinition(RMContextNodesDTO.class);
     HopsQuery<RMContextNodesDTO> query = session.createQuery(dobj);
 
-    List<RMContextNodesDTO> results = query.getResultList();
-    if (results != null && !results.isEmpty()) {
-      return createRMContextNodesList(results);
+    List<RMContextNodesDTO> queryResults = query.getResultList();
+    List<RMContextActiveNodes> result = null;
+    if (queryResults != null && !queryResults.isEmpty()) {
+      result = createRMContextNodesList(queryResults);
     }
-    return null;
+    session.release(queryResults);
+    return result;
   }
 
   @Override
@@ -90,7 +92,7 @@ public class RMContextActiveNodesClusterJ
       toPersist.add(createPersistable(req, session));
     }
     session.savePersistentAll(toPersist);
-    session.flush();
+    session.release(toPersist);
   }
 
   @Override
@@ -103,7 +105,7 @@ public class RMContextActiveNodesClusterJ
           getNodeId()));
     }
     session.deletePersistentAll(toPersist);
-    session.flush();
+    session.release(toPersist);
   }
 
   private RMContextNodesDTO createPersistable(RMContextActiveNodes entry,

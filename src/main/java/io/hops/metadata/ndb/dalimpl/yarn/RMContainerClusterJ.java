@@ -36,10 +36,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class RMContainerClusterJ
     implements TablesDef.RMContainerTableDef, RMContainerDataAccess<RMContainer> {
-
+private static final Log LOG = LogFactory.getLog(RMContainerClusterJ.class);
   @PersistenceCapable(table = TABLE_NAME)
   public interface RMContainerDTO {
 
@@ -89,6 +93,25 @@ public class RMContainerClusterJ
 
     void setexitstatus(int exitstatus);
 
+    @Column(name = RESERVED_NODE_ID)
+    String getreservednodeid();
+
+    void setreservednodeid(String reservednodeid);
+
+    @Column(name = RESERVED_PRIORITY)
+    int getreservedpriority();
+
+    void setreservedpriority(int reservedpriority);
+
+    @Column(name = RESERVED_MEMORY)
+    int getreservedmemory();
+
+    void setreservedmemory(int reservedmemory);
+
+    @Column(name = RESERVED_VCORES)
+    int getreservedvcores();
+
+    void setreservedvcores(int reservedvcores);
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -101,13 +124,15 @@ public class RMContainerClusterJ
         qb.createQueryDefinition(RMContainerDTO.class);
     HopsQuery<RMContainerDTO> query = session.
         createQuery(dobj);
-    List<RMContainerDTO> results = query.
+    List<RMContainerDTO> queryResults = query.
         getResultList();
-    return createMap(results);
+
+    Map<String,RMContainer> result = createMap(queryResults);
+    session.release(queryResults);
+    return result;
   }
 
   @Override
-
   public void addAll(Collection<RMContainer> toAdd) throws StorageException {
     HopsSession session = connector.obtainSession();
 
@@ -116,9 +141,9 @@ public class RMContainerClusterJ
     for (RMContainer hop : toAdd) {
       toPersist.add(createPersistable(hop, session));
     }
-
     session.savePersistentAll(toPersist);
     session.flush();
+    session.release(toPersist);
   }
 
   @Override
@@ -133,21 +158,42 @@ public class RMContainerClusterJ
               getContainerIdID()));
     }
     session.deletePersistentAll(toPersist);
+    session.release(toPersist);
   }
 
   @Override
+  public void remove(RMContainer toRemove)
+      throws StorageException {
+    HopsSession session = connector.obtainSession();
+    RMContainerDTO dto = session.
+          newInstance(RMContainerClusterJ.RMContainerDTO.class, toRemove.
+              getContainerIdID());
+    session.deletePersistent(dto);
+    session.release(dto);
+  }
+  
+  @Override
   public void add(RMContainer rmcontainer) throws StorageException {
     HopsSession session = connector.obtainSession();
-    session.savePersistent(createPersistable(rmcontainer, session));
+    RMContainerDTO dto = createPersistable(rmcontainer, session);
+    session.savePersistent(dto);
     session.flush();
+    session.release(dto);
   }
 
   private RMContainer createHopRMContainer(RMContainerDTO rMContainerDTO) {
 
     return new RMContainer(rMContainerDTO.getcontaineridid(),
-        rMContainerDTO.getappattemptidid(), rMContainerDTO.getnodeidid(),
-        rMContainerDTO.getuser(), rMContainerDTO.getstarttime(),
-        rMContainerDTO.getfinishtime(), rMContainerDTO.getstate(),
+        rMContainerDTO.getappattemptidid(),
+            rMContainerDTO.getnodeidid(),
+            rMContainerDTO.getuser(),
+            rMContainerDTO.getreservednodeid(),
+            rMContainerDTO.getreservedpriority(),
+            rMContainerDTO.getreservedmemory(),
+            rMContainerDTO.getreservedvcores(),
+            rMContainerDTO.getstarttime(),
+            rMContainerDTO.getfinishtime(),
+            rMContainerDTO.getstate(),
         rMContainerDTO.getfinishedstatusstate(),
         rMContainerDTO.getexitstatus());
 
@@ -167,6 +213,10 @@ public class RMContainerClusterJ
     rMContainerDTO.setstate(hop.getState());
     rMContainerDTO.setfinishedstatusstate(hop.getFinishedStatusState());
     rMContainerDTO.setexitstatus(hop.getExitStatus());
+    rMContainerDTO.setreservednodeid(hop.getReservedNodeIdID());
+    rMContainerDTO.setreservedpriority(hop.getReservedPriorityID());
+    rMContainerDTO.setreservedmemory(hop.getReservedMemory());
+    rMContainerDTO.setreservedvcores(hop.getReservedVCores());
 
     return rMContainerDTO;
   }

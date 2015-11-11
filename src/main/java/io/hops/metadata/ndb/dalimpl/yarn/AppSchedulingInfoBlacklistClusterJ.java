@@ -69,9 +69,12 @@ public class AppSchedulingInfoBlacklistClusterJ
         qb.createQueryDefinition(AppSchedulingInfoBlacklistDTO.class);
     HopsQuery<AppSchedulingInfoBlacklistDTO> query = session.
         createQuery(dobj);
-    List<AppSchedulingInfoBlacklistDTO> results = query.
+    List<AppSchedulingInfoBlacklistDTO> queryResults = query.
         getResultList();
-    return createMap(results);
+    Map<String,List<AppSchedulingInfoBlacklist>> result = 
+            createMap(queryResults);
+    session.release(queryResults);
+    return result;
   }
 
   @Override
@@ -86,6 +89,7 @@ public class AppSchedulingInfoBlacklistClusterJ
       toPersist.add(persistable);
     }
     session.savePersistentAll(toPersist);
+    session.release(toPersist);
   }
   
   @Override
@@ -103,6 +107,7 @@ public class AppSchedulingInfoBlacklistClusterJ
           objarr));
     }
     session.deletePersistentAll(toPersist);
+    session.release(toPersist);
   }
 
   private AppSchedulingInfoBlacklist createHopAppSchedulingInfoBlacklist(
