@@ -63,6 +63,12 @@ public class ContainerIdToCleanClusterJ implements
     String getcontainerid();
 
     void setcontainerid(String containerid);
+    
+    @Column(name = PENDING_EVENT_ID)
+    int getpendingeventid();
+
+    void setpendingeventid(int pendingeventid);
+    
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -81,11 +87,13 @@ public class ContainerIdToCleanClusterJ implements
     dobj.where(pred);
     HopsQuery<ContainerIdToCleanDTO> query = session.createQuery(dobj);
     query.setParameter(RMNODEID, rmnodeId);
-    List<ContainerIdToCleanDTO> results = query.getResultList();
+    List<ContainerIdToCleanDTO> queryResults = query.getResultList();
     LOG.debug(
         "HOP :: ClusterJ ContainerIdToClean.findByRMNode - FINISH:" + rmnodeId);
-    if (results != null && !results.isEmpty()) {
-      return createContainersToCleanList(results);
+    if (queryResults != null && !queryResults.isEmpty()) {
+      List<ContainerId> results = createContainersToCleanList(queryResults);
+      session.release(queryResults);
+      return results;
     }
     return null;
   }
@@ -100,11 +108,12 @@ public class ContainerIdToCleanClusterJ implements
         qb.createQueryDefinition(ContainerIdToCleanDTO.class);
     HopsQuery<ContainerIdToCleanDTO> query = session.
         createQuery(dobj);
-    List<ContainerIdToCleanDTO> results = query.
+    List<ContainerIdToCleanDTO> queryResults = query.
         getResultList();
     LOG.debug("HOP :: ClusterJ ContainerIdToClean.findByRMNode - FINISH");
-
-    return createMap(results);
+    Map<String, Set<ContainerId>> result = createMap(queryResults);
+    session.release(queryResults);
+    return result;
   }
 
   @Override
@@ -117,11 +126,10 @@ public class ContainerIdToCleanClusterJ implements
       toModify.add(createPersistable(hop, session));
     }
     session.savePersistentAll(toModify);
-    session.flush();
+    session.release(toModify);
   }
-
+  
   @Override
-
   public void removeAll(Collection<ContainerId> containers)
       throws StorageException {
     HopsSession session = connector.obtainSession();
@@ -131,7 +139,7 @@ public class ContainerIdToCleanClusterJ implements
       toRemove.add(createPersistable(hop, session));
     }
     session.deletePersistentAll(toRemove);
-    session.flush();
+    session.release(toRemove);
   }
 
   private ContainerIdToCleanDTO createPersistable(ContainerId hop,
@@ -141,12 +149,13 @@ public class ContainerIdToCleanClusterJ implements
     //Set values to persist new ContainerStatus
     dto.setrmnodeid(hop.getRmnodeid());
     dto.setcontainerid(hop.getContainerId());
+    dto.setpendingeventid(hop.getPendingEventId());
     return dto;
   }
 
   private ContainerId createHopContainerIdToClean(ContainerIdToCleanDTO dto) {
     ContainerId hop = new ContainerId(dto.getrmnodeid(), dto.
-        getcontainerid());
+        getcontainerid(),dto.getpendingeventid());
     return hop;
   }
 

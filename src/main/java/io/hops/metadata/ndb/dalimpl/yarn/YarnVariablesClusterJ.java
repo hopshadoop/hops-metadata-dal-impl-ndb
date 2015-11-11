@@ -61,23 +61,25 @@ public class YarnVariablesClusterJ
     LOG.debug("HOP :: ClusterJ YarnVariables.findById - START:" + id);
     HopsSession session = connector.obtainSession();
     YarnVariablesDTO yarnDTO;
-    if (session != null) {
-      if (id == Integer.MIN_VALUE) {
-        id = idVal;
-      }
-      yarnDTO = session.find(YarnVariablesDTO.class, id);
-      LOG.debug("HOP :: ClusterJ YarnVariables.findById - FINISH:" + id);
-      if (yarnDTO != null) {
-        return new YarnVariables(yarnDTO.getid(), yarnDTO.getvalue());
-      }
+    if (id == Integer.MIN_VALUE) {
+      id = idVal;
     }
-    return null;
+    yarnDTO = session.find(YarnVariablesDTO.class, id);
+    LOG.debug("HOP :: ClusterJ YarnVariables.findById - FINISH:" + id);
+    YarnVariables result = null;
+    if (yarnDTO != null) {
+      result = new YarnVariables(yarnDTO.getid(), yarnDTO.getvalue());
+    }
+    session.release(yarnDTO);
+    return result;
   }
 
   @Override
   public void add(YarnVariables toAdd) throws StorageException {
     HopsSession session = connector.obtainSession();
-    session.savePersistent(createPersistable(toAdd, session));
+    YarnVariablesDTO dto = createPersistable(toAdd, session);
+    session.savePersistent(dto);
+    session.release(dto);
   }
 
   private YarnVariablesDTO createPersistable(YarnVariables yarnVariables,
