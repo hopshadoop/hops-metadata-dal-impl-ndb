@@ -84,6 +84,7 @@ import io.hops.metadata.yarn.dal.AppSchedulingInfoDataAccess;
 import io.hops.metadata.yarn.dal.ContainerDataAccess;
 import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
 import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
+import io.hops.metadata.yarn.dal.ContainersLogsDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppLiveContainersDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppNewlyAllocatedContainersDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerNodeDataAccess;
@@ -379,6 +380,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         AppSchedulingInfoDataAccess.class,
         AppSchedulingInfoBlacklistDataAccess.class, ContainerDataAccess.class,
         ContainerIdToCleanDataAccess.class, ContainerStatusDataAccess.class,
+        ContainersLogsDataAccess.class,
         FiCaSchedulerAppLastScheduledContainerDataAccess.class,
         FiCaSchedulerAppLiveContainersDataAccess.class,
         FiCaSchedulerAppNewlyAllocatedContainersDataAccess.class,
@@ -530,6 +532,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
           } else if (e == ContainerStatusDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.ContainerStatusTableDef.TABLE_NAME);
+          } else if (e == ContainersLogsDataAccess.class) {
+            truncate(transactional,
+                io.hops.metadata.yarn.TablesDef.ContainersLogsTableDef.TABLE_NAME);
           } else if (e ==
               FiCaSchedulerAppLastScheduledContainerDataAccess.class) {
             truncate(transactional,
@@ -627,7 +632,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             session.currentTransaction().begin();
             session.deletePersistentAll(
                 YarnVariablesClusterJ.YarnVariablesDTO.class);
-            for (int j = 0; j <= 18; j++) {
+            for (int j = 0; j <= 19; j++) {
               YarnVariablesClusterJ.YarnVariablesDTO vd = session
                   .newInstance(YarnVariablesClusterJ.YarnVariablesDTO.class);
               vd.setid(j);

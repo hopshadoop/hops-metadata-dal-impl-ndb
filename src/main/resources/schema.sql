@@ -576,6 +576,17 @@ CREATE TABLE `yarn_containerstatus` (
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`rmnodeid`)$$
 
 
+delimiter $$
+
+CREATE TABLE `yarn_containers_logs` (
+  `containerid` VARCHAR(45) NOT NULL,
+  `start` INT NOT NULL,
+  `stop` INT NULL,
+  `exitstatus` INT NULL,
+  PRIMARY KEY (`containerid`),
+  INDEX `containerid_idx` (`containerid` ASC),
+  INDEX `exitstatus_idx` (`exitstatus` ASC)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`containerid`)$$
 
 
 delimiter $$
