@@ -1057,3 +1057,15 @@ CREATE TABLE `yarn_runnable_apps` (
   `isrunnable` BIT NOT NULL,
   PRIMARY KEY (`queuename`, `schedulerapp_id`))
 ENGINE = ndbcluster$$
+
+delimiter $$
+
+CREATE TABLE `yarn_projects_quota` (
+  `projectname` VARCHAR(45) NOT NULL,
+  `total` INT(11) DEFAULT '0',
+  `quota_remaining` INT(11)  DEFAULT '0',
+  PRIMARY KEY (`projectname`),
+  KEY total_idx(`total`),
+  KEY quota_remaining_idx(`quota_remaining`))
+ENGINE = ndbcluster$$
+
