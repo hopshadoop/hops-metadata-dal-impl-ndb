@@ -1,0 +1,3 @@
+# hopsndb-event-streaming
+The MySQL cluster’s epoch-driven Event API which provides streaming functionalities inspired us to build a high frequent event stream processing library to improve the scalability of Hops YARN. The purpose of this library to efficiently handle and process event streaming, and converting to Java objects that distributed
+YARN can process. Further, the library should be versatile that can be dynamically loaded in each  distributed YARN components(multiple ResourceTrackers and monolithic scheduler) as a normal native library loading with minimal source code modification in YARN.
