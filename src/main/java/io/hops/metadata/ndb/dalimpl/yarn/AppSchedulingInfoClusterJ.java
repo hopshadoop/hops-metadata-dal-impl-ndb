@@ -29,6 +29,7 @@ import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.TablesDef;
+import static io.hops.metadata.yarn.TablesDef.AppSchedulingInfoTableDef.USER;
 import io.hops.metadata.yarn.dal.AppSchedulingInfoDataAccess;
 import io.hops.metadata.yarn.entity.AppSchedulingInfo;
 
@@ -79,6 +80,16 @@ public class AppSchedulingInfoClusterJ implements
     byte getStoped();
 
     void setStoped(byte stoped);
+    
+    @Column(name = USER_NAME)
+    String getusername();
+
+    void setusername(String username);
+    
+    @Column(name = PROJECT_NAME)
+    String getprojectname();
+
+    void setprojectname(String projectname);
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -160,7 +171,8 @@ public class AppSchedulingInfoClusterJ implements
     appSchedulingInfoDTO.setuser(hop.getUser());
     appSchedulingInfoDTO.setPending(NdbBoolean.convert(hop.isPending()));
     appSchedulingInfoDTO.setStoped(NdbBoolean.convert(hop.isStoped()));
-    
+    appSchedulingInfoDTO.setusername(hop.getUserName());
+    appSchedulingInfoDTO.setprojectname(hop.getProjectName());
     return appSchedulingInfoDTO;
   }
 
