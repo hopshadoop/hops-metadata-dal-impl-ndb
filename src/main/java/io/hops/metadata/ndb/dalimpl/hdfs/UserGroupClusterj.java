@@ -35,7 +35,7 @@ import io.hops.metadata.ndb.wrapper.HopsSession;
 
 import java.util.List;
 
-public class UserGroupCluterj implements TablesDef.UsersGroupsTableDef,
+public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
     UserGroupDataAccess<User, Group>{
 
   @PersistenceCapable(table = TABLE_NAME)

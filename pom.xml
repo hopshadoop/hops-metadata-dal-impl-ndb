@@ -26,8 +26,7 @@
     <dependency>
       <groupId>com.mysql.ndb</groupId>
       <artifactId>clusterj-part-key-fix</artifactId>
-      <!--artifactId>clusterj</artifactId-->
-      <version>7.4.7</version>
+      <version>7.4.8</version>
     </dependency>
 
     <dependency>
@@ -71,7 +70,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.7</version>
+        <version>1.6</version>
         <executions>
           <execution>
             <id>make</id>
