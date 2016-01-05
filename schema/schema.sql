@@ -891,6 +891,8 @@ CREATE TABLE `yarn_allocated_containers` (
  `containerid` VARCHAR(45) NOT NULL,
  `responseid` INT NOT NULL,
 PRIMARY KEY (`applicationattemptid`, `containerid`,`responseid`),
+INDEX `applicationattemptid` (`applicationattemptid` ASC),
+INDEX `responseid` (`responseid` ASC),
 CONSTRAINT `appandresponseid`
     FOREIGN KEY (`applicationattemptid`)
     REFERENCES `yarn_allocate_response` (`applicationattemptid`)
