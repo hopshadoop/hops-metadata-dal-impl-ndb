@@ -1059,3 +1059,34 @@ CREATE TABLE `yarn_runnable_apps` (
   `isrunnable` BIT NOT NULL,
   PRIMARY KEY (`queuename`, `schedulerapp_id`))
 ENGINE = ndbcluster$$
+
+delimiter $$
+
+CREATE TABLE `yarn_projects_quota` (
+  `projectname` VARCHAR(100) NOT NULL,
+  `total` INT(11) DEFAULT '0',
+  `quota_remaining` INT(11)  DEFAULT '0',
+  PRIMARY KEY (`projectname`),
+  KEY total_idx(`total`),
+  KEY quota_remaining_idx(`quota_remaining`))
+ENGINE = ndbcluster$$
+
+delimiter $$
+
+CREATE TABLE `yarn_containers_logs` (
+  `container_id` VARCHAR(255) NOT NULL,
+  `start` BIGINT NOT NULL,
+  `stop` BIGINT  DEFAULT NULL,
+  `exit_status` INT  DEFAULT NULL,
+  PRIMARY KEY (`container_id`))
+ENGINE = ndbcluster$$
+
+delimiter $$
+
+CREATE TABLE `yarn_projects_daily_cost` (
+  `user` VARCHAR(255) NOT NULL,
+  `projectname` VARCHAR(100) NOT NULL,
+  `day` BIGINT NOT NULL,
+  `credits_used` INT  DEFAULT NULL,
+  PRIMARY KEY (`projectname`, `day`, `user`))
+ENGINE = ndbcluster$$

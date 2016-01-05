@@ -31,34 +31,26 @@ public class JniNdbEventStreaming implements DalNdbEventStreaming {
   private static final Log LOG = LogFactory.getLog(JniNdbEventStreaming.class);
 
   private static boolean nativeCodeLoaded = false;
+  private String SchedulerConfPath;
+  private String ResourceTrackerConfPath;
 
+  public void init(String SchedulerConfPath,
+          String ResourceTrackerConfPath) {
+    this.SchedulerConfPath = SchedulerConfPath;
+    this.ResourceTrackerConfPath = ResourceTrackerConfPath;
+  }
+  
   static {
     // Try to load native hopsndbevent library and set fallback flag appropriately
 
-    try {
-      System.loadLibrary("hopsndbevent");
+      System.loadLibrary("hopsyarn");
       LOG.info("Loaded the native-hopsndbevent library");
-      nativeCodeLoaded = true;
-    } catch (Throwable t) {
-            // Ignore failure to load
 
-      LOG.info("Failed to load native-hopsndbevent with error: " + t.
-              getMessage());
-      LOG.info("java.library.path="
-              + System.getProperty("java.library.path"));
-
-    }
-
-    if (!nativeCodeLoaded) {
-      LOG.warn(
-              "Unable to load native-hopsndbevent library for your platform... "
-              + "using builtin-java classes where applicable");
-    }
   }
 
     // native interface functions to start and close event api session. if same JVM start more session, this will crash
   // or gives buggy java objects !!!
-  private native void startEventAPISession(int isLeader);
+  private native void startEventAPISession(String jpath);
 
   private native void closeEventAPISession();
 
@@ -68,13 +60,13 @@ public class JniNdbEventStreaming implements DalNdbEventStreaming {
   }
 
   @Override
-  public synchronized void startHopsNdbEvetAPISession(boolean isLeader) {
+  public void startHopsNdbEvetAPISession(boolean isLeader) {
     LOG.info(
             "Application is requesting to start the api session... only one session per jvm");
     if(isLeader){
-      startEventAPISession(1);
+      startEventAPISession(SchedulerConfPath);
     }else{
-      startEventAPISession(0);
+      startEventAPISession(ResourceTrackerConfPath);
     }
     LOG.info("Successfully started the event api....");
   }

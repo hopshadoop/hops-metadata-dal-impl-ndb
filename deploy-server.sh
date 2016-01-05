@@ -9,4 +9,5 @@ server=glassfish@snurran.sics.se:/var/www/hops
 
 mvn clean install assembly:assembly -DskipTests
 scp target/hops-metadata-dal-impl-ndb-1.0-SNAPSHOT-jar-with-dependencies.jar $server/ndb-dal-$1-$2.jar
-
+scp target/classes/libhopsyarn.so $server/libhopsyarn-$1-$2.so
+scp schema/schema.sql $server/hops.sql
