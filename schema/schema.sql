@@ -720,10 +720,12 @@ CREATE TABLE `yarn_appschedulinginfo` (
   `applicationattemptid` VARCHAR(45) NOT NULL,
   `appid` VARCHAR(45) NOT NULL,
   `queuename` VARCHAR(45) NULL,
-  `user` VARCHAR(45) NULL,
+  `user` VARCHAR(251) NULL,
   `containeridcounter` INT NULL,
   `pending` BIT(8) NULL,
   `stoped` BIT(8) NULL,
+  `username` varchar(150) NULL,
+  `projectname` varchar(100) NULL,
   PRIMARY KEY (`applicationattemptid`),
   INDEX `appid_idx` (`appid` ASC),
   CONSTRAINT `appid`
