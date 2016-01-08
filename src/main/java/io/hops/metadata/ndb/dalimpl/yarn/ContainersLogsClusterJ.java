@@ -38,14 +38,14 @@ public class ContainersLogsClusterJ implements
     void setcontainerid(String containerid);
 
     @Column(name = START)
-    int getstart();
+    long getstart();
 
-    void setstart(int start);
+    void setstart(long start);
 
     @Column(name = STOP)
-    int getstop();
+    long getstop();
 
-    void setstop(int stop);
+    void setstop(long stop);
 
     @Column(name = EXITSTATUS)
     int getexitstatus();
