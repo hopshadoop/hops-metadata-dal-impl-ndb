@@ -24,10 +24,9 @@
     </dependency>
     
     <dependency>
-    <groupId>com.mysql.ndb</groupId>
-    <artifactId>clusterj-part-key-fix</artifactId>
-    <!--artifactId>clusterj</artifactId-->
-    <version>7.4.7</version>
+      <groupId>com.mysql.ndb</groupId>
+      <artifactId>clusterj-part-key-fix</artifactId>
+      <version>7.4.7</version>
     </dependency>
 
     <dependency>
@@ -60,14 +59,41 @@
   </repositories>
 
   <build>
-      <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh-external</artifactId>
-                <version>1.0</version>
-            </extension>
-        </extensions>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh-external</artifactId>
+        <version>1.0</version>
+      </extension>
+    </extensions>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <id>make</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <mkdir dir="${project.build.directory}/native"/>
+                <exec executable="cmake" dir="${project.build.directory}/native" failonerror="true">
+                  <arg line="${basedir}/src/ -DJVM_ARCH_DATA_MODEL=${sun.arch.data.model}"/>
+                </exec>
+                <exec executable="make" dir="${project.build.directory}/native" failonerror="true">
+                  <arg line="VERBOSE=1"/>
+                </exec>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
@@ -86,15 +112,23 @@
         </configuration>
       </plugin>
     </plugins>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>schema</directory>
+      </resource>
+    </resources>
   </build>
   
-<distributionManagement>
-     <repository>
-            <id>sics-release-repository</id>
-            <name>SICS Repository</name>
-            <url>scpexe://kompics.i.sics.se/home/maven/repository</url>
-        </repository>
-        <downloadUrl>http://kompics.sics.se/maven/repository</downloadUrl>
+  <distributionManagement>
+    <repository>
+      <id>sics-release-repository</id>
+      <name>SICS Repository</name>
+      <url>scpexe://kompics.i.sics.se/home/maven/repository</url>
+    </repository>
+    <downloadUrl>http://kompics.sics.se/maven/repository</downloadUrl>
   </distributionManagement>
 
 </project>

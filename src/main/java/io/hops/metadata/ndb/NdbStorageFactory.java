@@ -82,7 +82,7 @@ import io.hops.metadata.ndb.dalimpl.hdfs.SizeLogClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.StorageIdMapClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.UnderReplicatedBlockClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.UserClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.UserGroupCluterj;
+import io.hops.metadata.ndb.dalimpl.hdfs.UserGroupClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.VariableClusterj;
 import io.hops.metadata.ndb.dalimpl.yarn.AppSchedulingInfoBlacklistClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.AppSchedulingInfoClusterJ;
@@ -345,7 +345,7 @@ public class NdbStorageFactory implements DalStorageFactory {
             new CSLeafQueueUserInfoClusterJ());
     dataAccessMap.put(UserDataAccess.class, new UserClusterj());
     dataAccessMap.put(GroupDataAccess.class, new GroupClusterj());
-    dataAccessMap.put(UserGroupDataAccess.class, new UserGroupCluterj());
+    dataAccessMap.put(UserGroupDataAccess.class, new UserGroupClusterj());
   }
 
   @Override
