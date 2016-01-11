@@ -293,4 +293,16 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
   public void flush() {
     throw new UnsupportedOperationException("Not supported yet.");
   }
+
+  @Override
+  public String getClusterConnectString() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public String getDatabaseName() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  
+  
 }

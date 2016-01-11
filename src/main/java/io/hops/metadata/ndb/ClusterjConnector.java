@@ -139,7 +139,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   private DBSessionProvider dbSessionProvider = null;
   static ThreadLocal<DBSession> sessions = new ThreadLocal<DBSession>();
   static final Log LOG = LogFactory.getLog(ClusterjConnector.class);
-
+  private String clusterConnectString;
+  private String databaseName;
+  
   private ClusterjConnector() {
   }
 
@@ -153,8 +155,11 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       LOG.warn("SessionFactory is already initialized");
       return;
     }
+    
+    clusterConnectString = (String) conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING);
     LOG.info("Database connect string: " +
         conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING));
+    databaseName = (String) conf.get(Constants.PROPERTY_CLUSTER_DATABASE);
     LOG.info("Database name: " + conf.get(Constants.PROPERTY_CLUSTER_DATABASE));
     LOG.info("Max Transactions: " +
         conf.get(Constants.PROPERTY_CLUSTER_MAX_TRANSACTIONS));
@@ -165,7 +170,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         Integer.parseInt((String) conf.get("io.hops.session.reuse.count"));
     dbSessionProvider =
         new DBSessionProvider(conf, reuseCount, initialPoolSize);
-
+    
     isInitialized = true;
   }
 
@@ -683,4 +688,13 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     }
     dbSession.getSession().flush();
   }
+
+  public String getClusterConnectString() {
+    return clusterConnectString;
+  }
+
+  public String getDatabaseName() {
+    return databaseName;
+  }
+  
 }

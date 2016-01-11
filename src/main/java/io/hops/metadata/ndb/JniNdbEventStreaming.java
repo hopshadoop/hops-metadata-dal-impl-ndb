@@ -33,11 +33,16 @@ public class JniNdbEventStreaming implements DalNdbEventStreaming {
   private static boolean nativeCodeLoaded = false;
   private String SchedulerConfPath;
   private String ResourceTrackerConfPath;
-
+  private String connectionString;
+  private String databaseName;
+  
   public void init(String SchedulerConfPath,
-          String ResourceTrackerConfPath) {
+          String ResourceTrackerConfPath, String connectionString,
+        String databaseName) {
     this.SchedulerConfPath = SchedulerConfPath;
     this.ResourceTrackerConfPath = ResourceTrackerConfPath;
+    this.connectionString = connectionString;
+    this.databaseName = databaseName;
   }
   
   static {
@@ -50,7 +55,8 @@ public class JniNdbEventStreaming implements DalNdbEventStreaming {
 
     // native interface functions to start and close event api session. if same JVM start more session, this will crash
   // or gives buggy java objects !!!
-  private native void startEventAPISession(String jpath);
+  private native void startEventAPISession(String jpath, String jConnectionString,
+        String jDatabaseName);
 
   private native void closeEventAPISession();
 
@@ -64,9 +70,9 @@ public class JniNdbEventStreaming implements DalNdbEventStreaming {
     LOG.info(
             "Application is requesting to start the api session... only one session per jvm");
     if(isLeader){
-      startEventAPISession(SchedulerConfPath);
+      startEventAPISession(SchedulerConfPath, connectionString, databaseName);
     }else{
-      startEventAPISession(ResourceTrackerConfPath);
+      startEventAPISession(ResourceTrackerConfPath, connectionString, databaseName);
     }
     LOG.info("Successfully started the event api....");
   }
