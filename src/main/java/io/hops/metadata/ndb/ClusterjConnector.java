@@ -668,4 +668,14 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   public void dropAndRecreateDB() throws StorageException {
     MysqlServerConnector.getInstance().dropAndRecreateDB();
   }
+  
+  @Override
+  public void flush() throws StorageException {
+    DBSession dbSession = sessions.get();
+    if (dbSession == null) {
+      dbSession = dbSessionProvider.getSession();
+      sessions.set(dbSession);
+    }
+    dbSession.getSession().flush();
+  }
 }
