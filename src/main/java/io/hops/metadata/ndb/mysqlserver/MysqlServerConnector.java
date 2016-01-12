@@ -288,4 +288,9 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
             StorageConnector.class.getClassLoader().getResourceAsStream(configFile);
     return inStream;
   }
+  
+  @Override
+  public void flush() {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
 }

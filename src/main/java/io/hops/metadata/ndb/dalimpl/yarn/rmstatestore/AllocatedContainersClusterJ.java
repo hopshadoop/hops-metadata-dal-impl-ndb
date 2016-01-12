@@ -72,31 +72,29 @@ public static final Log LOG = LogFactory.getLog(AllocatedContainersClusterJ.clas
       //put new values
       toPersist.addAll(createPersistable(resp, session));
       //remove old values
-    HopsQueryBuilder qb = session.getQueryBuilder();
+      HopsQueryBuilder qb = session.getQueryBuilder();
       HopsQueryDomainType<AllocatedContainerDTO> dobj = qb.
               createQueryDefinition(AllocatedContainerDTO.class);
       HopsPredicate pred1 = dobj.get(APPLICATIONATTEMPTID).equal(dobj.param(
               APPLICATIONATTEMPTID));
       dobj.where(pred1);
-      HopsPredicate pred2 = dobj.get(RESPONSEID).equal(dobj.param(RESPONSEID));
-      dobj.where(pred2);
       HopsQuery<AllocatedContainerDTO> query = session.createQuery(dobj);
       query.setParameter(APPLICATIONATTEMPTID, resp.getApplicationattemptid());
-      query.setParameter(RESPONSEID, resp.getResponseId()-1);
-      remove ++;
+      remove++;
       query.deletePersistentAll();
     }
-      tt2 = tt2 + System.currentTimeMillis() - start;
-      add+=toPersist.size();
+    tt2 = tt2 + System.currentTimeMillis() - start;
+    add += toPersist.size();
     session.savePersistentAll(toPersist);
     tt3 = tt3 + System.currentTimeMillis() - start;
     session.release(toPersist);
     nbPersist++;
-      if(nbPersist%100 == 0){
-        double avgt1 = tt1/nbPersist;
-        double avgt2 = tt2/nbPersist;
-        double avgt3 = tt3/nbPersist;
-        LOG.info("allocated containers update avg time: " + avgt1 + ", " + avgt2 + ", " + avgt3);
+    if (nbPersist % 100 == 0) {
+      double avgt1 = tt1 / nbPersist;
+      double avgt2 = tt2 / nbPersist;
+      double avgt3 = tt3 / nbPersist;
+      LOG.info("allocated containers update avg time: " + avgt1 + ", " + avgt2
+              + ", " + avgt3);
     }
   }
 

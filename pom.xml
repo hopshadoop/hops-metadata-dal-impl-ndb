@@ -26,7 +26,7 @@
     <dependency>
       <groupId>com.mysql.ndb</groupId>
       <artifactId>clusterj-part-key-fix</artifactId>
-      <version>7.4.8</version>
+      <version>7.4.7</version>
     </dependency>
 
     <dependency>
