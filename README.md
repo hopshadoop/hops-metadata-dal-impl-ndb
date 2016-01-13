@@ -21,6 +21,8 @@ Development Notes
 Updates to schema/schema.sql should be copied to:
 hops-hadoop-chef/templates/default/hops.sql.erb
 
+Update to src/main/native/streaming/resources/RM_EventAPIConfig.ini and src/main/native/streaming/resources/RT_EventAPIConfig.ini should be copied to:
+hops-hadoop-chef/templates/default/RM_EventAPIConfig.ini.erb and hops-hadoop-chef/templates/default/RT_EventAPIConfig.ini.erb
 
 # License
 

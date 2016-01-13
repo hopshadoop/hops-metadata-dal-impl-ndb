@@ -31,34 +31,32 @@ public class JniNdbEventStreaming implements DalNdbEventStreaming {
   private static final Log LOG = LogFactory.getLog(JniNdbEventStreaming.class);
 
   private static boolean nativeCodeLoaded = false;
-
+  private String SchedulerConfPath;
+  private String ResourceTrackerConfPath;
+  private String connectionString;
+  private String databaseName;
+  
+  public void init(String SchedulerConfPath,
+          String ResourceTrackerConfPath, String connectionString,
+        String databaseName) {
+    this.SchedulerConfPath = SchedulerConfPath;
+    this.ResourceTrackerConfPath = ResourceTrackerConfPath;
+    this.connectionString = connectionString;
+    this.databaseName = databaseName;
+  }
+  
   static {
     // Try to load native hopsndbevent library and set fallback flag appropriately
 
-    try {
-      System.loadLibrary("hopsndbevent");
+      System.loadLibrary("hopsyarn-1.0");
       LOG.info("Loaded the native-hopsndbevent library");
-      nativeCodeLoaded = true;
-    } catch (Throwable t) {
-            // Ignore failure to load
 
-      LOG.info("Failed to load native-hopsndbevent with error: " + t.
-              getMessage());
-      LOG.info("java.library.path="
-              + System.getProperty("java.library.path"));
-
-    }
-
-    if (!nativeCodeLoaded) {
-      LOG.warn(
-              "Unable to load native-hopsndbevent library for your platform... "
-              + "using builtin-java classes where applicable");
-    }
   }
 
     // native interface functions to start and close event api session. if same JVM start more session, this will crash
   // or gives buggy java objects !!!
-  private native void startEventAPISession();
+  private native void startEventAPISession(String jpath, String jConnectionString,
+        String jDatabaseName);
 
   private native void closeEventAPISession();
 
@@ -68,10 +66,14 @@ public class JniNdbEventStreaming implements DalNdbEventStreaming {
   }
 
   @Override
-  public void startHopsNdbEvetAPISession() {
+  public void startHopsNdbEvetAPISession(boolean isLeader) {
     LOG.info(
             "Application is requesting to start the api session... only one session per jvm");
-    startEventAPISession();
+    if(isLeader){
+      startEventAPISession(SchedulerConfPath, connectionString, databaseName);
+    }else{
+      startEventAPISession(ResourceTrackerConfPath, connectionString, databaseName);
+    }
     LOG.info("Successfully started the event api....");
   }
 

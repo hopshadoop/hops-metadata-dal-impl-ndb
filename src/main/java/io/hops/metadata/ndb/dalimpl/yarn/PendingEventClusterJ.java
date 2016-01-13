@@ -103,8 +103,8 @@ public class PendingEventClusterJ
             = new ArrayList<PendingEventClusterJ.PendingEventDTO>();
     for (PendingEvent pendEvent : toAddPendingEvent) {
       PendingEventClusterJ.PendingEventDTO pendingEventDTO = createPersistable(
-              new PendingEvent(pendEvent.getRmnodeId(), pendEvent.
-                      getType(), pendEvent.getStatus(), pendEvent.getId()),
+              new PendingEvent(pendEvent.getId().getNodeId(), pendEvent.
+                      getType(), pendEvent.getStatus(), pendEvent.getId().getEventId()),
               session);
       toPersist.add(pendingEventDTO);
     }
@@ -191,10 +191,10 @@ public class PendingEventClusterJ
       HopsSession session) throws StorageException {
     PendingEventDTO DTO = session.newInstance(PendingEventDTO.class);
     //Set values to persist new persistedEvent
-    DTO.setrmnodeid(hopPersistedEvent.getRmnodeId());
+    DTO.setrmnodeid(hopPersistedEvent.getId().getNodeId());
     DTO.setType(hopPersistedEvent.getType());
     DTO.setStatus(hopPersistedEvent.getStatus());
-    DTO.setId(hopPersistedEvent.getId());
+    DTO.setId(hopPersistedEvent.getId().getEventId());
     return DTO;
   }
 

@@ -111,9 +111,23 @@ public class JustLaunchedContainersClusterJ
     dobj.where(pred);
     HopsQuery<JustLaunchedContainersDTO> query = session.createQuery(dobj);
     query.setParameter(RMNODEID, rmnodeId);
-    List<JustLaunchedContainersDTO> queryResults = query.getResultList();
-    LOG.debug("HOP :: ClusterJ JustLaunchedContainers.findByRMNode - FINISH:" +
-        rmnodeId);
+    List<JustLaunchedContainersDTO> queryResults = null;
+    boolean flag = false;
+    int count = 0;
+    while (!flag && count < 10) {
+      count++;
+      try {
+        queryResults = query.getResultList();
+        flag = true;
+      } catch (StorageException e) {
+        LOG.error("storage exception for node " + rmnodeId, e);
+        if (count >= 10) {
+          throw e;
+        }
+      }
+    }
+    LOG.info("HOP :: ClusterJ JustLaunchedContainers.findByRMNode - FINISH:"
+            + rmnodeId + " after " + count);
     List<JustLaunchedContainers> result = null;
     if (queryResults != null && !queryResults.isEmpty()) {
       result = createJustLaunchedContainersList(queryResults);

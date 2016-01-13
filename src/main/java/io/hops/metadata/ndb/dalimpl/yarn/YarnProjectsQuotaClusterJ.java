@@ -97,7 +97,7 @@ public class YarnProjectsQuotaClusterJ implements
 
   @Override
   public Map<String, YarnProjectsQuota> getAll() throws StorageException {
-    LOG.info("HOP :: ClusterJ YarnProjectsQuota.getAll - START");
+    LOG.debug("HOP :: ClusterJ YarnProjectsQuota.getAll - START");
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
@@ -109,7 +109,7 @@ public class YarnProjectsQuotaClusterJ implements
 
     List<YarnProjectsQuotaClusterJ.YarnProjectsQuotaDTO> queryResults = query.
             getResultList();
-    LOG.info("HOP :: ClusterJ YarnProjectsQuota.getAll - STOP");
+    LOG.debug("HOP :: ClusterJ YarnProjectsQuota.getAll - STOP");
     Map<String, YarnProjectsQuota> result = createMap(queryResults);
     session.release(queryResults);
     return result;
