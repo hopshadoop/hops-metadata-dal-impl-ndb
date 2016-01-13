@@ -70,6 +70,20 @@ public class ContainersLogsClusterJ implements
   }
 
   @Override
+  public void removeAll(Collection<ContainersLogs> containersLogs) throws
+          StorageException {
+    HopsSession session = connector.obtainSession();
+    List<ContainersLogsDTO> toRemove = new ArrayList<ContainersLogsDTO>();
+
+    for (ContainersLogs entry : containersLogs) {
+      toRemove.add(createPersistable(entry, session));
+    }
+
+    session.deletePersistentAll(toRemove);
+    session.release(toRemove);
+  }
+  
+  @Override
   public Map<String, ContainersLogs> getAll() throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
