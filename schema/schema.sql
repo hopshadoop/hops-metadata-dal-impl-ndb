@@ -1071,7 +1071,7 @@ CREATE TABLE `yarn_projects_quota` (
   PRIMARY KEY (`projectname`),
   KEY total_idx(`total`),
   KEY quota_remaining_idx(`quota_remaining`))
-ENGINE = ndbcluster$$
+ENGINE = ndbcluster PARTITION BY KEY(projectname)$$
 
 delimiter $$
 
@@ -1081,7 +1081,7 @@ CREATE TABLE `yarn_containers_logs` (
   `stop` BIGINT  DEFAULT NULL,
   `exit_status` INT  DEFAULT NULL,
   PRIMARY KEY (`container_id`))
-ENGINE = ndbcluster$$
+ENGINE = ndbcluster PARTITION BY KEY(projectname)$$
 
 delimiter $$
 
@@ -1091,4 +1091,12 @@ CREATE TABLE `yarn_projects_daily_cost` (
   `day` BIGINT NOT NULL,
   `credits_used` INT  DEFAULT NULL,
   PRIMARY KEY (`projectname`, `day`, `user`))
-ENGINE = ndbcluster$$
+ENGINE = ndbcluster PARTITION BY KEY(day)$$
+
+delimiter $$
+
+CREATE TABLE `yarn_containers_checkpoint` (
+  `container_id` VARCHAR(255) NOT NULL,
+  `checkpoint` BIGINT NOT NULL,
+  PRIMARY KEY (`container_id`))
+ENGINE = ndbcluster PARTITION BY KEY(container_id)$$

@@ -79,6 +79,7 @@ public class JniNdbEventStreaming implements DalNdbEventStreaming {
 
   @Override
   public void closeHopsNdbEventAPISession() {
+    LOG.info("closing EventAPI session");
     closeEventAPISession();
   }
 

@@ -84,6 +84,7 @@ import io.hops.metadata.yarn.dal.AppSchedulingInfoDataAccess;
 import io.hops.metadata.yarn.dal.ContainerDataAccess;
 import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
 import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
+import io.hops.metadata.yarn.dal.ContainersCheckPointsDataAccess;
 import io.hops.metadata.yarn.dal.ContainersLogsDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppLiveContainersDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppNewlyAllocatedContainersDataAccess;
@@ -108,6 +109,8 @@ import io.hops.metadata.yarn.dal.FiCaSchedulerAppSchedulingOpportunitiesDataAcce
 import io.hops.metadata.yarn.dal.NodeHBResponseDataAccess;
 import io.hops.metadata.yarn.dal.SchedulerApplicationDataAccess;
 import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
+import io.hops.metadata.yarn.dal.YarnProjectsDailyCostDataAccess;
+import io.hops.metadata.yarn.dal.YarnProjectsQuotaDataAccess;
 import io.hops.metadata.yarn.dal.YarnVariablesDataAccess;
 import io.hops.metadata.yarn.dal.capacity.CSQueueDataAccess;
 import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservedContainersDataAccess;
@@ -409,7 +412,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         RunnableAppsDataAccess.class,
         CSQueueDataAccess.class,
         NextHeartbeatDataAccess.class,
-        NodeHBResponseDataAccess.class);
+        NodeHBResponseDataAccess.class, 
+        YarnProjectsQuotaDataAccess.class, YarnProjectsDailyCostDataAccess.class,
+            ContainersCheckPointsDataAccess.class);
   }
 
   private boolean format(boolean transactional,
@@ -540,6 +545,15 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
           } else if (e == ContainersLogsDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.ContainersLogsTableDef.TABLE_NAME);
+          }else if(e==YarnProjectsQuotaDataAccess.class) {
+            truncate(transactional,
+                    io.hops.metadata.yarn.TablesDef.YarnProjectsQuotaTableDef.TABLE_NAME);
+          } else if (e == YarnProjectsDailyCostDataAccess.class) {
+            truncate(transactional,
+                    io.hops.metadata.yarn.TablesDef.YarnProjectsDailyCostTableDef.TABLE_NAME);
+          } else if (e == ContainersCheckPointsDataAccess.class) {
+            truncate(transactional,
+                    io.hops.metadata.yarn.TablesDef.ContainersCheckPointsTableDef.TABLE_NAME);
           } else if (e ==
               FiCaSchedulerAppLastScheduledContainerDataAccess.class) {
             truncate(transactional,
