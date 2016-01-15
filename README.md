@@ -7,7 +7,7 @@ How to build
 ===
 
 ```
-mvn clean install
+mvn clean install -DskipTests
 ```
 
 If you get an error that LIBNDBPATH is not set (or not correct), go to the [Hops](https://github.com/hopshadoop/hops) folder, and then the /target/lib folder. Copy the complete path (find it with pwd), and add it to your .bashrc file:
