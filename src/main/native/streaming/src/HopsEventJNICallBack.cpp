@@ -34,10 +34,12 @@ JNIEXPORT void JNICALL Java_io_hops_metadata_ndb_JniNdbEventStreaming_closeEvent
 }
 
 JNIEXPORT void JNICALL Java_io_hops_metadata_ndb_JniNdbEventStreaming_startEventAPISession(
-		JNIEnv *env, jobject thisObj, jstring jpath) {
+		JNIEnv *env, jobject thisObj, jstring jpath, jstring jConnectionString,
+        jstring jDatabaseName) {
 
   const char * path = env->GetStringUTFChars(jpath,0);
-
+  const char * l_NdbConnectionString = env->GetStringUTFChars(jConnectionString, 0);
+  const char * l_NdbDatabaseName = env->GetStringUTFChars(jDatabaseName, 0);
 	HopsConfigFile *l_ptrCFile=NULL;
   printf("starting event api session with config file: %s\n", path);
     // load the rt configuration file
@@ -66,7 +68,8 @@ JNIEXPORT void JNICALL Java_io_hops_metadata_ndb_JniNdbEventStreaming_startEvent
 		printf(
 				"[JNI][%s] ###################### Starting the  EventAPI and native methods ####################\n",
 				l_ptrTimeStamp);
-		HopsEventAPI::Instance()->initAPI(g_ptrGlobalJVM, l_ptrCFile);
+		HopsEventAPI::Instance()->initAPI(g_ptrGlobalJVM, l_ptrCFile, 
+            l_NdbConnectionString, l_NdbDatabaseName);
 	}
 	printf(
 			"[JNI][%s] ################## Initialization done , now starting callback ##################\n",

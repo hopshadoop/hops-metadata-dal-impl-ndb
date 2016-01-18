@@ -24,7 +24,8 @@ class HopsEventAPI {
 public:
 	static HopsEventAPI* Instance();
 	~HopsEventAPI();
-	void initAPI(JavaVM *_ptrJVM,HopsConfigFile *_ptrConf);
+	void initAPI(JavaVM *_ptrJVM,HopsConfigFile *_ptrConf, 
+  const char * l_zNdbConnectionString, const char * l_zNdbDatabaseName);
 	pthread_t * GetPthreadIdArray(int *_ptrSize);
 	void dropEvents();
 private:

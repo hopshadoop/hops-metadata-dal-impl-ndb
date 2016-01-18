@@ -14,7 +14,8 @@ extern "C" {
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_io_hops_metadata_ndb_JniNdbEventStreaming_startEventAPISession(
-		JNIEnv *, jobject, jstring);
+		JNIEnv *, jobject, jstring, jstring jConnectionString,
+        jstring jDatabaseName);
 
 /*
  * Class:     NdbEventStreaming
