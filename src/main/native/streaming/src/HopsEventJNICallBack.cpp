@@ -29,7 +29,7 @@ JNIEXPORT void JNICALL Java_io_hops_metadata_ndb_JniNdbEventStreaming_closeEvent
 		printf("[EventAPI] ########## Stopping thread ids - %ld\n",
 				l_pThradArray[i]);
 	}
-
+  HopsEventAPI::Instance()->dropEvents();
 
 }
 

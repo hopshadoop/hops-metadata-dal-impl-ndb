@@ -1081,7 +1081,7 @@ CREATE TABLE `yarn_containers_logs` (
   `stop` BIGINT  DEFAULT NULL,
   `exit_status` INT  DEFAULT NULL,
   PRIMARY KEY (`container_id`))
-ENGINE = ndbcluster PARTITION BY KEY(projectname)$$
+ENGINE = ndbcluster PARTITION BY KEY(container_id)$$
 
 delimiter $$
 

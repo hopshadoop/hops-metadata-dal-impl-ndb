@@ -9,6 +9,8 @@
 
 #include "../include/HopsEventAPI.h"
 #include "../include/HopsLoadSimulation.h"
+#include <pthread.h>
+
 using namespace cnf;
 
 #define MAX_TABLE_NAME_LENGTH 50
@@ -56,7 +58,10 @@ pthread_t * HopsEventAPI::GetPthreadIdArray(int *_ptrSize) {
 	return m_ptrThreadArray;
 }
 
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
 void HopsEventAPI::dropEvents() {
+  pthread_mutex_lock(&lock);
 	if (m_bAPIInitialized) {
 		// first stop pooling from db, dont get any events from ndb buffer
 		m_ptrEventThread->StopEventThread();
@@ -72,6 +77,7 @@ void HopsEventAPI::dropEvents() {
 		m_ptrEventThread->CancelEventThread();
 		delete m_ptrEventThread;
 	}
+  pthread_mutex_unlock(&lock);
 }
 void HopsEventAPI::initAPI(JavaVM *_ptrJVM, HopsConfigFile *_ptrConf,
         const char * l_zNdbConnectionString, const char * l_zNdbDatabaseName) {
