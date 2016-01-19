@@ -86,13 +86,18 @@
                 </exec>
                 <exec executable="make" dir="${project.build.directory}/native" failonerror="true">
                   <arg line="VERBOSE=1"/>
+                 </exec>
+                <exec command="cp classes/libhopsyarn.so classes/libhopsyarn-1.0.so" dir="${project.build.directory}" failonerror="true">
+                </exec>
+                <exec command="mvn install:install-file -Dfile=target/classes/libhopsyarn.so -DgroupId=io.hops.streaming 
+                            -DartifactId=libhopsyarn -Dversion=1.0 -Dpackaging=so -DlocalRepositoryPath=${maven.repo.local}" 
+                              dir="${project.build.directory}/.." failonerror="true">
                 </exec>
               </target>
             </configuration>
           </execution>
         </executions>
       </plugin>
-
 
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
