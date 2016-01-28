@@ -36,7 +36,7 @@ public class MySQLQueryHelper {
   public static final String SELECT_EXISTS = "select exists(%s)";
   public static final String SELECT_EXISTS_QUERY = "select * from %s";
   public static final String MIN = "select min(%s) from %s";
-  public static final String MAX = "select min(%s) from %s";
+  public static final String MAX = "select max(%s) from %s";
   
   private static MysqlServerConnector connector =
       MysqlServerConnector.getInstance();
