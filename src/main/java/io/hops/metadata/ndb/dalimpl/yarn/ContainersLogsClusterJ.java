@@ -80,6 +80,7 @@ public class ContainersLogsClusterJ implements
     }
 
     session.deletePersistentAll(toRemove);
+    session.flush();
     session.release(toRemove);
   }
   
