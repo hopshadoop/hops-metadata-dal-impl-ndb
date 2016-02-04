@@ -107,7 +107,7 @@ public class BlockInfoClusterj
   @Override
   public int countAllCompleteBlocks() throws StorageException {
     return MySQLQueryHelper.countWithCriterion(TABLE_NAME,
-            String.format("%s=%d", BLOCK_UNDER_CONSTRUCTION_STATE, 0));
+        String.format("%s=%d", BLOCK_UNDER_CONSTRUCTION_STATE, 0));
   }
 
   @Override
@@ -260,8 +260,7 @@ public class BlockInfoClusterj
   public List<BlockInfo> findBlockInfosByStorageId(int storageId)
           throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<ReplicaClusterj.ReplicaDTO> replicas =
-            ReplicaClusterj.getReplicas(session, storageId);
+    List<ReplicaClusterj.ReplicaDTO> replicas = ReplicaClusterj.getReplicas(session, storageId);
     long[] blockIds = new long[replicas.size()];
     int[] inodeIds = new int[replicas.size()];
     for (int i = 0; i < blockIds.length; i++) {
@@ -271,6 +270,12 @@ public class BlockInfoClusterj
     List<BlockInfo> ret = readBlockInfoBatch(session, inodeIds, blockIds);
     session.release(replicas);
     return ret;
+  }
+
+  @Override
+  public List<BlockInfo> findBlockInfosByHostId(String hostId) throws
+      StorageException {
+    throw new UnsupportedOperationException("Not implemented yet.");
   }
 
   @Override

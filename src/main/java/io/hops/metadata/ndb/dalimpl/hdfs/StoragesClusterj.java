@@ -110,9 +110,9 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
   private StorageDto createPersistable(Storage storage,
       HopsSession session) throws StorageException {
     StorageDto dto = session.newInstance(StorageDto.class);
-    dto.setStorageId(storage.getStorage_id());
-    dto.setHostId(storage.getHost_id());
-    dto.setStorageType(storage.getStorage_type());
+    dto.setStorageId(storage.getStorageID());
+    dto.setHostId(storage.getHostID());
+    dto.setStorageType(storage.getStorageType());
     return dto;
   }
 
