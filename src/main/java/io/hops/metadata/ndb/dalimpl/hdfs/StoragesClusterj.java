@@ -76,7 +76,7 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
   }
 
   @Override
-  public List<Storage> find(String hostId) throws StorageException {
+  public List<Storage> findByHostUuid(String uuid) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<StorageDto> dobj =
@@ -87,7 +87,7 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
     dobj.where(pred1);
 
     HopsQuery<StorageDto> query = session.createQuery(dobj);
-    query.setParameter("hostId", hostId);
+    query.setParameter("hostId", uuid);
 
     return convertAndRelease(session, query.getResultList());
   }
