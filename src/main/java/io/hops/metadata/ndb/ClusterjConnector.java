@@ -116,6 +116,7 @@ import io.hops.metadata.yarn.dal.capacity.CSQueueDataAccess;
 import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservedContainersDataAccess;
 import io.hops.metadata.yarn.dal.fair.LocalityLevelDataAccess;
 import io.hops.metadata.yarn.dal.fair.RunnableAppsDataAccess;
+import io.hops.metadata.yarn.dal.rmstatestore.AllocateRPCDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.AllocateResponseDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.AllocatedContainersDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.ApplicationAttemptStateDataAccess;
@@ -123,6 +124,7 @@ import io.hops.metadata.yarn.dal.rmstatestore.ApplicationStateDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.CompletedContainersStatusDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.DelegationKeyDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.DelegationTokenDataAccess;
+import io.hops.metadata.yarn.dal.rmstatestore.HeartBeatRPCDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.RMStateVersionDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.RPCDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.RanNodeDataAccess;
@@ -378,7 +380,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
         UserGroupDataAccess.class,
         // YARN
-        RPCDataAccess.class, ApplicationStateDataAccess.class,
+        RPCDataAccess.class, HeartBeatRPCDataAccess.class,
+        AllocateRPCDataAccess.class,
+        ApplicationStateDataAccess.class,
         UpdatedNodeDataAccess.class,
         ApplicationAttemptStateDataAccess.class,
         RanNodeDataAccess.class,
@@ -642,6 +646,20 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.UpdatedNodeTableDef.TABLE_NAME);
           }else if (e == RPCDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.RPCTableDef.TABLE_NAME);
+          } else if (e == HeartBeatRPCDataAccess.class) {
+            truncate(transactional,
+                    io.hops.metadata.yarn.TablesDef.HeartBeatContainerStatusesTableDef.TABLE_NAME);
+            truncate(transactional,
+                    io.hops.metadata.yarn.TablesDef.HeartBeatKeepAliveApplications.TABLE_NAME);
+            truncate(transactional,
+                    io.hops.metadata.yarn.TablesDef.HeartBeatRPCTableDef.TABLE_NAME);
+          } else if (e == HeartBeatRPCDataAccess.class) {
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPC.TABLE_NAME);
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCAsk.TABLE_NAME);
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCBlackListAdd.TABLE_NAME);
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCBlackListRemove.TABLE_NAME);
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCRelease.TABLE_NAME);
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCResourceIncrease.TABLE_NAME);
           } else if (e == RMLoadDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.RMLoadTableDef.TABLE_NAME);
           } else if (e == NodeHBResponseDataAccess.class) {
