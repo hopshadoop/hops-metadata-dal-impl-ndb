@@ -49,9 +49,9 @@ delimiter $$
 CREATE TABLE `hdfs_excess_replicas` (
   `inode_id` int(11) NOT NULL,
   `block_id` bigint(20) NOT NULL,
-  `storage_id` int(11) NOT NULL,
-  PRIMARY KEY (`inode_id`,`block_id`,`storage_id`),
-  KEY `storage_idx` (`storage_id`)
+  `datanode_uuid` varchar(255) NOT NULL,
+  PRIMARY KEY (`inode_id`,`block_id`,`datanode_uuid`),
+  KEY `storage_idx` (`datanode_uuid`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
@@ -228,7 +228,6 @@ CREATE TABLE `hdfs_replica_under_constructions` (
 
 delimiter $$
 
--- the one table to rule them all?
 CREATE TABLE `hdfs_replicas` (
   `inode_id` int(11) NOT NULL,
   `block_id` bigint(20) NOT NULL,

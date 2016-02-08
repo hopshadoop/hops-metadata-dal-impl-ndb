@@ -62,10 +62,10 @@ public class ExcessReplicaClusterj
     void setBlockId(long storageId);
 
     @PrimaryKey
-    @Column(name = STORAGE_ID)
-    int getStorageId();
+    @Column(name = DATANODE_UUID)
+    String getDatanodeUuid();
 
-    void setStorageId(int storageId);
+    void setDatanodeUuid(String uuid);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -102,15 +102,15 @@ public class ExcessReplicaClusterj
   }
 
   @Override
-  public List<ExcessReplica> findExcessReplicaByStorageId(int storageId)
+  public List<ExcessReplica> findExcessReplicaByDatanodeUuid(String uuid)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<ExcessReplicaDTO> qdt =
         qb.createQueryDefinition(ExcessReplicaDTO.class);
-    qdt.where(qdt.get("storageId").equal(qdt.param("param")));
+    qdt.where(qdt.get("datanode_uuid").equal(qdt.param("param")));
     HopsQuery<ExcessReplicaDTO> query = session.createQuery(qdt);
-    query.setParameter("param", storageId);
+    query.setParameter("param", uuid);
     List<ExcessReplicaDTO> dtos = query.getResultList();
     List<ExcessReplica> ler = createList(dtos);
     session.release(dtos);
@@ -174,13 +174,13 @@ public class ExcessReplicaClusterj
   }
 
   @Override
-  public ExcessReplica findByPK(long bId, int sId, int inodeId)
+  public ExcessReplica findByPK(long bId, String uuid, int inodeId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     Object[] pk = new Object[4];
     pk[0] = inodeId;
     pk[1] = bId;
-    pk[2] = sId;
+    pk[2] = uuid;
 
     ExcessReplicaDTO invTable = session.find(ExcessReplicaDTO.class, pk);
     if (invTable == null) {
@@ -206,14 +206,14 @@ public class ExcessReplicaClusterj
   }
 
   private ExcessReplica createReplica(ExcessReplicaDTO exReplicaTable) {
-    return new ExcessReplica(exReplicaTable.getStorageId(),
+    return new ExcessReplica(exReplicaTable.getDatanodeUuid(),
         exReplicaTable.getBlockId(), exReplicaTable.getINodeId());
   }
 
   private void createPersistable(ExcessReplica exReplica,
       ExcessReplicaDTO exReplicaTable) {
     exReplicaTable.setBlockId(exReplica.getBlockId());
-    exReplicaTable.setStorageId(exReplica.getStorageId());
+    exReplicaTable.setDatanodeUuid(exReplica.getDatanodeUuid());
     exReplicaTable.setINodeId(exReplica.getInodeId());
   }
 }
