@@ -62,10 +62,10 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     void setBlockId(long bid);
 
     @PrimaryKey
-    @Column(name = STORAGE_ID)
-    int getStorageId();
+    @Column(name = DATANODE_UUID)
+    String getDatanodeUuid();
 
-    void setStorageId(int id);
+    void setDatanodeUuid(String uuid);
     
     @Column(name = TIMESTAMP)
     long getTimestamp();
@@ -112,13 +112,13 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
   }
 
   @Override
-  public CorruptReplica findByPk(long blockId, int storageId, int inodeId)
+  public CorruptReplica findByPk(long blockId, String datanodeUuid, int inodeId)
       throws StorageException {
     HopsSession dbSession = connector.obtainSession();
     Object[] keys = new Object[2];
     keys[0] = inodeId;
     keys[1] = blockId;
-    keys[2] = storageId;
+    keys[2] = datanodeUuid;
 
     CorruptReplicaDTO corruptReplicaTable =
         dbSession.find(CorruptReplicaDTO.class, keys);
@@ -200,7 +200,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
 
   private CorruptReplica createReplica(CorruptReplicaDTO corruptReplicaTable) {
     return new CorruptReplica(corruptReplicaTable.getBlockId(),
-        corruptReplicaTable.getStorageId(), corruptReplicaTable.getINodeId());
+        corruptReplicaTable.getDatanodeUuid(), corruptReplicaTable.getINodeId());
   }
 
   private List<CorruptReplica> createCorruptReplicaList(
@@ -215,7 +215,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
   private void createPersistable(CorruptReplica corruptReplica,
       CorruptReplicaDTO corruptReplicaTable) {
     corruptReplicaTable.setBlockId(corruptReplica.getBlockId());
-    corruptReplicaTable.setStorageId(corruptReplica.getStorageId());
+    corruptReplicaTable.setDatanodeUuid(corruptReplica.getDatanodeUuid());
     corruptReplicaTable.setINodeId(corruptReplica.getInodeId());
     corruptReplicaTable.setTimestamp(System.currentTimeMillis());
   }

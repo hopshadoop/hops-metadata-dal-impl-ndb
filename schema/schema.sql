@@ -37,9 +37,9 @@ delimiter $$
 CREATE TABLE `hdfs_corrupt_replicas` (
   `inode_id` int(11) NOT NULL,
   `block_id` bigint(20) NOT NULL,
-  `storage_id` int(11) NOT NULL,
+  `datanode_uuid` varchar(255) NOT NULL,
   `timestamp` bigint(20) NOT NULL,
-  PRIMARY KEY (`inode_id`,`block_id`,`storage_id`),
+  PRIMARY KEY (`inode_id`,`block_id`,`datanode_uuid`),
   KEY `timestamp` (`timestamp`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1
 /*!50100 PARTITION BY KEY (inode_id) */$$
@@ -134,11 +134,11 @@ delimiter $$
 CREATE TABLE `hdfs_invalidated_blocks` (
   `inode_id` int(11) NOT NULL,
   `block_id` bigint(20) NOT NULL,
-  `storage_id` int(11) NOT NULL,
+  `datanode_uuid` varchar(255) NOT NULL,
   `generation_stamp` bigint(20) DEFAULT NULL,
   `num_bytes` bigint(20) DEFAULT NULL,
-  PRIMARY KEY (`inode_id`,`block_id`,`storage_id`),
-  KEY `storage_idx` (`storage_id`)
+  PRIMARY KEY (`inode_id`,`block_id`,`datanode_uuid`),
+  KEY `storage_idx` (`datanode_uuid`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1
 /*!50100 PARTITION BY KEY (inode_id) */$$
 

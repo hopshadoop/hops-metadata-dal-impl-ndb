@@ -66,10 +66,10 @@ public class InvalidatedBlockClusterj implements
     void setBlockId(long blockId);
     
     @PrimaryKey
-    @Column(name = STORAGE_ID)
-    int getStorageId();
+    @Column(name = DATANODE_UUID)
+    String getDatanodeUuid();
 
-    void setStorageId(int storageId);
+    void setDatanodeUuid(String uui);
     
     @Column(name = GENERATION_STAMP)
     long getGenerationStamp();
@@ -106,15 +106,15 @@ public class InvalidatedBlockClusterj implements
   }
 
   @Override
-  public List<InvalidatedBlock> findInvalidatedBlockByStorageId(int storageId)
+  public List<InvalidatedBlock> findInvalidatedBlockByDatanodeUuid(String uuid)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<InvalidateBlocksDTO> qdt =
         qb.createQueryDefinition(InvalidateBlocksDTO.class);
-    qdt.where(qdt.get("storageId").equal(qdt.param("param")));
+    qdt.where(qdt.get("datanode_uuid").equal(qdt.param("param")));
     HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
-    query.setParameter("param", storageId);
+    query.setParameter("param", uuid);
     
     List<InvalidateBlocksDTO> dtos = query.getResultList();
     List<InvalidatedBlock> ivl = createList(dtos);
@@ -123,9 +123,12 @@ public class InvalidatedBlockClusterj implements
   }
   
   @Override
-  public Map<Long, Long> findInvalidatedBlockByStorageIdUsingMySQLServer(int storageId) throws StorageException {
-  return MySQLQueryHelper.execute(String.format("SELECT %s, %s "
-            + "FROM %s WHERE %s='%d'", BLOCK_ID, GENERATION_STAMP, TABLE_NAME, STORAGE_ID, storageId), new MySQLQueryHelper.ResultSetHandler<Map<Long,Long>>() {
+  public Map<Long, Long> findInvalidatedBlockByDatanodeUuidUsingMySQLServer
+      (String uuid) throws StorageException {
+    return MySQLQueryHelper.execute(String.format("SELECT %s, %s "
+            + "FROM %s WHERE %s='%d'", BLOCK_ID, GENERATION_STAMP,
+      TABLE_NAME, DATANODE_UUID, uuid), new MySQLQueryHelper
+      .ResultSetHandler<Map<Long,Long>>() {
       @Override
       public Map<Long,Long> handle(ResultSet result) throws SQLException {
         Map<Long,Long> blockInodeMap = new HashMap<Long,Long>();
@@ -195,13 +198,13 @@ public class InvalidatedBlockClusterj implements
   }
   
   @Override
-  public InvalidatedBlock findInvBlockByPkey(long blockId, int storageId,
+  public InvalidatedBlock findInvBlockByPkey(long blockId, String uuid,
       int inodeId) throws StorageException {
     HopsSession session = connector.obtainSession();
     Object[] pk = new Object[3];
     pk[0] = inodeId;
     pk[1] = blockId;
-    pk[2] = storageId;
+    pk[2] = uuid;
 
     InvalidateBlocksDTO invTable = session.find(InvalidateBlocksDTO.class, pk);
     if (invTable == null) {
@@ -276,14 +279,14 @@ public class InvalidatedBlockClusterj implements
   }
 
   @Override
-  public void removeAllByStorageId(int storageId) throws StorageException {
+  public void removeAllByDatanodeUuid(String uuid) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<InvalidateBlocksDTO> qdt =
         qb.createQueryDefinition(InvalidateBlocksDTO.class);
-    qdt.where(qdt.get("storageId").equal(qdt.param("param")));
+    qdt.where(qdt.get("datanode_uuid").equal(qdt.param("param")));
     HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
-    query.setParameter("param", storageId);
+    query.setParameter("param", uuid);
     query.deletePersistentAll();
   }
 
@@ -299,7 +302,7 @@ public class InvalidatedBlockClusterj implements
   }
 
   private InvalidatedBlock createReplica(InvalidateBlocksDTO invBlockTable) {
-    return new InvalidatedBlock(invBlockTable.getStorageId(),
+    return new InvalidatedBlock(invBlockTable.getDatanodeUuid(),
         invBlockTable.getBlockId(), invBlockTable.getGenerationStamp(),
         invBlockTable.getNumBytes(), invBlockTable.getINodeId());
   }
@@ -307,7 +310,7 @@ public class InvalidatedBlockClusterj implements
   private void createPersistable(InvalidatedBlock invBlock,
       InvalidateBlocksDTO newInvTable) {
     newInvTable.setBlockId(invBlock.getBlockId());
-    newInvTable.setStorageId(invBlock.getStorageId());
+    newInvTable.setDatanodeUuid(invBlock.getDatanodeUuid());
     newInvTable.setGenerationStamp(invBlock.getGenerationStamp());
     newInvTable.setNumBytes(invBlock.getNumBytes());
     newInvTable.setINodeId(invBlock.getInodeId());
