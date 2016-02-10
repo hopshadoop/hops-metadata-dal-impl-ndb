@@ -37,6 +37,7 @@ delimiter $$
 CREATE TABLE `hdfs_corrupt_replicas` (
   `inode_id` int(11) NOT NULL,
   `block_id` bigint(20) NOT NULL,
+  `storage_id` int(11) NOT NULL,
   `datanode_uuid` varchar(255) NOT NULL,
   `timestamp` bigint(20) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`datanode_uuid`),
@@ -49,6 +50,7 @@ delimiter $$
 CREATE TABLE `hdfs_excess_replicas` (
   `inode_id` int(11) NOT NULL,
   `block_id` bigint(20) NOT NULL,
+  `storage_id` int(11) NOT NULL,
   `datanode_uuid` varchar(255) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`datanode_uuid`),
   KEY `storage_idx` (`datanode_uuid`)
@@ -134,6 +136,7 @@ delimiter $$
 CREATE TABLE `hdfs_invalidated_blocks` (
   `inode_id` int(11) NOT NULL,
   `block_id` bigint(20) NOT NULL,
+  `storage_id` int(11) NOT NULL,
   `datanode_uuid` varchar(255) NOT NULL,
   `generation_stamp` bigint(20) DEFAULT NULL,
   `num_bytes` bigint(20) DEFAULT NULL,

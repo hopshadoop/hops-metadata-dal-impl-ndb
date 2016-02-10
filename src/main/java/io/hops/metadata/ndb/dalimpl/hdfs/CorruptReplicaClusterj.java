@@ -52,24 +52,24 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     @PrimaryKey
     @Column(name = INODE_ID)
     int getINodeId();
-
     void setINodeId(int inodeId);
     
     @PrimaryKey
     @Column(name = BLOCK_ID)
     long getBlockId();
-
     void setBlockId(long bid);
 
     @PrimaryKey
     @Column(name = DATANODE_UUID)
     String getDatanodeUuid();
-
     void setDatanodeUuid(String uuid);
+
+    @Column(name = STORAGE_ID)
+    int getStorageId();
+    void setStorageId(int storageId);
     
     @Column(name = TIMESTAMP)
     long getTimestamp();
-
     void setTimestamp(long timestamp);
   }
 
@@ -199,8 +199,9 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
   }
 
   private CorruptReplica createReplica(CorruptReplicaDTO corruptReplicaTable) {
-    return new CorruptReplica(corruptReplicaTable.getBlockId(),
-        corruptReplicaTable.getDatanodeUuid(), corruptReplicaTable.getINodeId());
+    return new CorruptReplica(corruptReplicaTable.getDatanodeUuid(),
+        corruptReplicaTable.getStorageId(), corruptReplicaTable.getBlockId(),
+        corruptReplicaTable.getINodeId());
   }
 
   private List<CorruptReplica> createCorruptReplicaList(

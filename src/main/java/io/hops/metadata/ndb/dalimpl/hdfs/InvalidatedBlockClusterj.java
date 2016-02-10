@@ -56,29 +56,28 @@ public class InvalidatedBlockClusterj implements
     @PrimaryKey
     @Column(name = INODE_ID)
     int getINodeId();
-
     void setINodeId(int inodeID);
     
     @PrimaryKey
     @Column(name = BLOCK_ID)
     long getBlockId();
-
     void setBlockId(long blockId);
     
     @PrimaryKey
     @Column(name = DATANODE_UUID)
     String getDatanodeUuid();
+    void setDatanodeUuid(String uuid);
 
-    void setDatanodeUuid(String uui);
+    @Column(name = STORAGE_ID)
+    int getStorageId();
+    void setStorageId(int storageId);
     
     @Column(name = GENERATION_STAMP)
     long getGenerationStamp();
-
     void setGenerationStamp(long generationStamp);
 
     @Column(name = NUM_BYTES)
     long getNumBytes();
-
     void setNumBytes(long numBytes);
   }
 
@@ -303,8 +302,9 @@ public class InvalidatedBlockClusterj implements
 
   private InvalidatedBlock createReplica(InvalidateBlocksDTO invBlockTable) {
     return new InvalidatedBlock(invBlockTable.getDatanodeUuid(),
-        invBlockTable.getBlockId(), invBlockTable.getGenerationStamp(),
-        invBlockTable.getNumBytes(), invBlockTable.getINodeId());
+        invBlockTable.getStorageId(), invBlockTable.getBlockId(),
+        invBlockTable.getGenerationStamp(), invBlockTable.getNumBytes(),
+        invBlockTable.getINodeId());
   }
 
   private void createPersistable(InvalidatedBlock invBlock,

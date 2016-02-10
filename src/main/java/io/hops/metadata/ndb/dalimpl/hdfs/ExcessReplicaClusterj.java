@@ -52,20 +52,21 @@ public class ExcessReplicaClusterj
     @PrimaryKey
     @Column(name = INODE_ID)
     int getINodeId();
-
     void setINodeId(int inodeID);
     
     @PrimaryKey
     @Column(name = BLOCK_ID)
     long getBlockId();
-
     void setBlockId(long storageId);
 
     @PrimaryKey
     @Column(name = DATANODE_UUID)
     String getDatanodeUuid();
-
     void setDatanodeUuid(String uuid);
+
+    @Column(name = STORAGE_ID)
+    int getStorageId();
+    void setStorageId(int storageId);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -207,7 +208,8 @@ public class ExcessReplicaClusterj
 
   private ExcessReplica createReplica(ExcessReplicaDTO exReplicaTable) {
     return new ExcessReplica(exReplicaTable.getDatanodeUuid(),
-        exReplicaTable.getBlockId(), exReplicaTable.getINodeId());
+        exReplicaTable.getStorageId(), exReplicaTable.getBlockId(), exReplicaTable
+        .getINodeId());
   }
 
   private void createPersistable(ExcessReplica exReplica,
