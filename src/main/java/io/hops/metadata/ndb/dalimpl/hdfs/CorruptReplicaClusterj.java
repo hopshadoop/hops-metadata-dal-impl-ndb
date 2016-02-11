@@ -169,8 +169,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
       throws StorageException {
     HopsSession dbSession = connector.obtainSession();
     HopsQueryBuilder qb = dbSession.getQueryBuilder();
-    HopsQueryDomainType<CorruptReplicaDTO> dobj =
-        qb.createQueryDefinition(CorruptReplicaDTO.class);
+    HopsQueryDomainType<CorruptReplicaDTO> dobj = qb.createQueryDefinition(CorruptReplicaDTO.class);
     HopsPredicate pred1 = dobj.get("iNodeId").equal(dobj.param("iNodeIdParam"));
     dobj.where(pred1);
     HopsQuery<CorruptReplicaDTO> query = dbSession.createQuery(dobj);
@@ -196,6 +195,24 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     List<CorruptReplica> crl = createCorruptReplicaList(dtos);
     dbSession.release(dtos);
     return crl;
+  }
+
+  @Override
+  public void removeByDatanodeUuid(long blockId, String datanodeUuid) throws
+      StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+
+    HopsQueryDomainType<CorruptReplicaDTO> qdt = qb.createQueryDefinition(CorruptReplicaDTO.class);
+    HopsPredicate pred1 = qdt.get("block_id").equal(qdt.param("blockId"));
+    HopsPredicate pred2 = qdt.get("datanodeUuid").equal(qdt.param("datanodeUuid"));
+    qdt.where(pred1.and(pred2));
+
+    HopsQuery<CorruptReplicaDTO> query = session.createQuery(qdt);
+    query.setParameter("blockId", blockId);
+    query.setParameter("datanodeUuid", datanodeUuid);
+
+    query.deletePersistentAll();
   }
 
   private CorruptReplica createReplica(CorruptReplicaDTO corruptReplicaTable) {

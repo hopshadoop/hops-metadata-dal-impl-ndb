@@ -315,4 +315,21 @@ public class InvalidatedBlockClusterj implements
     newInvTable.setNumBytes(invBlock.getNumBytes());
     newInvTable.setINodeId(invBlock.getInodeId());
   }
+
+  @Override
+  public void removeByDatanodeUuid(long blockId, String datanodeUuid) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+
+    HopsQueryDomainType<InvalidateBlocksDTO> qdt = qb.createQueryDefinition(InvalidateBlocksDTO.class);
+    HopsPredicate pred1 = qdt.get("block_id").equal(qdt.param("blockId"));
+    HopsPredicate pred2 = qdt.get("datanodeUuid").equal(qdt.param("datanodeUuid"));
+    qdt.where(pred1.and(pred2));
+
+    HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
+    query.setParameter("blockId", blockId);
+    query.setParameter("datanodeUuid", datanodeUuid);
+
+    query.deletePersistentAll();
+  }
 }
