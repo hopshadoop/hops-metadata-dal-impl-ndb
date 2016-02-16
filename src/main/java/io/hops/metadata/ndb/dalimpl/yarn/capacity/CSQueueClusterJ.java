@@ -146,7 +146,7 @@ public class CSQueueClusterJ implements TablesDef.CSQueueTableDef,
     if (removed != null) {
       List<CSQueueDTO> toRemove = new ArrayList<CSQueueDTO>(removed.size());
       for (CSQueue hop : removed) {
-        toRemove.add(session.newInstance(CSQueueClusterJ.CSQueueDTO.class));
+        toRemove.add(createPersistable(hop, session));
       }
       session.deletePersistentAll(toRemove);
       session.release(toRemove);

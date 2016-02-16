@@ -1226,3 +1226,11 @@ CREATE TABLE `yarn_allocate_rpc_resource_increase` (
     ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = ndbcluster PARTITION BY KEY(rpcid)$$
+
+delimiter $$
+
+CREATE TABLE `yarn_cs_leaf_queue_pending_apps` (
+  `app_attempt_id` varchar(200) NOT NULL,
+  `path` varchar(200) NOT NULL,
+  PRIMARY KEY (`app_attempt_id`))
+ENGINE = ndbcluster PARTITION BY KEY(app_attempt_id)$$

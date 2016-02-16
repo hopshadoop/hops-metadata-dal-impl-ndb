@@ -112,6 +112,7 @@ import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
 import io.hops.metadata.yarn.dal.YarnProjectsDailyCostDataAccess;
 import io.hops.metadata.yarn.dal.YarnProjectsQuotaDataAccess;
 import io.hops.metadata.yarn.dal.YarnVariablesDataAccess;
+import io.hops.metadata.yarn.dal.capacity.CSLeafQueuesPendingAppsDataAccess;
 import io.hops.metadata.yarn.dal.capacity.CSQueueDataAccess;
 import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservedContainersDataAccess;
 import io.hops.metadata.yarn.dal.fair.LocalityLevelDataAccess;
@@ -418,7 +419,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         NextHeartbeatDataAccess.class,
         NodeHBResponseDataAccess.class, 
         YarnProjectsQuotaDataAccess.class, YarnProjectsDailyCostDataAccess.class,
-            ContainersCheckPointsDataAccess.class);
+        ContainersCheckPointsDataAccess.class,
+        CSLeafQueuesPendingAppsDataAccess.class);
   }
 
   private boolean format(boolean transactional,
@@ -688,6 +690,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.RunnableAppsTableDef.TABLE_NAME);
           } else if (e==CSQueueDataAccess.class){
             truncate(transactional, io.hops.metadata.yarn.TablesDef.CSQueueTableDef.TABLE_NAME);
+          } else if (e==CSLeafQueuesPendingAppsDataAccess.class){
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.CSLeafQueuesPendingAppsTableDef.TABLE_NAME);
           }
         }
         MysqlServerConnector.truncateTable(transactional,
