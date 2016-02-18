@@ -113,7 +113,6 @@ import io.hops.metadata.yarn.dal.YarnProjectsDailyCostDataAccess;
 import io.hops.metadata.yarn.dal.YarnProjectsQuotaDataAccess;
 import io.hops.metadata.yarn.dal.YarnVariablesDataAccess;
 import io.hops.metadata.yarn.dal.capacity.CSLeafQueuesPendingAppsDataAccess;
-import io.hops.metadata.yarn.dal.capacity.CSQueueDataAccess;
 import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservedContainersDataAccess;
 import io.hops.metadata.yarn.dal.fair.LocalityLevelDataAccess;
 import io.hops.metadata.yarn.dal.fair.RunnableAppsDataAccess;
@@ -415,7 +414,6 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         RMLoadDataAccess.class, PendingEventDataAccess.class,
         LocalityLevelDataAccess.class,
         RunnableAppsDataAccess.class,
-        CSQueueDataAccess.class,
         NextHeartbeatDataAccess.class,
         NodeHBResponseDataAccess.class, 
         YarnProjectsQuotaDataAccess.class, YarnProjectsDailyCostDataAccess.class,
@@ -688,8 +686,6 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.LocalityLevelTableDef.TABLE_NAME);
           } else if (e== RunnableAppsDataAccess.class){
             truncate(transactional, io.hops.metadata.yarn.TablesDef.RunnableAppsTableDef.TABLE_NAME);
-          } else if (e==CSQueueDataAccess.class){
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.CSQueueTableDef.TABLE_NAME);
           } else if (e==CSLeafQueuesPendingAppsDataAccess.class){
             truncate(transactional, io.hops.metadata.yarn.TablesDef.CSLeafQueuesPendingAppsTableDef.TABLE_NAME);
           }

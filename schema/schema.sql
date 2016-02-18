@@ -1010,30 +1010,6 @@ CREATE TABLE `yarn_localitylevel` (
   PRIMARY KEY (`schedulerapp_id`, `priority_id`))
 ENGINE = ndbcluster$$
 
-delimiter $$
-
-CREATE TABLE `yarn_csleafqueueuserinfo` (
-  `username` VARCHAR(45) NOT NULL,
-  `consumed_memory` INT NULL,
-  `consumed_vcores` INT NULL,
-  `pending_applications` INT NULL,
-  `active_applications` INT NULL,
-  PRIMARY KEY (`username`))
-ENGINE = ndbcluster$$
-
-delimiter $$
-
-CREATE TABLE `yarn_csqueue` (
-  `path` VARCHAR(45) NOT NULL,
-  `name` VARCHAR(45) NULL,
-  `used_capacity` FLOAT NULL,
-  `used_resource_memory` INT NULL,
-  `used_resource_vcores` INT NULL,
-  `absolute_used_capacity` FLOAT NULL,
-  `is_parent` INT NULL,
-  `num_containers` INT NULL,
-  PRIMARY KEY (`path`))
-ENGINE = ndbcluster$$
 
 delimiter $$
 
