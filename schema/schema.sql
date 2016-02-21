@@ -469,8 +469,8 @@ CREATE TABLE `yarn_queuemetrics` (
 delimiter $$
 
 CREATE TABLE `yarn_rmnode` (
-  `rmnodeid` VARCHAR(45) NOT NULL,
-  `hostname` VARCHAR(45) NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
+  `hostname` VARCHAR(255) NULL,
   `commandport` INT NULL,
   `httpport` INT NULL,
   `nodeaddress` VARCHAR(45) NULL,
@@ -505,11 +505,11 @@ CREATE TABLE `yarn_resource` (
 delimiter $$
 
 CREATE TABLE `yarn_node` (
-  `nodeid` VARCHAR(45) NOT NULL,
-  `name` VARCHAR(45) NULL,
-  `location` VARCHAR(45) NULL,
+  `nodeid` VARCHAR(255) NOT NULL,
+  `name` VARCHAR(255) NULL,
+  `location` VARCHAR(255) NULL,
   `level` INT NULL,
-  `parent` VARCHAR(45) NULL,
+  `parent` VARCHAR(255) NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`nodeid`),
   INDEX `name` (`name` ASC, `location` ASC),
@@ -524,8 +524,8 @@ CREATE TABLE `yarn_node` (
 delimiter $$
 
 CREATE TABLE `yarn_ficascheduler_node` (
-  `rmnodeid` VARCHAR(45) NOT NULL,
-  `nodename` VARCHAR(45) NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
+  `nodename` VARCHAR(255) NULL,
   `numcontainers` INT NULL,
   `rmcontainerid` VARCHAR(45) NULL,
   PRIMARY KEY (`rmnodeid`)
@@ -535,7 +535,7 @@ CREATE TABLE `yarn_ficascheduler_node` (
 delimiter $$
 
 CREATE TABLE `yarn_rmctx_activenodes` (
-  `rmnodeid` VARCHAR(45) NOT NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`rmnodeid`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
@@ -543,7 +543,7 @@ CREATE TABLE `yarn_rmctx_activenodes` (
 delimiter $$
 
 CREATE TABLE `yarn_updatedcontainerinfo` (
-  `rmnodeid` VARCHAR(45) NOT NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
   `containerid` VARCHAR(45) NOT NULL,
   `updatedcontainerinfoid` INT NOT NULL,
   `pendingeventid` INT,
@@ -561,7 +561,7 @@ delimiter $$
 
 CREATE TABLE `yarn_containerstatus` (
   `containerid` VARCHAR(45) NOT NULL,
-  `rmnodeid` VARCHAR(45) NOT NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
   `state` VARCHAR(45) NULL,
   `diagnostics` VARCHAR(2000) NULL,
   `exitstatus` INT NULL,
@@ -583,7 +583,7 @@ delimiter $$
 
 
 CREATE TABLE `yarn_justlaunchedcontainers` (
-  `rmnodeid` VARCHAR(45) NOT NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
   `containerid` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`containerid`, `rmnodeid`),
   INDEX `rmnodeid_idx` (`rmnodeid` ASC),
@@ -597,7 +597,7 @@ CREATE TABLE `yarn_justlaunchedcontainers` (
 delimiter $$
 
 CREATE TABLE `yarn_latestnodehbresponse` (
-  `rmnodeid` VARCHAR(45) NOT NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
   `response` VARBINARY(13500) NULL,
   PRIMARY KEY (`rmnodeid`),
   CONSTRAINT `rmnodeid`
@@ -611,7 +611,7 @@ delimiter $$
 
 CREATE TABLE `yarn_updated_node` (
   `applicationid` VARCHAR(45) NOT NULL,
-  `nodeid` VARCHAR(45) NULL,
+  `nodeid` VARCHAR(255) NULL,
   PRIMARY KEY (`applicationid`, `nodeid`),
   CONSTRAINT `nodeid`
     FOREIGN KEY (`nodeid`)
@@ -624,7 +624,7 @@ delimiter $$
 
 CREATE TABLE `yarn_ran_node` (
   `application_attempt_id` VARCHAR(45) NOT NULL,
-  `nodeid` VARCHAR(45) NULL,
+  `nodeid` VARCHAR(255) NULL,
   PRIMARY KEY (`application_attempt_id`, `nodeid`),
   CONSTRAINT `nodeid`
     FOREIGN KEY (`nodeid`)
@@ -636,7 +636,7 @@ CREATE TABLE `yarn_ran_node` (
 delimiter $$
 
 CREATE TABLE `yarn_containerid_toclean` (
-  `rmnodeid` VARCHAR(45) NOT NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
   `containerid` VARCHAR(45) NOT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`, `containerid`),
@@ -674,7 +674,7 @@ CREATE TABLE `yarn_rmcontainer` (
 delimiter $$
 
 CREATE TABLE `yarn_launchedcontainers` (
-  `rmnodeid` VARCHAR(45) NOT NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
   `containerid_id` VARCHAR(45) NOT NULL,
   `rmcontainer_id` VARCHAR(45) NULL,
   PRIMARY KEY (`rmnodeid`, `containerid_id`),
@@ -689,7 +689,7 @@ CREATE TABLE `yarn_launchedcontainers` (
 delimiter $$
 
 CREATE TABLE `yarn_rmnode_finishedapplications` (
-  `rmnodeid` VARCHAR(45) NOT NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
   `applicationid` VARCHAR(45) NOT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`, `applicationid`),
@@ -834,7 +834,7 @@ delimiter $$
 
 
 CREATE TABLE `yarn_rmctx_inactivenodes` (
-  `rmnodeid` VARCHAR(45) NOT NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`rmnodeid`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(rmnodeid) $$
 
@@ -858,7 +858,7 @@ CREATE TABLE `yarn_resourcerequest` (
 delimiter $$
 
 CREATE TABLE `yarn_fsscheduler_node` (
-  `rmnodeid` VARCHAR(45) NOT NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
   `numcontainers` INT NULL,
   `reservedcontainer_id` VARCHAR(45) NULL,
   `reservedappschedulable_id` VARCHAR(45) NULL,
@@ -944,7 +944,7 @@ PRIMARY KEY (`rmhostname`)
 delimiter $$
 
 CREATE TABLE `yarn_nextheartbeat` (
-  `rmnodeid` VARCHAR(45) NOT NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
   `nextheartbeat` INT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`),
@@ -959,7 +959,7 @@ delimiter $$
 
 CREATE TABLE `yarn_pendingevents` (
   `id` INT NOT NULL,
-  `rmnodeid` VARCHAR(45) NOT NULL,
+  `rmnodeid` VARCHAR(255) NOT NULL,
   `type` INT NULL,
   `status` INT NULL,
   `last_hb` INT NULL,
