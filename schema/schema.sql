@@ -947,12 +947,7 @@ CREATE TABLE `yarn_nextheartbeat` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `nextheartbeat` INT NULL,
   `pendingeventid` INT,
-  PRIMARY KEY (`rmnodeid`),
-  CONSTRAINT `rmnodeid`
-    FOREIGN KEY (`rmnodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  PRIMARY KEY (`rmnodeid`)
 )ENGINE = ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(rmnodeid)$$
 
 delimiter $$

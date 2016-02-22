@@ -166,11 +166,14 @@ public class RMNodeClusterJ
 
   @Override
   public void removeAll(Collection<RMNode> toRemove) throws StorageException {
+    NextHeartbeatClusterJ nextHBClusterJ = new NextHeartbeatClusterJ();
     HopsSession session = connector.obtainSession();
     List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
+    LOG.debug("--- Removing RMnode from database ---");
     for (RMNode entry : toRemove) {
       toPersist.add(session.newInstance(RMNodeDTO.class, entry.
           getNodeId()));
+      nextHBClusterJ.removeById(entry.getNodeId());
     }
     session.deletePersistentAll(toPersist);
     session.release(toPersist);

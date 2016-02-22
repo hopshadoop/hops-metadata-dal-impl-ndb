@@ -22,27 +22,9 @@ import io.hops.StorageConnector;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.NdbStorageFactory;
 import io.hops.metadata.yarn.TablesDef;
-import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
-import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
-import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
-import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
-import io.hops.metadata.yarn.dal.JustLaunchedContainersDataAccess;
-import io.hops.metadata.yarn.dal.NodeDataAccess;
-import io.hops.metadata.yarn.dal.NodeHBResponseDataAccess;
-import io.hops.metadata.yarn.dal.RMNodeDataAccess;
-import io.hops.metadata.yarn.dal.ResourceDataAccess;
-import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
+import io.hops.metadata.yarn.dal.*;
 import io.hops.metadata.yarn.dal.util.YARNOperationType;
-import io.hops.metadata.yarn.entity.ContainerId;
-import io.hops.metadata.yarn.entity.ContainerStatus;
-import io.hops.metadata.yarn.entity.FinishedApplications;
-import io.hops.metadata.yarn.entity.JustLaunchedContainers;
-import io.hops.metadata.yarn.entity.Node;
-import io.hops.metadata.yarn.entity.NodeHBResponse;
-import io.hops.metadata.yarn.entity.RMNode;
-import io.hops.metadata.yarn.entity.RMNodeComps;
-import io.hops.metadata.yarn.entity.Resource;
-import io.hops.metadata.yarn.entity.UpdatedContainerInfo;
+import io.hops.metadata.yarn.entity.*;
 import io.hops.transaction.handler.LightWeightRequestHandler;
 import io.hops.transaction.handler.RequestHandler;
 import junit.framework.Assert;
@@ -51,10 +33,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 public class TestFullRMNodeClusterJ {
 
@@ -76,6 +55,78 @@ public class TestFullRMNodeClusterJ {
               }
             };
     setRMDTMasterKeyHandler.handle();
+  }
+
+  @Test
+  public void testRemoveHBForRMNode() throws StorageException, IOException {
+    final RMNode hopsRMNode =
+            new RMNode("host1:1234", "hostname", 1234, 8080, "127.0.0.1", "hop.sics.se",
+                    "healthy", -10L, "running", "blah", 10, 3, 0);
+    final NextHeartbeat nextHB =
+            new NextHeartbeat(hopsRMNode.getNodeId(), true, 22);
+
+    // Persist them in DB
+    LightWeightRequestHandler dbHandler = new LightWeightRequestHandler(YARNOperationType.TEST) {
+      @Override
+      public Object performTask() throws StorageException {
+        connector.beginTransaction();
+        connector.writeLock();
+
+        RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory.
+                getDataAccess(RMNodeDataAccess.class);
+        NextHeartbeatDataAccess nextHBDAO = (NextHeartbeatDataAccess) storageFactory.
+                getDataAccess(NextHeartbeatDataAccess.class);
+        List<NextHeartbeat> hb = new ArrayList<NextHeartbeat>();
+        hb.add(nextHB);
+        nextHBDAO.updateAll(hb);
+
+        rmNodeDAO.add(hopsRMNode);
+        connector.commit();
+
+        return null;
+      }
+    };
+    dbHandler.handle();
+
+    // Verify everything is there
+    dbHandler = new LightWeightRequestHandler(YARNOperationType.TEST) {
+      @Override
+      public Object performTask() throws IOException {
+        connector.beginTransaction();
+        connector.readLock();
+        RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory.
+                getDataAccess(RMNodeDataAccess.class);
+        RMNode retrievedRMNode = (RMNode) rmNodeDAO.
+                findByNodeId(hopsRMNode.getNodeId());
+        connector.commit();
+        return retrievedRMNode;
+      }
+    };
+    RMNode rmNode = (RMNode) dbHandler.handle();
+
+    // TODO: Check for the rest of the fields
+    Assert.assertEquals(rmNode.getNodeId(), hopsRMNode.getNodeId());
+
+    // Remove RMNode should trigger corresponding next HB to be removed
+    dbHandler = new LightWeightRequestHandler(YARNOperationType.TEST) {
+      @Override
+      public Object performTask() throws IOException {
+        connector.beginTransaction();
+        connector.writeLock();
+
+        RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory.
+                getDataAccess(RMNodeDataAccess.class);
+        Collection<RMNode> toBeDeleted = new HashSet<RMNode>();
+        toBeDeleted.add(hopsRMNode);
+        rmNodeDAO.removeAll(toBeDeleted);
+        connector.commit();
+
+        return null;
+      }
+    };
+    dbHandler.handle();
+
+    // TODO: check HB is indeed removed
   }
 
   @Test
