@@ -11,10 +11,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.wrapper.*;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.rmstatestore.UpdatedNodeDataAccess;
 import io.hops.metadata.yarn.entity.rmstatestore.UpdatedNode;
@@ -74,7 +71,34 @@ public class UpdatedNodeClusterJ implements
     session.release(queryResults);
     return result;
   }
-  
+
+  public void removeAllByRMNodeId(List<String> rmNodeIds) throws StorageException {
+    List<UpdatedNodeDTO> toBeRemoved = new ArrayList<UpdatedNodeDTO>();
+    List<UpdatedNodeDTO> updateNodesRemove = null;
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder queryBuilder = session.getQueryBuilder();
+
+    HopsQueryDomainType<UpdatedNodeDTO> dto =
+            queryBuilder.createQueryDefinition(UpdatedNodeDTO.class);
+    HopsPredicate pred = dto.get(NODEID).equal(dto.param(NODEID));
+    dto.where(pred);
+    HopsQuery<UpdatedNodeDTO> query = session.createQuery(dto);
+
+    for (String rmNodeId : rmNodeIds) {
+      query.setParameter(NODEID, rmNodeId);
+      updateNodesRemove = query.getResultList();
+
+      if (!updateNodesRemove.isEmpty()) {
+        toBeRemoved.addAll(updateNodesRemove);
+      }
+    }
+
+    if (!toBeRemoved.isEmpty()) {
+      session.deletePersistentAll(toBeRemoved);
+      session.release(toBeRemoved);
+    }
+  }
+
   private UpdatedNodeDTO createPersistable(UpdatedNode hop,
       HopsSession session) throws StorageException {
     UpdatedNodeDTO updatedNodeDTO =

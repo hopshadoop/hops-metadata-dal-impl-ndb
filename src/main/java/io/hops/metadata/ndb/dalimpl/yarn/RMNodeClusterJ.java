@@ -23,13 +23,17 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.RanNodeClusterJ;
+import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.UpdatedNodeClusterJ;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.RMNodeDataAccess;
+import io.hops.metadata.yarn.entity.FinishedApplications;
 import io.hops.metadata.yarn.entity.RMNode;
+import io.hops.metadata.yarn.entity.UpdatedContainerInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -166,12 +170,57 @@ public class RMNodeClusterJ
 
   @Override
   public void removeAll(Collection<RMNode> toRemove) throws StorageException {
+    NextHeartbeatClusterJ nextHBClusterJ = new NextHeartbeatClusterJ();
+    FinishedApplicationsClusterJ finishedAppsClusterJ = new FinishedApplicationsClusterJ();
+    NodeClusterJ nodeClusterJ = new NodeClusterJ();
+    UpdatedContainerInfoClusterJ updatedContClusterJ = new UpdatedContainerInfoClusterJ();
+    ContainerStatusClusterJ containerStatusClusterJ = new ContainerStatusClusterJ();
+    JustLaunchedContainersClusterJ justLaunchedCont = new JustLaunchedContainersClusterJ();
+    NodeHBResponseClusterJ nodeHBRespClusterJ = new NodeHBResponseClusterJ();
+    UpdatedNodeClusterJ updatedNodeClusterJ = new UpdatedNodeClusterJ();
+    RanNodeClusterJ ranNodeClusterJ = new RanNodeClusterJ();
+    ContainerIdToCleanClusterJ contIdClusterJ = new ContainerIdToCleanClusterJ();
+
     HopsSession session = connector.obtainSession();
     List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
+    List<String> nodesId = new ArrayList<String>();
+    List<FinishedApplications> finishedToRemove = new ArrayList<FinishedApplications>();
+    List<UpdatedContainerInfo> updatedContainersToRemove = new ArrayList<UpdatedContainerInfo>();
+    List<FinishedApplications> tmpFinishedApps = null;
+    List<UpdatedContainerInfo> tmpUpdatedCont = null;
+
     for (RMNode entry : toRemove) {
-      toPersist.add(session.newInstance(RMNodeDTO.class, entry.
-          getNodeId()));
+      String rmNodeId = entry.getNodeId();
+      toPersist.add(session.newInstance(RMNodeDTO.class, rmNodeId));
+      nodesId.add(rmNodeId);
+
+      tmpFinishedApps = finishedAppsClusterJ.findByRMNode(rmNodeId);
+      if (tmpFinishedApps != null) {
+        finishedToRemove.addAll(tmpFinishedApps);
+      }
+
+      tmpUpdatedCont = updatedContClusterJ.findByRMNodeList(rmNodeId);
+      if (tmpUpdatedCont != null) {
+        updatedContainersToRemove.addAll(tmpUpdatedCont);
+      }
     }
+
+    // Remove all depended entries from ndb
+    nextHBClusterJ.removeAllById(nodesId);
+    nodeClusterJ.removeAllById(nodesId);
+    if (!finishedToRemove.isEmpty()) {
+      finishedAppsClusterJ.removeAll(finishedToRemove);
+    }
+    if (!updatedContainersToRemove.isEmpty()) {
+      updatedContClusterJ.removeAll(updatedContainersToRemove);
+    }
+    containerStatusClusterJ.removeAllByRMNodeID(nodesId);
+    justLaunchedCont.removeByRMNodeId(nodesId);
+    nodeHBRespClusterJ.removeAllByRMNodeId(nodesId);
+    updatedNodeClusterJ.removeAllByRMNodeId(nodesId);
+    ranNodeClusterJ.removeAllByRMNodeId(nodesId);
+    contIdClusterJ.removeAllByRMNodeId(nodesId);
+
     session.deletePersistentAll(toPersist);
     session.release(toPersist);
   }

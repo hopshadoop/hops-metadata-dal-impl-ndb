@@ -118,6 +118,28 @@ public class NextHeartbeatClusterJ
     session.release(toRemove);
   }
 
+  public void removeById(String rmNodeId) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    NextHeartbeatDTO nextHB = session.find(NextHeartbeatDTO.class, rmNodeId);
+    if (nextHB != null) {
+      session.deletePersistent(nextHB);
+    }
+    session.release(nextHB);
+  }
+
+  public void removeAllById(List<String> rmNodesIds) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    List<NextHeartbeatDTO> hbDTOs = new ArrayList<NextHeartbeatDTO>(rmNodesIds.size());
+    for (String rmNodeId : rmNodesIds) {
+      NextHeartbeatDTO nextHB = session.find(NextHeartbeatDTO.class, rmNodeId);
+      if (nextHB != null) {
+        hbDTOs.add(nextHB);
+      }
+    }
+    session.deletePersistentAll(hbDTOs);
+    session.release(hbDTOs);
+  }
+
   private NextHeartbeatDTO createPersistable(NextHeartbeat hopNextHeartbeat,
           HopsSession session) throws StorageException {
     NextHeartbeatDTO DTO = session.newInstance(NextHeartbeatDTO.class);

@@ -98,6 +98,33 @@ public class ContainerIdToCleanClusterJ implements
     return null;
   }
 
+  public void removeAllByRMNodeId(List<String> rmNodesId) throws StorageException {
+    List<ContainerIdToCleanDTO> toBeRemoved = new ArrayList<ContainerIdToCleanDTO>();
+    List<ContainerIdToCleanDTO> containerIdToRemove = null;
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder queryBuilder = session.getQueryBuilder();
+
+    HopsQueryDomainType<ContainerIdToCleanDTO> dto =
+            queryBuilder.createQueryDefinition(ContainerIdToCleanDTO.class);
+    HopsPredicate pred = dto.get(RMNODEID).equal(dto.param(RMNODEID));
+    dto.where(pred);
+    HopsQuery<ContainerIdToCleanDTO> query = session.createQuery(dto);
+
+    for (String rmNodeId : rmNodesId) {
+      query.setParameter(RMNODEID, rmNodeId);
+      containerIdToRemove = query.getResultList();
+
+      if (!containerIdToRemove.isEmpty()) {
+        toBeRemoved.addAll(containerIdToRemove);
+      }
+    }
+
+    if (!toBeRemoved.isEmpty()) {
+      session.deletePersistentAll(toBeRemoved);
+      session.release(toBeRemoved);
+    }
+  }
+
   @Override
   public Map<String, Set<ContainerId>> getAll() throws StorageException {
     LOG.debug("HOP :: ClusterJ ContainerIdToClean.getAll - START");
