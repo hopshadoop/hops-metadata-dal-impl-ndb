@@ -84,6 +84,8 @@ import io.hops.metadata.yarn.dal.AppSchedulingInfoDataAccess;
 import io.hops.metadata.yarn.dal.ContainerDataAccess;
 import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
 import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
+import io.hops.metadata.yarn.dal.ContainersCheckPointsDataAccess;
+import io.hops.metadata.yarn.dal.ContainersLogsDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppLiveContainersDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppNewlyAllocatedContainersDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerNodeDataAccess;
@@ -107,11 +109,15 @@ import io.hops.metadata.yarn.dal.FiCaSchedulerAppSchedulingOpportunitiesDataAcce
 import io.hops.metadata.yarn.dal.NodeHBResponseDataAccess;
 import io.hops.metadata.yarn.dal.SchedulerApplicationDataAccess;
 import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
+import io.hops.metadata.yarn.dal.YarnProjectsDailyCostDataAccess;
+import io.hops.metadata.yarn.dal.YarnProjectsQuotaDataAccess;
 import io.hops.metadata.yarn.dal.YarnVariablesDataAccess;
+import io.hops.metadata.yarn.dal.capacity.CSLeafQueuesPendingAppsDataAccess;
 import io.hops.metadata.yarn.dal.capacity.CSQueueDataAccess;
 import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservedContainersDataAccess;
 import io.hops.metadata.yarn.dal.fair.LocalityLevelDataAccess;
 import io.hops.metadata.yarn.dal.fair.RunnableAppsDataAccess;
+import io.hops.metadata.yarn.dal.rmstatestore.AllocateRPCDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.AllocateResponseDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.AllocatedContainersDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.ApplicationAttemptStateDataAccess;
@@ -119,6 +125,7 @@ import io.hops.metadata.yarn.dal.rmstatestore.ApplicationStateDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.CompletedContainersStatusDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.DelegationKeyDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.DelegationTokenDataAccess;
+import io.hops.metadata.yarn.dal.rmstatestore.HeartBeatRPCDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.RMStateVersionDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.RPCDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.RanNodeDataAccess;
@@ -138,7 +145,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   private DBSessionProvider dbSessionProvider = null;
   static ThreadLocal<DBSession> sessions = new ThreadLocal<DBSession>();
   static final Log LOG = LogFactory.getLog(ClusterjConnector.class);
-
+  private String clusterConnectString;
+  private String databaseName;
+  
   private ClusterjConnector() {
   }
 
@@ -152,8 +161,11 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       LOG.warn("SessionFactory is already initialized");
       return;
     }
+    
+    clusterConnectString = (String) conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING);
     LOG.info("Database connect string: " +
         conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING));
+    databaseName = (String) conf.get(Constants.PROPERTY_CLUSTER_DATABASE);
     LOG.info("Database name: " + conf.get(Constants.PROPERTY_CLUSTER_DATABASE));
     LOG.info("Max Transactions: " +
         conf.get(Constants.PROPERTY_CLUSTER_MAX_TRANSACTIONS));
@@ -164,7 +176,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         Integer.parseInt((String) conf.get("io.hops.session.reuse.count"));
     dbSessionProvider =
         new DBSessionProvider(conf, reuseCount, initialPoolSize);
-
+    
     isInitialized = true;
   }
 
@@ -369,7 +381,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
         UserGroupDataAccess.class,
         // YARN
-        RPCDataAccess.class, ApplicationStateDataAccess.class,
+        RPCDataAccess.class, HeartBeatRPCDataAccess.class,
+        AllocateRPCDataAccess.class,
+        ApplicationStateDataAccess.class,
         UpdatedNodeDataAccess.class,
         ApplicationAttemptStateDataAccess.class,
         RanNodeDataAccess.class,
@@ -379,6 +393,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         AppSchedulingInfoDataAccess.class,
         AppSchedulingInfoBlacklistDataAccess.class, ContainerDataAccess.class,
         ContainerIdToCleanDataAccess.class, ContainerStatusDataAccess.class,
+        ContainersLogsDataAccess.class,
         FiCaSchedulerAppLastScheduledContainerDataAccess.class,
         FiCaSchedulerAppLiveContainersDataAccess.class,
         FiCaSchedulerAppNewlyAllocatedContainersDataAccess.class,
@@ -402,7 +417,10 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         RunnableAppsDataAccess.class,
         CSQueueDataAccess.class,
         NextHeartbeatDataAccess.class,
-        NodeHBResponseDataAccess.class);
+        NodeHBResponseDataAccess.class, 
+        YarnProjectsQuotaDataAccess.class, YarnProjectsDailyCostDataAccess.class,
+        ContainersCheckPointsDataAccess.class,
+        CSLeafQueuesPendingAppsDataAccess.class);
   }
 
   private boolean format(boolean transactional,
@@ -530,6 +548,18 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
           } else if (e == ContainerStatusDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.ContainerStatusTableDef.TABLE_NAME);
+          } else if (e == ContainersLogsDataAccess.class) {
+            truncate(transactional,
+                io.hops.metadata.yarn.TablesDef.ContainersLogsTableDef.TABLE_NAME);
+          }else if(e==YarnProjectsQuotaDataAccess.class) {
+            truncate(transactional,
+                    io.hops.metadata.yarn.TablesDef.YarnProjectsQuotaTableDef.TABLE_NAME);
+          } else if (e == YarnProjectsDailyCostDataAccess.class) {
+            truncate(transactional,
+                    io.hops.metadata.yarn.TablesDef.YarnProjectsDailyCostTableDef.TABLE_NAME);
+          } else if (e == ContainersCheckPointsDataAccess.class) {
+            truncate(transactional,
+                    io.hops.metadata.yarn.TablesDef.ContainersCheckPointsTableDef.TABLE_NAME);
           } else if (e ==
               FiCaSchedulerAppLastScheduledContainerDataAccess.class) {
             truncate(transactional,
@@ -618,6 +648,20 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.UpdatedNodeTableDef.TABLE_NAME);
           }else if (e == RPCDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.RPCTableDef.TABLE_NAME);
+          } else if (e == HeartBeatRPCDataAccess.class) {
+            truncate(transactional,
+                    io.hops.metadata.yarn.TablesDef.HeartBeatContainerStatusesTableDef.TABLE_NAME);
+            truncate(transactional,
+                    io.hops.metadata.yarn.TablesDef.HeartBeatKeepAliveApplications.TABLE_NAME);
+            truncate(transactional,
+                    io.hops.metadata.yarn.TablesDef.HeartBeatRPCTableDef.TABLE_NAME);
+          } else if (e == HeartBeatRPCDataAccess.class) {
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPC.TABLE_NAME);
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCAsk.TABLE_NAME);
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCBlackListAdd.TABLE_NAME);
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCBlackListRemove.TABLE_NAME);
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCRelease.TABLE_NAME);
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCResourceIncrease.TABLE_NAME);
           } else if (e == RMLoadDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.RMLoadTableDef.TABLE_NAME);
           } else if (e == NodeHBResponseDataAccess.class) {
@@ -627,7 +671,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             session.currentTransaction().begin();
             session.deletePersistentAll(
                 YarnVariablesClusterJ.YarnVariablesDTO.class);
-            for (int j = 0; j <= 18; j++) {
+            for (int j = 0; j <= 19; j++) {
               YarnVariablesClusterJ.YarnVariablesDTO vd = session
                   .newInstance(YarnVariablesClusterJ.YarnVariablesDTO.class);
               vd.setid(j);
@@ -646,6 +690,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.RunnableAppsTableDef.TABLE_NAME);
           } else if (e==CSQueueDataAccess.class){
             truncate(transactional, io.hops.metadata.yarn.TablesDef.CSQueueTableDef.TABLE_NAME);
+          } else if (e==CSLeafQueuesPendingAppsDataAccess.class){
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.CSLeafQueuesPendingAppsTableDef.TABLE_NAME);
           }
         }
         MysqlServerConnector.truncateTable(transactional,
@@ -678,4 +724,13 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     }
     dbSession.getSession().flush();
   }
+
+  public String getClusterConnectString() {
+    return clusterConnectString;
+  }
+
+  public String getDatabaseName() {
+    return databaseName;
+  }
+  
 }

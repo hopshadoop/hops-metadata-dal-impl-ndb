@@ -9,6 +9,8 @@
 
 #include "../include/HopsEventAPI.h"
 #include "../include/HopsLoadSimulation.h"
+#include <pthread.h>
+
 using namespace cnf;
 
 #define MAX_TABLE_NAME_LENGTH 50
@@ -56,7 +58,10 @@ pthread_t * HopsEventAPI::GetPthreadIdArray(int *_ptrSize) {
 	return m_ptrThreadArray;
 }
 
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
 void HopsEventAPI::dropEvents() {
+  pthread_mutex_lock(&lock);
 	if (m_bAPIInitialized) {
 		// first stop pooling from db, dont get any events from ndb buffer
 		m_ptrEventThread->StopEventThread();
@@ -70,18 +75,21 @@ void HopsEventAPI::dropEvents() {
 		}
 		//finally cancel the event thread
 		m_ptrEventThread->CancelEventThread();
+    m_bAPIInitialized=false;
 		delete m_ptrEventThread;
 	}
+  pthread_mutex_unlock(&lock);
 }
-void HopsEventAPI::initAPI(JavaVM *_ptrJVM, HopsConfigFile *_ptrConf) {
+void HopsEventAPI::initAPI(JavaVM *_ptrJVM, HopsConfigFile *_ptrConf,
+        const char * l_zNdbConnectionString, const char * l_zNdbDatabaseName) {
 
 	char **pEventTableNameArray;
 
 	char l_zConfigReaderArray[1024];
 	char l_zSetOfTables[1024];
-	char l_zNdbDatabaseName[1024];
+//	char l_zNdbDatabaseName[1024];
 	char l_zSetOfCol[1024];
-	char l_zNdbConnectionString[1024];
+//	char l_zNdbConnectionString[1024];
 
 	memset(l_zConfigReaderArray, 0, sizeof(l_zConfigReaderArray));
 	memset(l_zSetOfTables, 0, sizeof(l_zSetOfTables));
@@ -142,7 +150,7 @@ void HopsEventAPI::initAPI(JavaVM *_ptrJVM, HopsConfigFile *_ptrConf) {
 
 	memset(l_zConfigReaderArray, 0, sizeof(l_zConfigReaderArray));
 	sprintf(l_zConfigReaderArray, "NDB_CONNECT_STRING");
-	strcpy(l_zNdbConnectionString, _ptrConf->GetValue(l_zConfigReaderArray));
+//	strcpy(l_zNdbConnectionString, _ptrConf->GetValue(l_zConfigReaderArray));
 
 	Ndb_cluster_connection *cluster_connection = new Ndb_cluster_connection(
 			l_zNdbConnectionString); // Object representing the cluster
@@ -177,7 +185,7 @@ void HopsEventAPI::initAPI(JavaVM *_ptrJVM, HopsConfigFile *_ptrConf) {
 
 	memset(l_zConfigReaderArray, 0, sizeof(l_zConfigReaderArray));
 	sprintf(l_zConfigReaderArray, "NDB_DATABASE_NAME");
-	strcpy(l_zNdbDatabaseName, _ptrConf->GetValue(l_zConfigReaderArray));
+//	strcpy(l_zNdbDatabaseName, _ptrConf->GetValue(l_zConfigReaderArray));
 
 	m_ptrProcessingQ = new HopsEventQueueFrame *[m_iTotalThreads];
 

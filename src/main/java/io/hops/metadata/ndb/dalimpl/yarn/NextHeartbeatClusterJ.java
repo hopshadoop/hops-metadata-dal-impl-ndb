@@ -111,8 +111,10 @@ public class NextHeartbeatClusterJ
       }
     }
     session.savePersistentAll(toPersist);
-    session.release(toPersist);
+    session.flush();
     session.deletePersistentAll(toRemove);
+    session.flush();
+    session.release(toPersist);
     session.release(toRemove);
   }
 

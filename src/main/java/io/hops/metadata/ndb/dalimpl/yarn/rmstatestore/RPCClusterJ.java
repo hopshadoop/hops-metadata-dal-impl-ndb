@@ -162,7 +162,11 @@ public class RPCClusterJ implements TablesDef.RPCTableDef, RPCDataAccess<RPC> {
     appMasterRPCDTO.setrpcid(hop.getRPCId());
     appMasterRPCDTO.settype(hop.getType().name());
     try {
-      appMasterRPCDTO.setrpc(CompressionUtils.compress(hop.getRpc()));
+      if (hop.getRpc() != null) {
+        appMasterRPCDTO.setrpc(CompressionUtils.compress(hop.getRpc()));
+      } else {
+        appMasterRPCDTO.setrpc(new byte[0]);
+      }
     } catch (IOException e) {
       throw new StorageException(e);
     }
