@@ -59,14 +59,36 @@ public class TestFullRMNodeClusterJ {
 
   @Test
   public void testRemoveHBForRMNode() throws StorageException, IOException {
-    final RMNode hopsRMNode =
-            new RMNode("host1:1234", "hostname", 1234, 8080, "127.0.0.1", "hop.sics.se",
+    final RMNode hopsRMNode0 =
+            new RMNode("host0:1234", "hostname0", 1234, 8080, "127.0.0.1", "hop.sics.se",
                     "healthy", -10L, "running", "blah", 10, 3, 0);
-    final NextHeartbeat nextHB =
-            new NextHeartbeat(hopsRMNode.getNodeId(), true, 22);
+    final NextHeartbeat nextHB0 =
+            new NextHeartbeat(hopsRMNode0.getNodeId(), true, 22);
+
+    final RMNode hopsRMNode1 =
+            new RMNode("host1:1234", "hostname1", 1234, 8080, "127.0.0.1", "hop.sics.se",
+                    "healthy", -10L, "running", "blah", 10, 3, 0);
+    final NextHeartbeat nextHB1 =
+            new NextHeartbeat(hopsRMNode1.getNodeId(), true, 22);
+
+    final RMNode hopsRMNode2 =
+            new RMNode("host2:1234", "hostname2", 1234, 8080, "127.0.0.1", "hop.sics.se",
+                    "healthy", -10L, "running", "blah", 10, 3, 0);
+    final NextHeartbeat nextHB2 =
+            new NextHeartbeat(hopsRMNode2.getNodeId(), true, 22);
+
+    final List<RMNode> rmNodes = new ArrayList<RMNode>();
+    rmNodes.add(hopsRMNode0);
+    rmNodes.add(hopsRMNode1);
+    rmNodes.add(hopsRMNode2);
+
+    final List<NextHeartbeat> HBs = new ArrayList<NextHeartbeat>();
+    HBs.add(nextHB0);
+    HBs.add(nextHB1);
+    HBs.add(nextHB2);
 
     // Persist them in DB
-    LightWeightRequestHandler dbHandler = new LightWeightRequestHandler(YARNOperationType.TEST) {
+    LightWeightRequestHandler populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
       @Override
       public Object performTask() throws StorageException {
         connector.beginTransaction();
@@ -74,59 +96,118 @@ public class TestFullRMNodeClusterJ {
 
         RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory.
                 getDataAccess(RMNodeDataAccess.class);
+
         NextHeartbeatDataAccess nextHBDAO = (NextHeartbeatDataAccess) storageFactory.
                 getDataAccess(NextHeartbeatDataAccess.class);
-        List<NextHeartbeat> hb = new ArrayList<NextHeartbeat>();
-        hb.add(nextHB);
-        nextHBDAO.updateAll(hb);
 
-        rmNodeDAO.add(hopsRMNode);
+        nextHBDAO.updateAll(HBs);
+
+        rmNodeDAO.addAll(rmNodes);
+
         connector.commit();
-
         return null;
       }
     };
-    dbHandler.handle();
+    populate.handle();
 
-    // Verify everything is there
-    dbHandler = new LightWeightRequestHandler(YARNOperationType.TEST) {
-      @Override
-      public Object performTask() throws IOException {
-        connector.beginTransaction();
-        connector.readLock();
-        RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory.
-                getDataAccess(RMNodeDataAccess.class);
-        RMNode retrievedRMNode = (RMNode) rmNodeDAO.
-                findByNodeId(hopsRMNode.getNodeId());
-        connector.commit();
-        return retrievedRMNode;
-      }
-    };
-    RMNode rmNode = (RMNode) dbHandler.handle();
+    // Verify RMNodes are there
+    LightWeightRequestHandler queryRMNodes = new QueryRMNodes(YARNOperationType.TEST);
+    Map<String, RMNode> rmNodeResult = (Map<String, RMNode>) queryRMNodes.handle();
 
-    // TODO: Check for the rest of the fields
-    Assert.assertEquals(rmNode.getNodeId(), hopsRMNode.getNodeId());
+    org.junit.Assert.assertEquals("There should be three RMNodes persisted", 3, rmNodeResult.size());
 
-    // Remove RMNode should trigger corresponding next HB to be removed
-    dbHandler = new LightWeightRequestHandler(YARNOperationType.TEST) {
-      @Override
-      public Object performTask() throws IOException {
-        connector.beginTransaction();
-        connector.writeLock();
+    // Verify nextHBs are there
+    LightWeightRequestHandler queryHB = new QueryHB(YARNOperationType.TEST);
 
-        RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory.
-                getDataAccess(RMNodeDataAccess.class);
-        Collection<RMNode> toBeDeleted = new HashSet<RMNode>();
-        toBeDeleted.add(hopsRMNode);
-        rmNodeDAO.removeAll(toBeDeleted);
-        connector.commit();
+    Map<String, Boolean> hbResult = (Map<String, Boolean>) queryHB.handle();
 
-        return null;
-      }
-    };
-    dbHandler.handle();
+    org.junit.Assert.assertEquals("There should be three next heartbeats persisted", 3, hbResult.size());
 
-    // TODO: check HB is indeed removed
+    // Remove one RMNode should trigger corresponding next HB to be removed
+    List<RMNode> toBeRemoved = new ArrayList<RMNode>();
+    toBeRemoved.add(rmNodes.get(0));
+    LightWeightRequestHandler removerRMNodes = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+    removerRMNodes.handle();
+
+    rmNodeResult = (Map<String, RMNode>) queryRMNodes.handle();
+    org.junit.Assert.assertEquals("There should be two RMNodes persisted", 2, rmNodeResult.size());
+    hbResult = (Map<String, Boolean>) queryHB.handle();
+    org.junit.Assert.assertEquals("There should be two next heartbeats persisted", 2, hbResult.size());
+
+    // Remove the rest of the RMNodes and corresponding HBs
+    toBeRemoved.clear();
+    toBeRemoved.add(rmNodes.get(1));
+    toBeRemoved.add(rmNodes.get(2));
+    removerRMNodes = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+    removerRMNodes.handle();
+
+    rmNodeResult = (Map<String, RMNode>) queryRMNodes.handle();
+    org.junit.Assert.assertEquals("There should be none RMNodes persisted", 0, rmNodeResult.size());
+    hbResult = (Map<String, Boolean>) queryHB.handle();
+    org.junit.Assert.assertEquals("There should be none next heartbeats persisted", 0, hbResult.size());
+  }
+
+  private class RemoveRMNodes extends LightWeightRequestHandler {
+    private List<RMNode> rmNodes;
+
+    public RemoveRMNodes(OperationType opType, List<RMNode> rmNodes) {
+      super(opType);
+      this.rmNodes = rmNodes;
+    }
+
+    @Override
+    public Object performTask() throws IOException {
+      connector.beginTransaction();
+      connector.writeLock();
+
+      RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory.
+              getDataAccess(RMNodeDataAccess.class);
+      Collection<RMNode> toBeDeleted = new HashSet<RMNode>(rmNodes);
+
+      rmNodeDAO.removeAll(toBeDeleted);
+      connector.commit();
+
+      return null;
+    }
+  }
+
+  private class QueryHB extends LightWeightRequestHandler {
+
+    public QueryHB(OperationType opType) {
+      super(opType);
+    }
+
+    @Override
+    public Object performTask() throws IOException {
+      connector.beginTransaction();
+      connector.readLock();
+
+      NextHeartbeatDataAccess nextHBDAO = (NextHeartbeatDataAccess) storageFactory
+              .getDataAccess(NextHeartbeatDataAccess.class);
+      Map<String, Boolean> result = nextHBDAO.getAll();
+      connector.commit();
+
+      return result;
+    }
+  }
+
+  private class QueryRMNodes extends LightWeightRequestHandler {
+
+    public QueryRMNodes(OperationType opType) {
+      super(opType);
+    }
+
+    @Override
+    public Object performTask() throws IOException {
+      connector.beginTransaction();
+      connector.readLock();
+      RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory.
+              getDataAccess(RMNodeDataAccess.class);
+      Map<String, RMNode> result = rmNodeDAO.getAll();
+
+      connector.commit();
+      return result;
+    }
   }
 
   @Test

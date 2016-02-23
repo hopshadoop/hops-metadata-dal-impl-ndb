@@ -169,12 +169,14 @@ public class RMNodeClusterJ
     NextHeartbeatClusterJ nextHBClusterJ = new NextHeartbeatClusterJ();
     HopsSession session = connector.obtainSession();
     List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
+    List<String> hbToRemove = new ArrayList<String>();
     LOG.debug("--- Removing RMnode from database ---");
     for (RMNode entry : toRemove) {
       toPersist.add(session.newInstance(RMNodeDTO.class, entry.
           getNodeId()));
-      nextHBClusterJ.removeById(entry.getNodeId());
+      hbToRemove.add(entry.getNodeId());
     }
+    nextHBClusterJ.removeAllById(hbToRemove);
     session.deletePersistentAll(toPersist);
     session.release(toPersist);
   }
