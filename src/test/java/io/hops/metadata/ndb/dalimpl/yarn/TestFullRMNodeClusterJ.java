@@ -145,6 +145,36 @@ public class TestFullRMNodeClusterJ {
     org.junit.Assert.assertEquals("There should be none RMNodes persisted", 0, rmNodeResult.size());
     hbResult = (Map<String, Boolean>) queryHB.handle();
     org.junit.Assert.assertEquals("There should be none next heartbeats persisted", 0, hbResult.size());
+
+    // Add RMNode but not HB
+    populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
+      @Override
+      public Object performTask() throws StorageException {
+        connector.beginTransaction();
+        connector.writeLock();
+
+        RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory.
+                getDataAccess(RMNodeDataAccess.class);
+
+        rmNodeDAO.addAll(rmNodes);
+
+        connector.commit();
+        return null;
+      }
+    };
+    populate.handle();
+
+    rmNodeResult = (Map<String, RMNode>) queryRMNodes.handle();
+    org.junit.Assert.assertEquals("There should be three RMNodes persisted", 3, rmNodeResult.size());
+
+    hbResult = (Map<String, Boolean>) queryHB.handle();
+    org.junit.Assert.assertEquals("There should be none next heartbeats persisted", 0, hbResult.size());
+
+    removerRMNodes = new RemoveRMNodes(YARNOperationType.TEST, rmNodes);
+    removerRMNodes.handle();
+
+    rmNodeResult = (Map<String, RMNode>) queryRMNodes.handle();
+    org.junit.Assert.assertEquals("There should be none RMNodes persisted", 0, rmNodeResult.size());
   }
 
 
