@@ -177,10 +177,15 @@ public class RMNodeClusterJ
       toPersist.add(session.newInstance(RMNodeDTO.class, entry.
           getNodeId()));
       hbToRemove.add(entry.getNodeId());
-      finishedToRemove.addAll(finishedAppsClusterJ.findByRMNode(entry.getNodeId()));
+      List<FinishedApplications> tmpFinishedApps = finishedAppsClusterJ.findByRMNode(entry.getNodeId());
+      if (tmpFinishedApps != null) {
+        finishedToRemove.addAll(finishedAppsClusterJ.findByRMNode(entry.getNodeId()));
+      }
     }
     nextHBClusterJ.removeAllById(hbToRemove);
-    finishedAppsClusterJ.removeAll(finishedToRemove);
+    if (finishedToRemove.size() > 0) {
+      finishedAppsClusterJ.removeAll(finishedToRemove);
+    }
     session.deletePersistentAll(toPersist);
     session.release(toPersist);
   }
