@@ -693,12 +693,7 @@ CREATE TABLE `yarn_rmnode_finishedapplications` (
   `applicationid` VARCHAR(45) NOT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`, `applicationid`),
-  INDEX `index2` (`rmnodeid` ASC),
-  CONSTRAINT `rmnodeid`
-    FOREIGN KEY (`rmnodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  INDEX `index2` (`rmnodeid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(applicationid) $$
 
 
