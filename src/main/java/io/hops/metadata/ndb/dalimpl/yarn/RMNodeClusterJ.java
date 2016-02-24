@@ -29,6 +29,7 @@ import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.RMNodeDataAccess;
+import io.hops.metadata.yarn.entity.FinishedApplications;
 import io.hops.metadata.yarn.entity.RMNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -167,15 +168,19 @@ public class RMNodeClusterJ
   @Override
   public void removeAll(Collection<RMNode> toRemove) throws StorageException {
     NextHeartbeatClusterJ nextHBClusterJ = new NextHeartbeatClusterJ();
+    FinishedApplicationsClusterJ finishedAppsClusterJ = new FinishedApplicationsClusterJ();
     HopsSession session = connector.obtainSession();
     List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
     List<String> hbToRemove = new ArrayList<String>();
+    List<FinishedApplications> finishedToRemove = new ArrayList<FinishedApplications>();
     for (RMNode entry : toRemove) {
       toPersist.add(session.newInstance(RMNodeDTO.class, entry.
           getNodeId()));
       hbToRemove.add(entry.getNodeId());
+      finishedToRemove.addAll(finishedAppsClusterJ.findByRMNode(entry.getNodeId()));
     }
     nextHBClusterJ.removeAllById(hbToRemove);
+    finishedAppsClusterJ.removeAll(finishedToRemove);
     session.deletePersistentAll(toPersist);
     session.release(toPersist);
   }
