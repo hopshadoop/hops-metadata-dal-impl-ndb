@@ -179,7 +179,7 @@ public class RMNodeClusterJ
       hbToRemove.add(entry.getNodeId());
       List<FinishedApplications> tmpFinishedApps = finishedAppsClusterJ.findByRMNode(entry.getNodeId());
       if (tmpFinishedApps != null) {
-        finishedToRemove.addAll(finishedAppsClusterJ.findByRMNode(entry.getNodeId()));
+        finishedToRemove.addAll(tmpFinishedApps);
       }
     }
     nextHBClusterJ.removeAllById(hbToRemove);
