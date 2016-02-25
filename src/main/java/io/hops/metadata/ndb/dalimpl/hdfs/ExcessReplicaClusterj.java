@@ -109,7 +109,7 @@ public class ExcessReplicaClusterj
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<ExcessReplicaDTO> qdt =
         qb.createQueryDefinition(ExcessReplicaDTO.class);
-    qdt.where(qdt.get("datanode_uuid").equal(qdt.param("param")));
+    qdt.where(qdt.get(DATANODE_UUID).equal(qdt.param("param")));
     HopsQuery<ExcessReplicaDTO> query = session.createQuery(qdt);
     query.setParameter("param", uuid);
     List<ExcessReplicaDTO> dtos = query.getResultList();
@@ -219,3 +219,4 @@ public class ExcessReplicaClusterj
     exReplicaTable.setINodeId(exReplica.getInodeId());
   }
 }
+
