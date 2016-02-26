@@ -136,6 +136,33 @@ public class JustLaunchedContainersClusterJ
     return result;
   }
 
+  public void removeByRMNodeId(List<String> rmNodeIds) throws StorageException {
+    List<JustLaunchedContainersDTO> toBeRemoved = new ArrayList<JustLaunchedContainersDTO>();
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder queryBuilder = session.getQueryBuilder();
+
+    HopsQueryDomainType<JustLaunchedContainersDTO> dto =
+            queryBuilder.createQueryDefinition(JustLaunchedContainersDTO.class);
+    HopsPredicate pred = dto.get(RMNODEID).equal(dto.param(RMNODEID));
+    dto.where(pred);
+    HopsQuery<JustLaunchedContainersDTO> query = session.createQuery(dto);
+    List<JustLaunchedContainersDTO> rmNodeContainers;
+
+    for (String rmNodeId : rmNodeIds) {
+      query.setParameter(RMNODEID, rmNodeId);
+      rmNodeContainers = query.getResultList();
+
+      if (rmNodeContainers != null) {
+        toBeRemoved.addAll(rmNodeContainers);
+      }
+    }
+
+    if (!toBeRemoved.isEmpty()) {
+      session.deletePersistentAll(toBeRemoved);
+      session.release(toBeRemoved);
+    }
+  }
+
   @Override
   public Map<String, List<JustLaunchedContainers>> getAll()
       throws StorageException {

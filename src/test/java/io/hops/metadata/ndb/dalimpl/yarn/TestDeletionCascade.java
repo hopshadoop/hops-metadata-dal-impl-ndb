@@ -459,14 +459,13 @@ public class TestDeletionCascade extends NDBBaseTest {
 
         Assert.assertEquals("There are six different containers", 6,
                 contStatusResult.size());
-        
+
         // Remove first RMNode
         List<RMNode> toBeDeleted = new ArrayList<RMNode>();
         toBeDeleted.add(hopsRMNode0);
         LightWeightRequestHandler rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeDeleted);
         rmNodeRemover.handle();
 
-        queryContStatus = new QueryContainerStatus(YARNOperationType.TEST);
         contStatusResult = (Map<String, ContainerStatus>) queryContStatus.handle();
 
         Assert.assertEquals("There should be four containers now", 4,
@@ -481,10 +480,111 @@ public class TestDeletionCascade extends NDBBaseTest {
         rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeDeleted);
         rmNodeRemover.handle();
 
-        queryContStatus = new QueryContainerStatus(YARNOperationType.TEST);
         contStatusResult = (Map<String, ContainerStatus>) queryContStatus.handle();
 
         Assert.assertTrue("There should be none container statuses by now", contStatusResult.isEmpty());
+    }
+
+    @Test
+    public void testRemoveJustLaunchedContainersForRMNode()
+        throws Exception {
+        final List<JustLaunchedContainers> justLaunCont0 =
+                new ArrayList<JustLaunchedContainers>();
+        justLaunCont0.add(new JustLaunchedContainers(hopsRMNode0.getNodeId(), "cont0_0"));
+        justLaunCont0.add(new JustLaunchedContainers(hopsRMNode0.getNodeId(), "cont0_1"));
+
+        final List<JustLaunchedContainers> justLaunCont1 =
+                new ArrayList<JustLaunchedContainers>();
+        justLaunCont1.add(new JustLaunchedContainers(hopsRMNode1.getNodeId(), "cont1_0"));
+        justLaunCont1.add(new JustLaunchedContainers(hopsRMNode1.getNodeId(), "cont1_1"));
+
+        final List<JustLaunchedContainers> justLaunCont2 =
+                new ArrayList<JustLaunchedContainers>();
+        justLaunCont2.add(new JustLaunchedContainers(hopsRMNode2.getNodeId(), "cont2_0"));
+        justLaunCont2.add(new JustLaunchedContainers(hopsRMNode2.getNodeId(), "cont2_1"));
+
+        // Persist them in DB
+        LightWeightRequestHandler populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
+            @Override
+            public Object performTask() throws IOException {
+                connector.beginTransaction();
+                connector.writeLock();
+
+                RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory
+                        .getDataAccess(RMNodeDataAccess.class);
+                JustLaunchedContainersDataAccess jLaunched = (JustLaunchedContainersDataAccess)
+                        storageFactory.getDataAccess(JustLaunchedContainersDataAccess.class);
+
+                jLaunched.addAll(justLaunCont0);
+                jLaunched.addAll(justLaunCont1);
+                jLaunched.addAll(justLaunCont2);
+
+                rmNodeDAO.addAll(rmNodes);
+
+                connector.commit();
+                return null;
+            }
+        };
+        populate.handle();
+
+        // Verify all just launched containers are there
+        LightWeightRequestHandler queryJLaunched = new QueryJustLaunchedContainers(YARNOperationType.TEST);
+        Map<String, List<JustLaunchedContainers>> jLaunchedResult = (Map<String, List<JustLaunchedContainers>>)
+                queryJLaunched.handle();
+
+        Assert.assertEquals("There should be three RMNode IDs", 3, jLaunchedResult.size());
+
+        // Remove the first node
+        List<RMNode> toBeDeleted = new ArrayList<RMNode>();
+        toBeDeleted.add(hopsRMNode0);
+        LightWeightRequestHandler rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeDeleted);
+        rmNodeRemover.handle();
+
+        jLaunchedResult = (Map<String, List<JustLaunchedContainers>>)
+                queryJLaunched.handle();
+
+        Assert.assertEquals("There should be two RMNode IDs now", 2, jLaunchedResult.size());
+        Assert.assertFalse("host0:1234 should not exist", jLaunchedResult.containsKey(hopsRMNode0.getNodeId()));
+        Assert.assertEquals("host1:1234 should have two launched containers", 2,
+                jLaunchedResult.get(hopsRMNode1.getNodeId()).size());
+        Assert.assertEquals("host2:1234 should have two launched containers", 2,
+                jLaunchedResult.get(hopsRMNode2.getNodeId()).size());
+
+        // Remove the rest of the RMNodes
+        toBeDeleted.clear();
+        toBeDeleted.add(hopsRMNode1);
+        toBeDeleted.add(hopsRMNode2);
+        rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeDeleted);
+        rmNodeRemover.handle();
+
+        jLaunchedResult = (Map<String, List<JustLaunchedContainers>>)
+                queryJLaunched.handle();
+        Assert.assertNull("By now there should be no just launched containers",
+                jLaunchedResult);
+    }
+
+    /**
+     * Helper classes
+     */
+    private class QueryJustLaunchedContainers extends LightWeightRequestHandler {
+
+        public QueryJustLaunchedContainers(OperationType opType) {
+            super(opType);
+        }
+
+        @Override
+        public Object performTask() throws IOException {
+            connector.beginTransaction();
+            connector.readLock();
+
+            JustLaunchedContainersDataAccess jLaunchedDAO = (JustLaunchedContainersDataAccess)
+                    storageFactory.getDataAccess(JustLaunchedContainersDataAccess.class);
+
+            Map<String, List<JustLaunchedContainers>> result = jLaunchedDAO.getAll();
+            connector.commit();
+
+            return result;
+        }
     }
 
     private class QueryContainerStatus extends LightWeightRequestHandler {

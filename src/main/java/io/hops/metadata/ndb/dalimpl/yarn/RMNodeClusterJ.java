@@ -173,6 +173,8 @@ public class RMNodeClusterJ
     NodeClusterJ nodeClusterJ = new NodeClusterJ();
     UpdatedContainerInfoClusterJ updatedContClusterJ = new UpdatedContainerInfoClusterJ();
     ContainerStatusClusterJ containerStatusClusterJ = new ContainerStatusClusterJ();
+    JustLaunchedContainersClusterJ justLaunchedCont = new JustLaunchedContainersClusterJ();
+
     HopsSession session = connector.obtainSession();
     List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
     List<String> nodesId = new ArrayList<String>();
@@ -207,6 +209,7 @@ public class RMNodeClusterJ
       updatedContClusterJ.removeAll(updatedContainersToRemove);
     }
     containerStatusClusterJ.removeAllByRMNodeID(nodesId);
+    justLaunchedCont.removeByRMNodeId(nodesId);
 
     session.deletePersistentAll(toPersist);
     session.release(toPersist);
