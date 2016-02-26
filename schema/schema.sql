@@ -557,12 +557,7 @@ CREATE TABLE `yarn_containerstatus` (
   `exitstatus` INT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`containerid`, `rmnodeid`),
-  INDEX `rmnodeid_idx` (`rmnodeid` ASC),
-  CONSTRAINT `rmnodeid`
-  FOREIGN KEY (`rmnodeid`)
-  REFERENCES `yarn_rmnode` (`rmnodeid`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION
+  INDEX `rmnodeid_idx` (`rmnodeid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`rmnodeid`)$$
 
 

@@ -31,30 +31,32 @@ import java.io.IOException;
 import java.util.*;
 
 public class TestDeletionCascade extends NDBBaseTest {
-    @Test
-    public void testRemoveHBForRMNode() throws StorageException, IOException {
-        final RMNode hopsRMNode0 =
-                new RMNode("host0:1234", "hostname0", 1234, 8080, "127.0.0.1", "hop.sics.se",
-                        "healthy", -10L, "running", "blah", 10, 3, 0);
-        final NextHeartbeat nextHB0 =
-                new NextHeartbeat(hopsRMNode0.getNodeId(), true, 22);
-
-        final RMNode hopsRMNode1 =
-                new RMNode("host1:1234", "hostname1", 1234, 8080, "127.0.0.1", "hop.sics.se",
-                        "healthy", -10L, "running", "blah", 10, 3, 0);
-        final NextHeartbeat nextHB1 =
-                new NextHeartbeat(hopsRMNode1.getNodeId(), true, 22);
-
-        final RMNode hopsRMNode2 =
-                new RMNode("host2:1234", "hostname2", 1234, 8080, "127.0.0.1", "hop.sics.se",
-                        "healthy", -10L, "running", "blah", 10, 3, 0);
-        final NextHeartbeat nextHB2 =
-                new NextHeartbeat(hopsRMNode2.getNodeId(), true, 22);
-
-        final List<RMNode> rmNodes = new ArrayList<RMNode>();
+    final static RMNode hopsRMNode0 =
+            new RMNode("host0:1234", "hostname0", 1234, 8080, "127.0.0.1", "hop.sics.se",
+                    "healthy", -10L, "running", "blah", 10, 3, 0);
+    final static RMNode hopsRMNode1 =
+            new RMNode("host1:1234", "hostname1", 1234, 8080, "127.0.0.1", "hop.sics.se",
+                    "healthy", -10L, "running", "blah", 10, 3, 0);
+    final static RMNode hopsRMNode2 =
+            new RMNode("host2:1234", "hostname2", 1234, 8080, "127.0.0.1", "hop.sics.se",
+                    "healthy", -10L, "running", "blah", 10, 3, 0);
+    final static List<RMNode> rmNodes = new ArrayList<RMNode>();
+    static {
         rmNodes.add(hopsRMNode0);
         rmNodes.add(hopsRMNode1);
         rmNodes.add(hopsRMNode2);
+    }
+
+    @Test
+    public void testRemoveHBForRMNode() throws StorageException, IOException {
+        final NextHeartbeat nextHB0 =
+                new NextHeartbeat(hopsRMNode0.getNodeId(), true, 22);
+
+        final NextHeartbeat nextHB1 =
+                new NextHeartbeat(hopsRMNode1.getNodeId(), true, 22);
+
+        final NextHeartbeat nextHB2 =
+                new NextHeartbeat(hopsRMNode2.getNodeId(), true, 22);
 
         final List<NextHeartbeat> HBs = new ArrayList<NextHeartbeat>();
         HBs.add(nextHB0);
@@ -154,23 +156,18 @@ public class TestDeletionCascade extends NDBBaseTest {
     @Test
     public void testRemoveFinishedApplicationsForRMNode()
             throws StorageException, IOException {
-        final RMNode hopsRMNode0 =
-                new RMNode("host0:1234", "hostname0", 1234, 8080, "127.0.0.1", "hop.sics.se",
-                        "healthy", -10L, "running", "blah", 10, 3, 0);
+
         final List<FinishedApplications> finishedApps0 = new ArrayList<FinishedApplications>();
         finishedApps0.add(new FinishedApplications("host0:1234", "app0_0", 1));
         finishedApps0.add(new FinishedApplications("host0:1234", "app0_1", 1));
 
-        final RMNode hopsRMNode1 =
-                new RMNode("host1:1234", "hostname1", 1234, 8080, "127.0.0.1", "hop.sics.se",
-                        "healthy", -10L, "running", "blah", 10, 3, 0);
         final List<FinishedApplications> finishedApps1 = new ArrayList<FinishedApplications>();
         finishedApps1.add(new FinishedApplications("host1:1234", "app1_0", 1));
         finishedApps1.add(new FinishedApplications("host1:1234", "app1_1", 1));
 
-        final List<RMNode> rmNodes = new ArrayList<RMNode>();
-        rmNodes.add(hopsRMNode0);
-        rmNodes.add(hopsRMNode1);
+        final List<FinishedApplications> finishedApps2 = new ArrayList<FinishedApplications>();
+        finishedApps2.add(new FinishedApplications("host2:1234", "app1_0", 1));
+        finishedApps2.add(new FinishedApplications("host2:1234", "app1_1", 1));
 
         // Persist them in DB
         LightWeightRequestHandler populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
@@ -187,6 +184,7 @@ public class TestDeletionCascade extends NDBBaseTest {
 
                 finishedAppsDAO.addAll(finishedApps0);
                 finishedAppsDAO.addAll(finishedApps1);
+                finishedAppsDAO.addAll(finishedApps2);
 
                 rmNodeDAO.addAll(rmNodes);
 
@@ -201,12 +199,14 @@ public class TestDeletionCascade extends NDBBaseTest {
         Map<String, List<FinishedApplications>> finishedAppsResult =
                 (Map<String, List<FinishedApplications>>) queryFinishedApps.handle();
 
-        Assert.assertEquals("There should be 2 FinishedApplications groups, grouped by RMNode", 2,
+        Assert.assertEquals("There should be 3 FinishedApplications groups, grouped by RMNode", 3,
                 finishedAppsResult.size());
         Assert.assertEquals("RMode 0 should have two finished apps", 2,
                 finishedAppsResult.get(hopsRMNode0.getNodeId()).size());
         Assert.assertEquals("RMode 1 should have two finished apps", 2,
                 finishedAppsResult.get(hopsRMNode1.getNodeId()).size());
+        Assert.assertEquals("RMode 2 should have two finished apps", 2,
+                finishedAppsResult.get(hopsRMNode2.getNodeId()).size());
 
         // Remove first RMNode
         List<RMNode> toBeRemoved = new ArrayList<RMNode>();
@@ -217,16 +217,19 @@ public class TestDeletionCascade extends NDBBaseTest {
         // Verify FinishedApplications are removed as well
         finishedAppsResult = (Map<String, List<FinishedApplications>>)
                 queryFinishedApps.handle();
-        Assert.assertEquals("Only one set of FinishedApplications should exist", 1,
+        Assert.assertEquals("Only two sets of FinishedApplications should exist", 2,
                 finishedAppsResult.size());
         Assert.assertFalse("RMNode0 should not have FinishedApplications",
                 finishedAppsResult.containsKey(hopsRMNode0.getNodeId()));
         Assert.assertEquals("RMNode1 FinishedApplications should be two", 2,
                 finishedAppsResult.get(hopsRMNode1.getNodeId()).size());
+        Assert.assertEquals("RMNode2 FinishedApplications should be two", 2,
+                finishedAppsResult.get(hopsRMNode2.getNodeId()).size());
 
-        // Remove second RMNode
+        // Remove the rest of RMNodes
         toBeRemoved.clear();
         toBeRemoved.add(rmNodes.get(1));
+        toBeRemoved.add(rmNodes.get(2));
         rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
         rmNodeRemover.handle();
 
@@ -239,28 +242,14 @@ public class TestDeletionCascade extends NDBBaseTest {
 
     @Test
     public void testRemoveNodeForRMNode() throws StorageException, IOException {
-        final RMNode hopsRMNode0 =
-                new RMNode("host0:1234", "hostname0", 1234, 8080, "127.0.0.1", "hop.sics.se",
-                        "healthy", -10L, "running", "blah", 10, 3, 0);
         final Node hopsNode0 =
                 new Node("host0:1234", "host0", "rack0", 1, "parent", 1);
 
-        final RMNode hopsRMNode1 =
-                new RMNode("host1:1234", "hostname1", 1234, 8080, "127.0.0.1", "hop.sics.se",
-                        "healthy", -10L, "running", "blah", 10, 3, 0);
         final Node hopsNode1 =
                 new Node("host1:1234", "host1", "rack0", 1, "parent", 1);
 
-        final RMNode hopsRMNode2 =
-                new RMNode("host2:1234", "hostname2", 1234, 8080, "127.0.0.1", "hop.sics.se",
-                        "healthy", -10L, "running", "blah", 10, 3, 0);
         final Node hopsNode2 =
                 new Node("host2:1234", "host2", "rack1", 1, "parent", 1);
-
-        final List<RMNode> rmNodes = new ArrayList<RMNode>();
-        rmNodes.add(hopsRMNode0);
-        rmNodes.add(hopsRMNode1);
-        rmNodes.add(hopsRMNode2);
 
         final List<Node> nodes = new ArrayList<Node>();
         nodes.add(hopsNode0);
@@ -321,37 +310,23 @@ public class TestDeletionCascade extends NDBBaseTest {
 
     @Test
     public void testRemoveUpdatedContainersInfoForRMNode() throws Exception {
-        final RMNode hopsRMNode0 =
-                new RMNode("host0:1234", "hostname0", 1234, 8080, "127.0.0.1", "hop.sics.se",
-                        "healthy", -10L, "running", "blah", 10, 3, 0);
         final List<UpdatedContainerInfo> containerInfos0 =
                 new ArrayList<UpdatedContainerInfo>();
         containerInfos0.add(new UpdatedContainerInfo("host0:1234", "cont0", 1, 1));
         containerInfos0.add(new UpdatedContainerInfo("host0:1234", "cont1", 1, 1));
         containerInfos0.add(new UpdatedContainerInfo("host0:1234", "cont2", 1, 1));
 
-        final RMNode hopsRMNode1 =
-                new RMNode("host1:1234", "hostname1", 1234, 8080, "127.0.0.1", "hop.sics.se",
-                        "healthy", -10L, "running", "blah", 10, 3, 0);
         final List<UpdatedContainerInfo> containerInfos1 =
                 new ArrayList<UpdatedContainerInfo>();
         containerInfos0.add(new UpdatedContainerInfo("host1:1234", "cont0", 1, 1));
         containerInfos0.add(new UpdatedContainerInfo("host1:1234", "cont1", 1, 1));
         containerInfos0.add(new UpdatedContainerInfo("host1:1234", "cont2", 1, 1));
 
-        final RMNode hopsRMNode2 =
-                new RMNode("host2:1234", "hostname2", 1234, 8080, "127.0.0.1", "hop.sics.se",
-                        "healthy", -10L, "running", "blah", 10, 3, 0);
         final List<UpdatedContainerInfo> containerInfos2 =
                 new ArrayList<UpdatedContainerInfo>();
         containerInfos0.add(new UpdatedContainerInfo("host2:1234", "cont0", 1, 1));
         containerInfos0.add(new UpdatedContainerInfo("host2:1234", "cont1", 1, 1));
         containerInfos0.add(new UpdatedContainerInfo("host2:1234", "cont2", 1, 1));
-
-        final List<RMNode> rmNodes = new ArrayList<RMNode>();
-        rmNodes.add(hopsRMNode0);
-        rmNodes.add(hopsRMNode1);
-        rmNodes.add(hopsRMNode2);
 
         // Persist them in DB
         LightWeightRequestHandler populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
@@ -433,6 +408,103 @@ public class TestDeletionCascade extends NDBBaseTest {
                 queryUpdatedCont.handle();
         Assert.assertTrue("There should be no updatedcontainersinfo entries",
                 updatedContResult.isEmpty());
+    }
+
+    @Test
+    public void testRemoveContainerStatusForRMNode() throws Exception {
+        final List<ContainerStatus> containerStatus0 =
+                new ArrayList<ContainerStatus>();
+        containerStatus0.add(new ContainerStatus("cont0_0", "running", "healthy", 0, "host0:1234", 1));
+        containerStatus0.add(new ContainerStatus("cont0_1", "running", "healthy", 0, "host0:1234", 1));
+
+        final List<ContainerStatus> containerStatus1 =
+                new ArrayList<ContainerStatus>();
+        containerStatus1.add(new ContainerStatus("cont1_0", "running", "healthy", 0, "host1:1234", 1));
+        containerStatus1.add(new ContainerStatus("cont1_1", "running", "healthy", 0, "host1:1234", 1));
+
+        final List<ContainerStatus> containerStatus2 =
+                new ArrayList<ContainerStatus>();
+        containerStatus2.add(new ContainerStatus("cont2_0", "running", "healthy", 0, "host2:1234", 1));
+        containerStatus2.add(new ContainerStatus("cont2_1", "running", "healthy", 0, "host2:1234", 1));
+
+        // Persist them in DB
+        LightWeightRequestHandler populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
+            @Override
+            public Object performTask() throws IOException {
+                connector.beginTransaction();
+                connector.writeLock();
+
+                RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory
+                        .getDataAccess(RMNodeDataAccess.class);
+
+                ContainerStatusDataAccess contStatusDAO = (ContainerStatusDataAccess)
+                        storageFactory.getDataAccess(ContainerStatusDataAccess.class);
+
+                contStatusDAO.addAll(containerStatus0);
+                contStatusDAO.addAll(containerStatus1);
+                contStatusDAO.addAll(containerStatus2);
+
+                rmNodeDAO.addAll(rmNodes);
+
+                connector.commit();
+                return null;
+            }
+        };
+        populate.handle();
+
+        // Verify container statuses are there
+        LightWeightRequestHandler queryContStatus = new QueryContainerStatus(YARNOperationType.TEST);
+        Map<String, ContainerStatus> contStatusResult = (Map<String, ContainerStatus>)
+                queryContStatus.handle();
+
+        Assert.assertEquals("There are six different containers", 6,
+                contStatusResult.size());
+        
+        // Remove first RMNode
+        List<RMNode> toBeDeleted = new ArrayList<RMNode>();
+        toBeDeleted.add(hopsRMNode0);
+        LightWeightRequestHandler rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeDeleted);
+        rmNodeRemover.handle();
+
+        queryContStatus = new QueryContainerStatus(YARNOperationType.TEST);
+        contStatusResult = (Map<String, ContainerStatus>) queryContStatus.handle();
+
+        Assert.assertEquals("There should be four containers now", 4,
+                contStatusResult.size());
+        Assert.assertFalse("cont0_0 should not be there", contStatusResult.containsKey(containerStatus0.get(0)));
+        Assert.assertFalse("cont0_1 should not be there", contStatusResult.containsKey(containerStatus0.get(1)));
+
+        // Remove the rest of the RMNodes
+        toBeDeleted.clear();
+        toBeDeleted.add(hopsRMNode1);
+        toBeDeleted.add(hopsRMNode2);
+        rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeDeleted);
+        rmNodeRemover.handle();
+
+        queryContStatus = new QueryContainerStatus(YARNOperationType.TEST);
+        contStatusResult = (Map<String, ContainerStatus>) queryContStatus.handle();
+
+        Assert.assertTrue("There should be none container statuses by now", contStatusResult.isEmpty());
+    }
+
+    private class QueryContainerStatus extends LightWeightRequestHandler {
+
+        public QueryContainerStatus(OperationType opType) {
+            super(opType);
+        }
+
+        @Override
+        public Object performTask() throws IOException {
+            connector.beginTransaction();
+            connector.readLock();
+
+            ContainerStatusDataAccess contStatusDAO = (ContainerStatusDataAccess)
+                    storageFactory.getDataAccess(ContainerStatusDataAccess.class);
+            Map<String, ContainerStatus> result = contStatusDAO.getAll();
+            connector.commit();
+
+            return result;
+        }
     }
 
     private class QueryUpdatedContainers extends LightWeightRequestHandler {

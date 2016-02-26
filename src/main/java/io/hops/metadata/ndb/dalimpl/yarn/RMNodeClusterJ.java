@@ -172,6 +172,7 @@ public class RMNodeClusterJ
     FinishedApplicationsClusterJ finishedAppsClusterJ = new FinishedApplicationsClusterJ();
     NodeClusterJ nodeClusterJ = new NodeClusterJ();
     UpdatedContainerInfoClusterJ updatedContClusterJ = new UpdatedContainerInfoClusterJ();
+    ContainerStatusClusterJ containerStatusClusterJ = new ContainerStatusClusterJ();
     HopsSession session = connector.obtainSession();
     List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
     List<String> nodesId = new ArrayList<String>();
@@ -205,6 +206,7 @@ public class RMNodeClusterJ
     if (!updatedContainersToRemove.isEmpty()) {
       updatedContClusterJ.removeAll(updatedContainersToRemove);
     }
+    containerStatusClusterJ.removeAllByRMNodeID(nodesId);
 
     session.deletePersistentAll(toPersist);
     session.release(toPersist);

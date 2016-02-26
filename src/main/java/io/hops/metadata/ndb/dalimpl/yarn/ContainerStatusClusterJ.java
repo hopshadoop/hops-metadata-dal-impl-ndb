@@ -23,10 +23,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.wrapper.*;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
 import io.hops.metadata.yarn.entity.ContainerStatus;
@@ -104,6 +101,32 @@ public class ContainerStatusClusterJ implements
       }
     }
     return null;
+  }
+
+  public void removeAllByRMNodeID(List<String> rmNodeIds) throws StorageException {
+    List<ContainerStatusDTO> toBeRemoved = new ArrayList<ContainerStatusDTO>();
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder queryBuilder = session.getQueryBuilder();
+    HopsQueryDomainType<ContainerStatusDTO> dto =
+            queryBuilder.createQueryDefinition(ContainerStatusDTO.class);
+    HopsPredicate pred = dto.get(RMNODEID).equal(dto.param(RMNODEID));
+    dto.where(pred);
+    HopsQuery<ContainerStatusDTO> query = session.createQuery(dto);
+    List<ContainerStatusDTO> contStatus;
+
+    for (String rmNodeID : rmNodeIds) {
+      query.setParameter(RMNODEID, rmNodeID);
+      contStatus = query.getResultList();
+
+      if (contStatus != null) {
+        toBeRemoved.addAll(contStatus);
+      }
+    }
+
+    if (!toBeRemoved.isEmpty()) {
+      session.deletePersistentAll(toBeRemoved);
+      session.release(toBeRemoved);
+    }
   }
 
   @Override
