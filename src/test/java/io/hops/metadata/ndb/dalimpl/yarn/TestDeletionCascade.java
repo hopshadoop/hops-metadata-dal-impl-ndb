@@ -21,10 +21,12 @@ package io.hops.metadata.ndb.dalimpl.yarn;
 import io.hops.exception.StorageException;
 import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
 import io.hops.metadata.yarn.dal.NextHeartbeatDataAccess;
+import io.hops.metadata.yarn.dal.NodeDataAccess;
 import io.hops.metadata.yarn.dal.RMNodeDataAccess;
 import io.hops.metadata.yarn.dal.util.YARNOperationType;
 import io.hops.metadata.yarn.entity.FinishedApplications;
 import io.hops.metadata.yarn.entity.NextHeartbeat;
+import io.hops.metadata.yarn.entity.Node;
 import io.hops.metadata.yarn.entity.RMNode;
 import io.hops.transaction.handler.LightWeightRequestHandler;
 import junit.framework.Assert;
@@ -230,7 +232,6 @@ public class TestDeletionCascade extends NDBBaseTest {
         // Remove second RMNode
         toBeRemoved.clear();
         toBeRemoved.add(rmNodes.get(1));
-        // TODO: Change this with private class RemoveRMNodes
         rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
         rmNodeRemover.handle();
 
@@ -239,6 +240,88 @@ public class TestDeletionCascade extends NDBBaseTest {
                 queryFinishedApps.handle();
         Assert.assertEquals("No FinishedApplications should exist at that point", 0,
                 finishedAppsResult.size());
+    }
+
+    @Test
+    public void testRemoveNodeForRMNode() throws StorageException, IOException {
+        final RMNode hopsRMNode0 =
+                new RMNode("host0:1234", "hostname0", 1234, 8080, "127.0.0.1", "hop.sics.se",
+                        "healthy", -10L, "running", "blah", 10, 3, 0);
+        final Node hopsNode0 =
+                new Node("host0:1234", "host0", "rack0", 1, "parent", 1);
+
+        final RMNode hopsRMNode1 =
+                new RMNode("host1:1234", "hostname1", 1234, 8080, "127.0.0.1", "hop.sics.se",
+                        "healthy", -10L, "running", "blah", 10, 3, 0);
+        final Node hopsNode1 =
+                new Node("host1:1234", "host1", "rack0", 1, "parent", 1);
+
+        final RMNode hopsRMNode2 =
+                new RMNode("host2:1234", "hostname2", 1234, 8080, "127.0.0.1", "hop.sics.se",
+                        "healthy", -10L, "running", "blah", 10, 3, 0);
+        final Node hopsNode2 =
+                new Node("host2:1234", "host2", "rack1", 1, "parent", 1);
+
+        final List<RMNode> rmNodes = new ArrayList<RMNode>();
+        rmNodes.add(hopsRMNode0);
+        rmNodes.add(hopsRMNode1);
+        rmNodes.add(hopsRMNode2);
+
+        final List<Node> nodes = new ArrayList<Node>();
+        nodes.add(hopsNode0);
+        nodes.add(hopsNode1);
+        nodes.add(hopsNode2);
+
+        // Persist them in DB
+        LightWeightRequestHandler populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
+            @Override
+            public Object performTask() throws IOException {
+                connector.beginTransaction();
+                connector.writeLock();
+
+                RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory
+                        .getDataAccess(RMNodeDataAccess.class);
+
+                NodeDataAccess nodeDAO = (NodeDataAccess) storageFactory
+                        .getDataAccess(NodeDataAccess.class);
+
+                nodeDAO.addAll(nodes);
+
+                rmNodeDAO.addAll(rmNodes);
+
+                connector.commit();
+                return null;
+            }
+        };
+        populate.handle();
+
+        // Verify Nodes are there
+        LightWeightRequestHandler queryNodes = new QueryNodes(YARNOperationType.TEST);
+        Map<String, Node> queryNodesResult = (Map<String, Node>) queryNodes.handle();
+        Assert.assertEquals("We should have 3 Nodes", 3, queryNodesResult.size());
+
+        // Remove first RMNode
+        List<RMNode> toBeRemoved = new ArrayList<RMNode>();
+        toBeRemoved.add(rmNodes.get(0));
+        LightWeightRequestHandler rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+        rmNodeRemover.handle();
+
+        // Verify Node entry is removed as well
+        queryNodesResult = (Map<String, Node>) queryNodes.handle();
+        Assert.assertEquals("Now we should have 2 Nodes", 2, queryNodesResult.size());
+        Assert.assertFalse("host0 should not have any Node", queryNodesResult.containsKey(
+                rmNodes.get(0).getNodeId()));
+
+        // Remove rest of RMNodes
+        toBeRemoved.clear();
+        toBeRemoved.add(rmNodes.get(1));
+        toBeRemoved.add(rmNodes.get(2));
+        rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+        rmNodeRemover.handle();
+
+        // Verify no Node entry is there
+        queryNodesResult = (Map<String, Node>) queryNodes.handle();
+        Assert.assertTrue("There should be no Node entry", queryNodesResult.isEmpty());
     }
 
     private class RemoveRMNodes extends LightWeightRequestHandler {
@@ -317,6 +400,24 @@ public class TestDeletionCascade extends NDBBaseTest {
             FinishedApplicationsDataAccess finishedAppsDAO = (FinishedApplicationsDataAccess)
                     storageFactory.getDataAccess(FinishedApplicationsDataAccess.class);
             Map<String, List<FinishedApplications>> result = finishedAppsDAO.getAll();
+            connector.commit();
+
+            return result;
+        }
+    }
+
+    private class QueryNodes extends  LightWeightRequestHandler {
+
+        public QueryNodes(OperationType opType) {
+            super(opType);
+        }
+
+        @Override
+        public Object performTask() throws IOException {
+            connector.beginTransaction();
+            connector.readLock();
+            NodeDataAccess nodeDAO = (NodeDataAccess) storageFactory.getDataAccess(NodeDataAccess.class);
+            Map<String, Node> result = nodeDAO.getAll();
             connector.commit();
 
             return result;

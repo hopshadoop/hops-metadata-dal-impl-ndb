@@ -123,6 +123,22 @@ public class NodeClusterJ implements TablesDef.NodeTableDef, NodeDataAccess<Node
     session.release(toPersist);
   }
 
+  public void removeAllById(List<String> nodeIds) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    List<NodeDTO> toBeDeleted = new ArrayList<NodeDTO>();
+    for (String nodeId : nodeIds) {
+      NodeDTO hit = session.find(NodeDTO.class, nodeId);
+      if (hit != null) {
+        toBeDeleted.add(hit);
+      }
+    }
+
+    if (!toBeDeleted.isEmpty()) {
+      session.deletePersistentAll(toBeDeleted);
+      session.release(toBeDeleted);
+    }
+  }
+
   @Override
   public void createNode(Node node) throws StorageException {
     HopsSession session = connector.obtainSession();

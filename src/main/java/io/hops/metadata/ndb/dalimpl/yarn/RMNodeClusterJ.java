@@ -169,22 +169,24 @@ public class RMNodeClusterJ
   public void removeAll(Collection<RMNode> toRemove) throws StorageException {
     NextHeartbeatClusterJ nextHBClusterJ = new NextHeartbeatClusterJ();
     FinishedApplicationsClusterJ finishedAppsClusterJ = new FinishedApplicationsClusterJ();
+    NodeClusterJ nodeClusterJ = new NodeClusterJ();
     HopsSession session = connector.obtainSession();
     List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
-    List<String> hbToRemove = new ArrayList<String>();
+    List<String> nodesId = new ArrayList<String>();
     List<FinishedApplications> finishedToRemove = new ArrayList<FinishedApplications>();
     List<FinishedApplications> tmpFinishedApps = null;
     for (RMNode entry : toRemove) {
       toPersist.add(session.newInstance(RMNodeDTO.class, entry.
           getNodeId()));
-      hbToRemove.add(entry.getNodeId());
+      nodesId.add(entry.getNodeId());
       tmpFinishedApps = finishedAppsClusterJ.findByRMNode(entry.getNodeId());
       if (tmpFinishedApps != null) {
         finishedToRemove.addAll(tmpFinishedApps);
       }
     }
-    nextHBClusterJ.removeAllById(hbToRemove);
-    if (finishedToRemove.size() > 0) {
+    nextHBClusterJ.removeAllById(nodesId);
+    nodeClusterJ.removeAllById(nodesId);
+    if (!finishedToRemove.isEmpty()) {
       finishedAppsClusterJ.removeAll(finishedToRemove);
     }
     session.deletePersistentAll(toPersist);

@@ -512,12 +512,7 @@ CREATE TABLE `yarn_node` (
   `parent` VARCHAR(255) NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`nodeid`),
-  INDEX `name` (`name` ASC, `location` ASC),
-  CONSTRAINT `nodeid`
-  FOREIGN KEY (`nodeid`)
-  REFERENCES `yarn_rmnode` (`rmnodeid`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION
+  INDEX `name` (`name` ASC, `location` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(nodeid) $$
 
 
