@@ -173,11 +173,12 @@ public class RMNodeClusterJ
     List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
     List<String> hbToRemove = new ArrayList<String>();
     List<FinishedApplications> finishedToRemove = new ArrayList<FinishedApplications>();
+    List<FinishedApplications> tmpFinishedApps = null;
     for (RMNode entry : toRemove) {
       toPersist.add(session.newInstance(RMNodeDTO.class, entry.
           getNodeId()));
       hbToRemove.add(entry.getNodeId());
-      List<FinishedApplications> tmpFinishedApps = finishedAppsClusterJ.findByRMNode(entry.getNodeId());
+      tmpFinishedApps = finishedAppsClusterJ.findByRMNode(entry.getNodeId());
       if (tmpFinishedApps != null) {
         finishedToRemove.addAll(tmpFinishedApps);
       }
