@@ -543,12 +543,7 @@ CREATE TABLE `yarn_updatedcontainerinfo` (
   `updatedcontainerinfoid` INT NOT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`, `containerid`, `updatedcontainerinfoid`),
-  INDEX `containerid` (`containerid` ASC),
-  CONSTRAINT `rmnodeid`
-  FOREIGN KEY (`rmnodeid`)
-  REFERENCES `yarn_rmnode` (`rmnodeid`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION
+  INDEX `containerid` (`containerid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`rmnodeid`)$$
 
 

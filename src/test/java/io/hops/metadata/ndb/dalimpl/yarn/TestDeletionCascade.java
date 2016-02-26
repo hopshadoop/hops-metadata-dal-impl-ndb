@@ -19,17 +19,12 @@
 package io.hops.metadata.ndb.dalimpl.yarn;
 
 import io.hops.exception.StorageException;
-import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
-import io.hops.metadata.yarn.dal.NextHeartbeatDataAccess;
-import io.hops.metadata.yarn.dal.NodeDataAccess;
-import io.hops.metadata.yarn.dal.RMNodeDataAccess;
+import io.hops.metadata.yarn.dal.*;
 import io.hops.metadata.yarn.dal.util.YARNOperationType;
-import io.hops.metadata.yarn.entity.FinishedApplications;
-import io.hops.metadata.yarn.entity.NextHeartbeat;
-import io.hops.metadata.yarn.entity.Node;
-import io.hops.metadata.yarn.entity.RMNode;
+import io.hops.metadata.yarn.entity.*;
 import io.hops.transaction.handler.LightWeightRequestHandler;
 import junit.framework.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -322,6 +317,144 @@ public class TestDeletionCascade extends NDBBaseTest {
         // Verify no Node entry is there
         queryNodesResult = (Map<String, Node>) queryNodes.handle();
         Assert.assertTrue("There should be no Node entry", queryNodesResult.isEmpty());
+    }
+
+    @Test
+    public void testRemoveUpdatedContainersInfoForRMNode() throws Exception {
+        final RMNode hopsRMNode0 =
+                new RMNode("host0:1234", "hostname0", 1234, 8080, "127.0.0.1", "hop.sics.se",
+                        "healthy", -10L, "running", "blah", 10, 3, 0);
+        final List<UpdatedContainerInfo> containerInfos0 =
+                new ArrayList<UpdatedContainerInfo>();
+        containerInfos0.add(new UpdatedContainerInfo("host0:1234", "cont0", 1, 1));
+        containerInfos0.add(new UpdatedContainerInfo("host0:1234", "cont1", 1, 1));
+        containerInfos0.add(new UpdatedContainerInfo("host0:1234", "cont2", 1, 1));
+
+        final RMNode hopsRMNode1 =
+                new RMNode("host1:1234", "hostname1", 1234, 8080, "127.0.0.1", "hop.sics.se",
+                        "healthy", -10L, "running", "blah", 10, 3, 0);
+        final List<UpdatedContainerInfo> containerInfos1 =
+                new ArrayList<UpdatedContainerInfo>();
+        containerInfos0.add(new UpdatedContainerInfo("host1:1234", "cont0", 1, 1));
+        containerInfos0.add(new UpdatedContainerInfo("host1:1234", "cont1", 1, 1));
+        containerInfos0.add(new UpdatedContainerInfo("host1:1234", "cont2", 1, 1));
+
+        final RMNode hopsRMNode2 =
+                new RMNode("host2:1234", "hostname2", 1234, 8080, "127.0.0.1", "hop.sics.se",
+                        "healthy", -10L, "running", "blah", 10, 3, 0);
+        final List<UpdatedContainerInfo> containerInfos2 =
+                new ArrayList<UpdatedContainerInfo>();
+        containerInfos0.add(new UpdatedContainerInfo("host2:1234", "cont0", 1, 1));
+        containerInfos0.add(new UpdatedContainerInfo("host2:1234", "cont1", 1, 1));
+        containerInfos0.add(new UpdatedContainerInfo("host2:1234", "cont2", 1, 1));
+
+        final List<RMNode> rmNodes = new ArrayList<RMNode>();
+        rmNodes.add(hopsRMNode0);
+        rmNodes.add(hopsRMNode1);
+        rmNodes.add(hopsRMNode2);
+
+        // Persist them in DB
+        LightWeightRequestHandler populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
+            @Override
+            public Object performTask() throws IOException {
+                connector.beginTransaction();
+                connector.writeLock();
+
+                RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory
+                        .getDataAccess(RMNodeDataAccess.class);
+
+                UpdatedContainerInfoDataAccess updatedContDAO = (UpdatedContainerInfoDataAccess)
+                        storageFactory.getDataAccess(UpdatedContainerInfoDataAccess.class);
+
+                updatedContDAO.addAll(containerInfos0);
+                updatedContDAO.addAll(containerInfos1);
+                updatedContDAO.addAll(containerInfos2);
+
+                rmNodeDAO.addAll(rmNodes);
+
+                connector.commit();
+                return null;
+            }
+        };
+        populate.handle();
+
+        // Verify UpdatedContainers are there
+        QueryUpdatedContainers queryUpdatedCont = new QueryUpdatedContainers(YARNOperationType.TEST);
+        Map<String, Map<Integer, List<UpdatedContainerInfo>>> updatedContResult =
+                (Map<String, Map<Integer, List<UpdatedContainerInfo>>>) queryUpdatedCont.handle();
+
+        /*for (Map.Entry<String, Map<Integer, List<UpdatedContainerInfo>>> cont : updatedContResult.entrySet()) {
+            System.out.println("RMNode ID: " + cont.getKey());
+            for (Map.Entry<Integer, List<UpdatedContainerInfo>> val : cont.getValue().entrySet()) {
+                System.out.println("Container info ID: " + val.getKey());
+                for (UpdatedContainerInfo contInfo : val.getValue()) {
+                    System.out.println("Container info: " + contInfo);
+                }
+            }
+        }*/
+
+        Assert.assertEquals("Three groups of RMNodes", 3, updatedContResult.size());
+        Assert.assertEquals("host0:1234 should have one entry for container info id", 1,
+                updatedContResult.get(rmNodes.get(0).getNodeId()).size());
+        Assert.assertEquals("host1:1234 should have one entry for container info id", 1,
+                updatedContResult.get(rmNodes.get(1).getNodeId()).size());
+        Assert.assertEquals("host2:1234 should have one entry for container info id", 1,
+                updatedContResult.get(rmNodes.get(2).getNodeId()).size());
+        Assert.assertEquals("host0:1234 should have three updates for containerinfoid: 1", 3,
+                updatedContResult.get(rmNodes.get(0).getNodeId()).get(1).size());
+        Assert.assertEquals("host1:1234 should have three updates for containerinfoid: 1", 3,
+                updatedContResult.get(rmNodes.get(1).getNodeId()).get(1).size());
+        Assert.assertEquals("host2:1234 should have three updates for containerinfoid: 1", 3,
+                updatedContResult.get(rmNodes.get(2).getNodeId()).get(1).size());
+
+        // Remove first RMNode
+        final List<RMNode> toBeRemoved = new ArrayList<RMNode>();
+        toBeRemoved.add(rmNodes.get(0));
+        LightWeightRequestHandler rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+        rmNodeRemover.handle();
+
+        // Verify no updatedcontainers exist for host0:1234
+        updatedContResult = (Map<String, Map<Integer, List<UpdatedContainerInfo>>>)
+                queryUpdatedCont.handle();
+        Assert.assertEquals("There should be two groups of updatedcontainersinfo", 2,
+                updatedContResult.size());
+        Assert.assertFalse("There should be no entry for host0:1234",
+                updatedContResult.containsKey(hopsRMNode0.getNodeId()));
+
+        // Remove the rest of the RMNodes
+        toBeRemoved.clear();
+        toBeRemoved.add(rmNodes.get(1));
+        toBeRemoved.add(rmNodes.get(2));
+        rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+        rmNodeRemover.handle();
+
+        // Verify that no updatedcontainersinfo is there
+        updatedContResult = (Map<String, Map<Integer, List<UpdatedContainerInfo>>>)
+                queryUpdatedCont.handle();
+        Assert.assertTrue("There should be no updatedcontainersinfo entries",
+                updatedContResult.isEmpty());
+    }
+
+    private class QueryUpdatedContainers extends LightWeightRequestHandler {
+
+        public QueryUpdatedContainers(OperationType opType) {
+            super(opType);
+        }
+
+        @Override
+        public Object performTask() throws IOException {
+            connector.beginTransaction();
+            connector.readLock();
+
+            UpdatedContainerInfoDataAccess updatedContDAO = (UpdatedContainerInfoDataAccess)
+                    storageFactory.getDataAccess(UpdatedContainerInfoDataAccess.class);
+
+            Map<String, Map<Integer, List<UpdatedContainerInfo>>> result =
+                    updatedContDAO.getAll();
+
+            connector.commit();
+            return result;
+        }
     }
 
     private class RemoveRMNodes extends LightWeightRequestHandler {
