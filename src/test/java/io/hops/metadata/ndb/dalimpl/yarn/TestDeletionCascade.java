@@ -20,8 +20,10 @@ package io.hops.metadata.ndb.dalimpl.yarn;
 
 import io.hops.exception.StorageException;
 import io.hops.metadata.yarn.dal.*;
+import io.hops.metadata.yarn.dal.rmstatestore.UpdatedNodeDataAccess;
 import io.hops.metadata.yarn.dal.util.YARNOperationType;
 import io.hops.metadata.yarn.entity.*;
+import io.hops.metadata.yarn.entity.rmstatestore.UpdatedNode;
 import io.hops.transaction.handler.LightWeightRequestHandler;
 import junit.framework.Assert;
 import org.junit.Test;
@@ -593,7 +595,7 @@ public class TestDeletionCascade extends NDBBaseTest {
 
         // Verify NodeHBResponses are there
         LightWeightRequestHandler queryNodeHBResponse =
-                new QueryNodeHBRespose(YARNOperationType.TEST);
+                new QueryNodeHBResponse(YARNOperationType.TEST);
         Map<String, NodeHBResponse> nodeHBResult = (Map<String, NodeHBResponse>)
                 queryNodeHBResponse.handle();
 
@@ -629,12 +631,124 @@ public class TestDeletionCascade extends NDBBaseTest {
         Assert.assertTrue("Response should not have any RM nodes", nodeHBResult.isEmpty());
     }
 
+    @Test
+    public void testRemoveUpdatedNodeForRMNode() throws Exception {
+        final List<UpdatedNode> updatedNodes0 =
+                new ArrayList<UpdatedNode>();
+        updatedNodes0.add(new UpdatedNode("app0", hopsRMNode0.getNodeId()));
+        updatedNodes0.add(new UpdatedNode("app0", hopsRMNode1.getNodeId()));
+
+        final List<UpdatedNode> updatedNodes1 =
+                new ArrayList<UpdatedNode>();
+        updatedNodes1.add(new UpdatedNode("app1", hopsRMNode1.getNodeId()));
+        updatedNodes1.add(new UpdatedNode("app1", hopsRMNode2.getNodeId()));
+
+        final List<UpdatedNode> updatedNodes2 =
+                new ArrayList<UpdatedNode>();
+        updatedNodes2.add(new UpdatedNode("app2", hopsRMNode0.getNodeId()));
+        updatedNodes2.add(new UpdatedNode("app2", hopsRMNode2.getNodeId()));
+
+        final List<List<UpdatedNode>> toBePersisted =
+                new ArrayList<List<UpdatedNode>>();
+        toBePersisted.add(updatedNodes0);
+        toBePersisted.add(updatedNodes1);
+        toBePersisted.add(updatedNodes2);
+
+        // Persist them in DB
+        LightWeightRequestHandler populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
+            @Override
+            public Object performTask() throws IOException {
+                connector.beginTransaction();
+                connector.writeLock();
+
+                RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory
+                        .getDataAccess(RMNodeDataAccess.class);
+                UpdatedNodeDataAccess updatedNodeDAO = (UpdatedNodeDataAccess) storageFactory
+                        .getDataAccess(UpdatedNodeDataAccess.class);
+
+                updatedNodeDAO.addAll(toBePersisted);
+                rmNodeDAO.addAll(rmNodes);
+
+                connector.commit();
+                return null;
+            }
+        };
+        populate.handle();
+
+        // Verify updated nodes are there
+        LightWeightRequestHandler queryUpdatedNode = new QueryUpdatedNode(YARNOperationType.TEST);
+        Map<String, List<UpdatedNode>> updatedNodeResult = (Map<String, List<UpdatedNode>>)
+                queryUpdatedNode.handle();
+
+        Assert.assertEquals("There should be three application IDs", 3,
+                updatedNodeResult.size());
+        Assert.assertTrue("app0 should be there", updatedNodeResult.containsKey("app0"));
+        Assert.assertTrue("app1 should be there", updatedNodeResult.containsKey("app1"));
+        Assert.assertTrue("app2 should be there", updatedNodeResult.containsKey("app2"));
+
+        // Remove first node
+        List<RMNode> toBeRemoved = new ArrayList<RMNode>();
+        toBeRemoved.add(hopsRMNode0);
+
+        LightWeightRequestHandler rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+        rmNodeRemover.handle();
+
+        updatedNodeResult = (Map<String, List<UpdatedNode>>) queryUpdatedNode.handle();
+        Assert.assertEquals("Still there should be three application IDs...", 3,
+                updatedNodeResult.size());
+        Set<String> runningNodes = new HashSet<String>();
+
+        for (List<UpdatedNode> nodes : updatedNodeResult.values()) {
+            for (UpdatedNode updatedNode : nodes) {
+                runningNodes.add(updatedNode.getNodeId());
+            }
+        }
+        Assert.assertFalse("...But none on " + hopsRMNode0.getNodeId(),
+                runningNodes.contains(hopsRMNode0.getNodeId()));
+        Assert.assertTrue("Yet, " + hopsRMNode1.getNodeId() + " should be there",
+                runningNodes.contains(hopsRMNode1.getNodeId()));
+        Assert.assertTrue("Yet, " + hopsRMNode2.getNodeId() + " should be there",
+                runningNodes.contains(hopsRMNode2.getNodeId()));
+
+        // Remove the rest of RMNodes
+        toBeRemoved.clear();
+        toBeRemoved.add(hopsRMNode1);
+        toBeRemoved.add(hopsRMNode2);
+        rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+        rmNodeRemover.handle();
+
+        updatedNodeResult = (Map<String, List<UpdatedNode>>) queryUpdatedNode.handle();
+
+        Assert.assertTrue("No entry should be there", updatedNodeResult.isEmpty());
+    }
+
     /**
      * Helper classes
      */
-    private class QueryNodeHBRespose extends LightWeightRequestHandler {
+    private class QueryUpdatedNode extends LightWeightRequestHandler {
 
-        public QueryNodeHBRespose(OperationType opType) {
+        public QueryUpdatedNode(OperationType opType) {
+            super(opType);
+        }
+
+        @Override
+        public Object performTask() throws IOException {
+            connector.beginTransaction();
+            connector.readLock();
+
+            UpdatedNodeDataAccess updatedNodeDAO = (UpdatedNodeDataAccess)
+                    storageFactory.getDataAccess(UpdatedNodeDataAccess.class);
+
+            Map<String, List<UpdatedNode>> result = updatedNodeDAO.getAll();
+            connector.commit();
+
+            return result;
+        }
+    }
+
+    private class QueryNodeHBResponse extends LightWeightRequestHandler {
+
+        public QueryNodeHBResponse(OperationType opType) {
             super(opType);
         }
 

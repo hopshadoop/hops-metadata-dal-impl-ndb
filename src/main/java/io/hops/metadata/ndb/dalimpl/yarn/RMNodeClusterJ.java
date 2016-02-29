@@ -23,6 +23,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.UpdatedNodeClusterJ;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -175,6 +176,7 @@ public class RMNodeClusterJ
     ContainerStatusClusterJ containerStatusClusterJ = new ContainerStatusClusterJ();
     JustLaunchedContainersClusterJ justLaunchedCont = new JustLaunchedContainersClusterJ();
     NodeHBResponseClusterJ nodeHBRespClusterJ = new NodeHBResponseClusterJ();
+    UpdatedNodeClusterJ updatedNodeClusterJ = new UpdatedNodeClusterJ();
 
     HopsSession session = connector.obtainSession();
     List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
@@ -212,6 +214,7 @@ public class RMNodeClusterJ
     containerStatusClusterJ.removeAllByRMNodeID(nodesId);
     justLaunchedCont.removeByRMNodeId(nodesId);
     nodeHBRespClusterJ.removeAllByRMNodeId(nodesId);
+    updatedNodeClusterJ.removeAllByRMNodeId(nodesId);
 
     session.deletePersistentAll(toPersist);
     session.release(toPersist);
