@@ -24,7 +24,6 @@ import io.hops.metadata.yarn.dal.util.YARNOperationType;
 import io.hops.metadata.yarn.entity.*;
 import io.hops.transaction.handler.LightWeightRequestHandler;
 import junit.framework.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -563,9 +562,97 @@ public class TestDeletionCascade extends NDBBaseTest {
                 jLaunchedResult);
     }
 
+    @Test
+    public void testRemoveNodeHBResponseForRMNode() throws Exception {
+        final List<NodeHBResponse> nodeHBResponses =
+                new ArrayList<NodeHBResponse>();
+        nodeHBResponses.add(new NodeHBResponse(hopsRMNode0.getNodeId(), "some_response".getBytes()));
+        nodeHBResponses.add(new NodeHBResponse(hopsRMNode1.getNodeId(), "some_response".getBytes()));
+        nodeHBResponses.add(new NodeHBResponse(hopsRMNode2.getNodeId(), "some_response".getBytes()));
+
+        // Persist them in DB
+        LightWeightRequestHandler populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
+            @Override
+            public Object performTask() throws IOException {
+                connector.beginTransaction();
+                connector.writeLock();
+
+                RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory
+                        .getDataAccess(RMNodeDataAccess.class);
+                NodeHBResponseDataAccess nodeHBResposeDAO = (NodeHBResponseDataAccess)
+                        storageFactory.getDataAccess(NodeHBResponseDataAccess.class);
+
+                nodeHBResposeDAO.addAll(nodeHBResponses);
+                rmNodeDAO.addAll(rmNodes);
+
+                connector.commit();
+                return null;
+            }
+        };
+        populate.handle();
+
+        // Verify NodeHBResponses are there
+        LightWeightRequestHandler queryNodeHBResponse =
+                new QueryNodeHBRespose(YARNOperationType.TEST);
+        Map<String, NodeHBResponse> nodeHBResult = (Map<String, NodeHBResponse>)
+                queryNodeHBResponse.handle();
+
+        Assert.assertEquals("There should be three node HB responses", 3,
+                nodeHBResult.size());
+        Assert.assertTrue("hops0:1234 should be there", nodeHBResult.containsKey(
+                hopsRMNode0.getNodeId()));
+        Assert.assertTrue("hops1:1234 should be there", nodeHBResult.containsKey(
+                hopsRMNode0.getNodeId()));
+        Assert.assertTrue("hops2:1234 should be there", nodeHBResult.containsKey(
+                hopsRMNode0.getNodeId()));
+
+        // Remove first node
+        List<RMNode> toBeRemoved = new ArrayList<RMNode>();
+        toBeRemoved.add(hopsRMNode0);
+        LightWeightRequestHandler rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+        rmNodeRemover.handle();
+
+        nodeHBResult = (Map<String, NodeHBResponse>) queryNodeHBResponse.handle();
+        Assert.assertEquals("There should be two node HB responses", 2,
+                nodeHBResult.size());
+        Assert.assertFalse("host0:1234 should not have an entry", nodeHBResult.containsKey(
+                hopsRMNode0.getNodeId()));
+
+        // Remove the rest of the RM nodes
+        toBeRemoved.clear();
+        toBeRemoved.add(hopsRMNode1);
+        toBeRemoved.add(hopsRMNode2);
+        rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+        rmNodeRemover.handle();
+
+        nodeHBResult = (Map<String, NodeHBResponse>) queryNodeHBResponse.handle();
+        Assert.assertTrue("Response should not have any RM nodes", nodeHBResult.isEmpty());
+    }
+
     /**
      * Helper classes
      */
+    private class QueryNodeHBRespose extends LightWeightRequestHandler {
+
+        public QueryNodeHBRespose(OperationType opType) {
+            super(opType);
+        }
+
+        @Override
+        public Object performTask() throws IOException {
+            connector.beginTransaction();
+            connector.readLock();
+
+            NodeHBResponseDataAccess nodeHBResponseDAO = (NodeHBResponseDataAccess)
+                    storageFactory.getDataAccess(NodeHBResponseDataAccess.class);
+
+            Map<String, NodeHBResponse> result = nodeHBResponseDAO.getAll();
+            connector.commit();
+
+            return result;
+        }
+    }
+
     private class QueryJustLaunchedContainers extends LightWeightRequestHandler {
 
         public QueryJustLaunchedContainers(OperationType opType) {
