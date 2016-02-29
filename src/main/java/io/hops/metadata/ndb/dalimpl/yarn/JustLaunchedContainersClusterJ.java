@@ -152,7 +152,7 @@ public class JustLaunchedContainersClusterJ
       query.setParameter(RMNODEID, rmNodeId);
       rmNodeContainers = query.getResultList();
 
-      if (rmNodeContainers != null) {
+      if (!rmNodeContainers.isEmpty()) {
         toBeRemoved.addAll(rmNodeContainers);
       }
     }

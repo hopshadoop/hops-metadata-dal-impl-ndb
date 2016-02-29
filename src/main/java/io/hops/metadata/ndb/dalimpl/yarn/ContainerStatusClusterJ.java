@@ -118,7 +118,7 @@ public class ContainerStatusClusterJ implements
       query.setParameter(RMNODEID, rmNodeID);
       contStatus = query.getResultList();
 
-      if (contStatus != null) {
+      if (!contStatus.isEmpty()) {
         toBeRemoved.addAll(contStatus);
       }
     }

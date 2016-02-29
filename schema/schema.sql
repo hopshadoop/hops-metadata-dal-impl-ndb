@@ -605,12 +605,7 @@ CREATE TABLE `yarn_containerid_toclean` (
   `containerid` VARCHAR(45) NOT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`, `containerid`),
-  INDEX `rmnodeId` (`containerid` ASC),
-  CONSTRAINT `rmnodeid`
-    FOREIGN KEY (`rmnodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  INDEX `rmnodeId` (`containerid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(rmnodeid) $$
 
 

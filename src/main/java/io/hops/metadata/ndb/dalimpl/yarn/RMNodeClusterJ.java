@@ -179,6 +179,7 @@ public class RMNodeClusterJ
     NodeHBResponseClusterJ nodeHBRespClusterJ = new NodeHBResponseClusterJ();
     UpdatedNodeClusterJ updatedNodeClusterJ = new UpdatedNodeClusterJ();
     RanNodeClusterJ ranNodeClusterJ = new RanNodeClusterJ();
+    ContainerIdToCleanClusterJ contIdClusterJ = new ContainerIdToCleanClusterJ();
 
     HopsSession session = connector.obtainSession();
     List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
@@ -218,6 +219,7 @@ public class RMNodeClusterJ
     nodeHBRespClusterJ.removeAllByRMNodeId(nodesId);
     updatedNodeClusterJ.removeAllByRMNodeId(nodesId);
     ranNodeClusterJ.removeAllByRMNodeId(nodesId);
+    contIdClusterJ.removeAllByRMNodeId(nodesId);
 
     session.deletePersistentAll(toPersist);
     session.release(toPersist);

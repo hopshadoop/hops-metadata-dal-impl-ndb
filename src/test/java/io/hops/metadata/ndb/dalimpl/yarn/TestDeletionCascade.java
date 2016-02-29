@@ -816,9 +816,104 @@ public class TestDeletionCascade extends NDBBaseTest {
                 ranNodesResult.isEmpty());
     }
 
+    @Test
+    public void testRemoveContainerIdToCleanForRMNode() throws Exception {
+        final List<ContainerId> containersId =
+                new ArrayList<ContainerId>();
+        containersId.add(new ContainerId(hopsRMNode0.getNodeId(), "cont0_0", 1));
+        containersId.add(new ContainerId(hopsRMNode0.getNodeId(), "cont0_1", 1));
+        containersId.add(new ContainerId(hopsRMNode0.getNodeId(), "cont0_2", 1));
+
+        containersId.add(new ContainerId(hopsRMNode1.getNodeId(), "cont1_0", 1));
+        containersId.add(new ContainerId(hopsRMNode1.getNodeId(), "cont1_1", 1));
+        containersId.add(new ContainerId(hopsRMNode1.getNodeId(), "cont1_2", 1));
+
+        containersId.add(new ContainerId(hopsRMNode2.getNodeId(), "cont2_0", 1));
+        containersId.add(new ContainerId(hopsRMNode2.getNodeId(), "cont2_1", 1));
+        containersId.add(new ContainerId(hopsRMNode2.getNodeId(), "cont2_2", 1));
+
+        // Persist them in DB
+        LightWeightRequestHandler populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
+            @Override
+            public Object performTask() throws IOException {
+                connector.beginTransaction();
+                connector.writeLock();
+
+                RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory
+                        .getDataAccess(RMNodeDataAccess.class);
+                ContainerIdToCleanDataAccess contIdDAO = (ContainerIdToCleanDataAccess)
+                        storageFactory.getDataAccess(ContainerIdToCleanDataAccess.class);
+
+                contIdDAO.addAll(containersId);
+                rmNodeDAO.addAll(rmNodes);
+
+                connector.commit();
+                return null;
+            }
+        };
+        populate.handle();
+
+        // Verify containers id to clean are there
+        LightWeightRequestHandler queryCont = new QueryContainerIdToClean(YARNOperationType.TEST);
+        Map<String, Set<ContainerId>> contToCleanResult = (Map<String, Set<ContainerId>>)
+                queryCont.handle();
+
+        Assert.assertEquals("There should be three buckets of RMNodes", 3,
+                contToCleanResult.size());
+        Assert.assertTrue("Node " + hopsRMNode0.getNodeId() + " should be there",
+                contToCleanResult.containsKey(hopsRMNode0.getNodeId()));
+        Assert.assertTrue("Node " + hopsRMNode1.getNodeId() + " should be there",
+                contToCleanResult.containsKey(hopsRMNode1.getNodeId()));
+        Assert.assertTrue("Node " + hopsRMNode2.getNodeId() + " should be there",
+                contToCleanResult.containsKey(hopsRMNode2.getNodeId()));
+
+        // Remove first RMNode
+        List<RMNode> toBeRemoved = new ArrayList<RMNode>();
+        toBeRemoved.add(hopsRMNode0);
+        LightWeightRequestHandler rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+        rmNodeRemover.handle();
+
+        contToCleanResult = (Map<String, Set<ContainerId>>) queryCont.handle();
+        Assert.assertEquals("Now there should be two buckets", 2,
+                contToCleanResult.size());
+        Assert.assertFalse("Node " + hopsRMNode0.getNodeId() + " should not exist",
+                contToCleanResult.containsKey(hopsRMNode0.getNodeId()));
+
+        // Remove the rest of the RMNodes
+        toBeRemoved.clear();
+        toBeRemoved.add(hopsRMNode1);
+        toBeRemoved.add(hopsRMNode2);
+        rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+        rmNodeRemover.handle();
+
+        contToCleanResult = (Map<String, Set<ContainerId>>) queryCont.handle();
+        Assert.assertTrue("By now there should be nothing persisted",
+                contToCleanResult.isEmpty());
+    }
+
     /**
      * Helper classes
      */
+    private class QueryContainerIdToClean extends LightWeightRequestHandler {
+
+        public QueryContainerIdToClean(OperationType opType) {
+            super(opType);
+        }
+
+        @Override
+        public Object performTask() throws IOException {
+            connector.beginTransaction();
+            connector.readLock();
+
+            ContainerIdToCleanDataAccess contIdDAO = (ContainerIdToCleanDataAccess)
+                    storageFactory.getDataAccess(ContainerIdToCleanDataAccess.class);
+            Map<String, Set<ContainerId>> result = contIdDAO.getAll();
+            connector.commit();
+
+            return result;
+        }
+    }
+
     private class QueryRanNodes extends LightWeightRequestHandler {
 
         public QueryRanNodes(OperationType opType) {
