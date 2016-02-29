@@ -595,12 +595,7 @@ delimiter $$
 CREATE TABLE `yarn_ran_node` (
   `application_attempt_id` VARCHAR(45) NOT NULL,
   `nodeid` VARCHAR(255) NULL,
-  PRIMARY KEY (`application_attempt_id`, `nodeid`),
-  CONSTRAINT `nodeid`
-    FOREIGN KEY (`nodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  PRIMARY KEY (`application_attempt_id`, `nodeid`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(application_attempt_id) $$
 
 delimiter $$

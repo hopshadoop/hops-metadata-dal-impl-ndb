@@ -20,9 +20,11 @@ package io.hops.metadata.ndb.dalimpl.yarn;
 
 import io.hops.exception.StorageException;
 import io.hops.metadata.yarn.dal.*;
+import io.hops.metadata.yarn.dal.rmstatestore.RanNodeDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.UpdatedNodeDataAccess;
 import io.hops.metadata.yarn.dal.util.YARNOperationType;
 import io.hops.metadata.yarn.entity.*;
+import io.hops.metadata.yarn.entity.rmstatestore.RanNode;
 import io.hops.metadata.yarn.entity.rmstatestore.UpdatedNode;
 import io.hops.transaction.handler.LightWeightRequestHandler;
 import junit.framework.Assert;
@@ -722,9 +724,121 @@ public class TestDeletionCascade extends NDBBaseTest {
         Assert.assertTrue("No entry should be there", updatedNodeResult.isEmpty());
     }
 
+    @Test
+    public void testRemoveRanNodeForRMNode() throws Exception {
+        final Map<Integer, RanNode> ranNode0 = new HashMap<Integer, RanNode>();
+        ranNode0.put(0, new RanNode("appAtt0", hopsRMNode0.getNodeId()));
+        ranNode0.put(1, new RanNode("appAtt0", hopsRMNode1.getNodeId()));
+
+        final Map<Integer, RanNode> ranNode1 = new HashMap<Integer, RanNode>();
+        ranNode1.put(2, new RanNode("appAtt1", hopsRMNode1.getNodeId()));
+        ranNode1.put(3, new RanNode("appAtt1", hopsRMNode2.getNodeId()));
+
+        final Map<Integer, RanNode> ranNode2 = new HashMap<Integer, RanNode>();
+        ranNode2.put(4, new RanNode("appAtt2", hopsRMNode0.getNodeId()));
+        ranNode2.put(5, new RanNode("appAtt2", hopsRMNode2.getNodeId()));
+
+        final List<Map<Integer, RanNode>> toBePersisted =
+                new ArrayList<Map<Integer, RanNode>>();
+        toBePersisted.add(ranNode0);
+        toBePersisted.add(ranNode1);
+        toBePersisted.add(ranNode2);
+
+        // Persist them in DB
+        LightWeightRequestHandler populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
+            @Override
+            public Object performTask() throws IOException {
+                connector.beginTransaction();
+                connector.writeLock();
+
+                RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess) storageFactory
+                        .getDataAccess(RMNodeDataAccess.class);
+                RanNodeDataAccess ranNodeDAO = (RanNodeDataAccess) storageFactory
+                        .getDataAccess(RanNodeDataAccess.class);
+
+                ranNodeDAO.addAll(toBePersisted);
+                rmNodeDAO.addAll(rmNodes);
+
+                connector.commit();
+                return null;
+            }
+        };
+        populate.handle();
+
+        // Verify ran nodes are there
+        LightWeightRequestHandler queryRanNodes = new QueryRanNodes(YARNOperationType.TEST);
+        Map<String, List<RanNode>> ranNodesResult = (Map<String, List<RanNode>>) queryRanNodes.handle();
+
+        Assert.assertEquals("There should be three application attempts IDs", 3,
+                ranNodesResult.size());
+        Assert.assertTrue("appAtt0 should be there",
+                ranNodesResult.containsKey("appAtt0"));
+        Assert.assertTrue("appAtt1 should be there",
+                ranNodesResult.containsKey("appAtt1"));
+        Assert.assertTrue("appAtt2 should be there",
+                ranNodesResult.containsKey("appAtt2"));
+
+        // Remove first node
+        List<RMNode> toBeRemoved = new ArrayList<RMNode>();
+        toBeRemoved.add(hopsRMNode0);
+        LightWeightRequestHandler rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+        rmNodeRemover.handle();
+
+        ranNodesResult = (Map<String, List<RanNode>>) queryRanNodes.handle();
+
+        Assert.assertEquals("Still there should be three application attempts...", 3,
+                ranNodesResult.size());
+        Set<String> ranNodes = new HashSet<String>();
+
+        for (List<RanNode> entry : ranNodesResult.values()) {
+            for (RanNode node : entry) {
+                ranNodes.add(node.getNodeId());
+            }
+        }
+
+        Assert.assertFalse("...But " + hopsRMNode0.getNodeId() + " should not be here",
+                ranNodes.contains(hopsRMNode0.getNodeId()));
+        Assert.assertTrue("Yet, " + hopsRMNode1.getNodeId() + " should be here",
+                ranNodes.contains(hopsRMNode1.getNodeId()));
+        Assert.assertTrue("Yet, " + hopsRMNode2.getNodeId() + " should be here",
+                ranNodes.contains(hopsRMNode2.getNodeId()));
+
+        // Remove the rest of the RMNodes
+        toBeRemoved.clear();
+        toBeRemoved.add(hopsRMNode1);
+        toBeRemoved.add(hopsRMNode2);
+
+        rmNodeRemover = new RemoveRMNodes(YARNOperationType.TEST, toBeRemoved);
+        rmNodeRemover.handle();
+        ranNodesResult = (Map<String, List<RanNode>>) queryRanNodes.handle();
+
+        Assert.assertTrue("At that point, no application attempt should exist",
+                ranNodesResult.isEmpty());
+    }
+
     /**
      * Helper classes
      */
+    private class QueryRanNodes extends LightWeightRequestHandler {
+
+        public QueryRanNodes(OperationType opType) {
+            super(opType);
+        }
+
+        @Override
+        public Object performTask() throws IOException {
+            connector.beginTransaction();
+            connector.readLock();
+
+            RanNodeDataAccess ranNodeDAO = (RanNodeDataAccess)
+                    storageFactory.getDataAccess(RanNodeDataAccess.class);
+            Map<String, List<RanNode>> result = ranNodeDAO.getAll();
+            connector.commit();
+
+            return result;
+        }
+    }
+
     private class QueryUpdatedNode extends LightWeightRequestHandler {
 
         public QueryUpdatedNode(OperationType opType) {
