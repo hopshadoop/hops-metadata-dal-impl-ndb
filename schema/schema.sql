@@ -1012,6 +1012,14 @@ ENGINE = ndbcluster$$
 
 delimiter $$
 
+CREATE TABLE `yarn_cspreemptedcontainers` (
+  `rmcontainer_id` VARCHAR(45) NOT NULL,
+  `preemption_time` BIGINT NOT NULL,
+  PRIMARY KEY (`rmcontainer_id`)
+) ENGINE = ndbcluster DEFAULT CHARSET = latin1 PARTITION BY KEY (rmcontainer_id)$$
+
+delimiter $$
+
 CREATE TABLE `yarn_csleafqueueuserinfo` (
   `username` VARCHAR(45) NOT NULL,
   `consumed_memory` INT NULL,
