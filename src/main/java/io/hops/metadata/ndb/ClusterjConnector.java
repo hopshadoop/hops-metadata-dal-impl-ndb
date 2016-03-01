@@ -86,8 +86,6 @@ import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
 import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
 import io.hops.metadata.yarn.dal.ContainersCheckPointsDataAccess;
 import io.hops.metadata.yarn.dal.ContainersLogsDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerAppLiveContainersDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerAppNewlyAllocatedContainersDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerNodeDataAccess;
 import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
 import io.hops.metadata.yarn.dal.JustLaunchedContainersDataAccess;
@@ -112,6 +110,7 @@ import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
 import io.hops.metadata.yarn.dal.YarnProjectsDailyCostDataAccess;
 import io.hops.metadata.yarn.dal.YarnProjectsQuotaDataAccess;
 import io.hops.metadata.yarn.dal.YarnVariablesDataAccess;
+import io.hops.metadata.yarn.dal.capacity.CSLeafQueueUserInfoDataAccess;
 import io.hops.metadata.yarn.dal.capacity.CSLeafQueuesPendingAppsDataAccess;
 import io.hops.metadata.yarn.dal.capacity.CSQueueDataAccess;
 import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservedContainersDataAccess;
@@ -395,8 +394,6 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         ContainerIdToCleanDataAccess.class, ContainerStatusDataAccess.class,
         ContainersLogsDataAccess.class,
         FiCaSchedulerAppLastScheduledContainerDataAccess.class,
-        FiCaSchedulerAppLiveContainersDataAccess.class,
-        FiCaSchedulerAppNewlyAllocatedContainersDataAccess.class,
         FiCaSchedulerAppReservationsDataAccess.class,
         FiCaSchedulerAppReservedContainersDataAccess.class,
         FiCaSchedulerAppSchedulingOpportunitiesDataAccess.class,
@@ -420,7 +417,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         NodeHBResponseDataAccess.class, 
         YarnProjectsQuotaDataAccess.class, YarnProjectsDailyCostDataAccess.class,
         ContainersCheckPointsDataAccess.class,
-        CSLeafQueuesPendingAppsDataAccess.class);
+        CSLeafQueuesPendingAppsDataAccess.class,
+        CSLeafQueueUserInfoDataAccess.class);
   }
 
   private boolean format(boolean transactional,
@@ -564,13 +562,6 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
               FiCaSchedulerAppLastScheduledContainerDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.FiCaSchedulerAppLastScheduledContainerTableDef.TABLE_NAME);
-          } else if (e == FiCaSchedulerAppLiveContainersDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.FiCaSchedulerAppLiveContainersTableDef.TABLE_NAME);
-          } else if (e ==
-              FiCaSchedulerAppNewlyAllocatedContainersDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.FiCaSchedulerAppNewlyAllocatedContainersTableDef.TABLE_NAME);
           } else if (e == FiCaSchedulerAppReservationsDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.FiCaSchedulerAppReservationsTableDef.TABLE_NAME);
@@ -692,6 +683,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.CSQueueTableDef.TABLE_NAME);
           } else if (e==CSLeafQueuesPendingAppsDataAccess.class){
             truncate(transactional, io.hops.metadata.yarn.TablesDef.CSLeafQueuesPendingAppsTableDef.TABLE_NAME);
+          } else if (e==CSLeafQueueUserInfoDataAccess.class){
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.CSLeafQueueUserInfoTableDef.TABLE_NAME);
           }
         }
         MysqlServerConnector.truncateTable(transactional,

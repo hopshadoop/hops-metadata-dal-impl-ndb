@@ -23,6 +23,7 @@ import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
 import io.hops.metadata.yarn.entity.ContainerId;
+import io.hops.metadata.yarn.entity.ContainerStatus;
 import io.hops.metadata.yarn.entity.FinishedApplications;
 import io.hops.metadata.yarn.entity.JustLaunchedContainers;
 import io.hops.metadata.yarn.entity.NextHeartbeat;
@@ -96,7 +97,8 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
         new ArrayList<ContainerStatusClusterJ.ContainerStatusDTO>();
     if (hopJustLaunchedContainers != null) {
       for (JustLaunchedContainers hop : hopJustLaunchedContainers) {
-        Object[] pk = new Object[]{hop.getContainerId(), hop.getRmnodeid()};
+        Object[] pk = new Object[]{hop.getContainerId(), hop.getRmnodeid(),
+        ContainerStatus.Type.JUST_LAUNCHED.name()};
         ContainerStatusClusterJ.ContainerStatusDTO containerStatusDTO = session.
                 newInstance(ContainerStatusClusterJ.ContainerStatusDTO.class, pk);
         containerStatusDTO = session.load(containerStatusDTO);
@@ -108,7 +110,8 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
     if (hopUpdatedContainerInfo != null) {
       
         for (UpdatedContainerInfo hop : hopUpdatedContainerInfo) {
-          Object[] pk = new Object[]{hop.getContainerId(), hop.getRmnodeid()};
+          Object[] pk = new Object[]{hop.getContainerId(), hop.getRmnodeid(),
+          ContainerStatus.Type.UCI.name()};
           ContainerStatusClusterJ.ContainerStatusDTO containerStatusDTO =
               session.
                   newInstance(ContainerStatusClusterJ.ContainerStatusDTO.class,

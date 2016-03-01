@@ -562,11 +562,12 @@ delimiter $$
 CREATE TABLE `yarn_containerstatus` (
   `containerid` VARCHAR(45) NOT NULL,
   `rmnodeid` VARCHAR(255) NOT NULL,
+  `type` VARCHAR(45) NOT NULL,
   `state` VARCHAR(45) NULL,
   `diagnostics` VARCHAR(2000) NULL,
   `exitstatus` INT NULL,
   `pendingeventid` INT,
-  PRIMARY KEY (`containerid`, `rmnodeid`),
+  PRIMARY KEY (`containerid`, `rmnodeid`, `type`),
   INDEX `rmnodeid_idx` (`rmnodeid` ASC),
   CONSTRAINT `rmnodeid`
   FOREIGN KEY (`rmnodeid`)
@@ -736,21 +737,6 @@ CREATE TABLE `yarn_appschedulinginfo` (
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(applicationattemptid)$$
 
 
-delimiter $$
-
-
-
-CREATE TABLE `yarn_schedulerapp_livecontainers` (
-  `applicationattemptid` VARCHAR(45) NOT NULL,
-  `rmcontainer_id` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`applicationattemptid`, `rmcontainer_id`),
-  CONSTRAINT `applicationattemptid`
-    FOREIGN KEY (`applicationattemptid`)
-    REFERENCES `yarn_appschedulinginfo` (`applicationattemptid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`applicationattemptid`)$$
-
 
 delimiter $$
 
@@ -763,20 +749,6 @@ CREATE TABLE `yarn_schedulerapp_reservedcontainers` (
   `rmcontainer_id` VARCHAR(45) NULL,
 PRIMARY KEY (`schedulerapp_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`schedulerapp_id`)$$
-
-
-delimiter $$
-
-CREATE TABLE `yarn_schedulerapp_newlyallocatedcontainers` (
-  `applicationattemptid` VARCHAR(45) NOT NULL,
-  `rmcontainer_id` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`applicationattemptid`, `rmcontainer_id`),
-  CONSTRAINT `applicationattemptid`
-    FOREIGN KEY (`applicationattemptid`)
-    REFERENCES `yarn_appschedulinginfo` (`applicationattemptid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`applicationattemptid`)$$
 
 
 delimiter $$
@@ -1010,30 +982,6 @@ CREATE TABLE `yarn_localitylevel` (
   PRIMARY KEY (`schedulerapp_id`, `priority_id`))
 ENGINE = ndbcluster$$
 
-delimiter $$
-
-CREATE TABLE `yarn_csleafqueueuserinfo` (
-  `username` VARCHAR(45) NOT NULL,
-  `consumed_memory` INT NULL,
-  `consumed_vcores` INT NULL,
-  `pending_applications` INT NULL,
-  `active_applications` INT NULL,
-  PRIMARY KEY (`username`))
-ENGINE = ndbcluster$$
-
-delimiter $$
-
-CREATE TABLE `yarn_csqueue` (
-  `path` VARCHAR(45) NOT NULL,
-  `name` VARCHAR(45) NULL,
-  `used_capacity` FLOAT NULL,
-  `used_resource_memory` INT NULL,
-  `used_resource_vcores` INT NULL,
-  `absolute_used_capacity` FLOAT NULL,
-  `is_parent` INT NULL,
-  `num_containers` INT NULL,
-  PRIMARY KEY (`path`))
-ENGINE = ndbcluster$$
 
 delimiter $$
 

@@ -91,8 +91,6 @@ import io.hops.metadata.ndb.dalimpl.yarn.ContainerIdToCleanClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.ContainerStatusClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.ContainersCheckPointsClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.ContainersLogsClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppLiveContainersClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppNewlyAllocatedContainersClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerNodeClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.FinishedApplicationsClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.FullRMNodeClusterJ;
@@ -149,8 +147,6 @@ import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
 import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
 import io.hops.metadata.yarn.dal.ContainersCheckPointsDataAccess;
 import io.hops.metadata.yarn.dal.ContainersLogsDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerAppLiveContainersDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerAppNewlyAllocatedContainersDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerNodeDataAccess;
 import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
 import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
@@ -272,14 +268,10 @@ public class NdbStorageFactory implements DalStorageFactory {
             new FinishedApplicationsClusterJ());
     dataAccessMap.put(SchedulerApplicationDataAccess.class,
             new SchedulerApplicationClusterJ());
-    dataAccessMap.put(FiCaSchedulerAppNewlyAllocatedContainersDataAccess.class,
-            new FiCaSchedulerAppNewlyAllocatedContainersClusterJ());
     dataAccessMap.put(FiCaSchedulerAppSchedulingOpportunitiesDataAccess.class,
             new FiCaSchedulerAppSchedulingOpportunitiesClusterJ());
     dataAccessMap.put(FiCaSchedulerAppLastScheduledContainerDataAccess.class,
             new FiCaSchedulerAppLastScheduledContainerClusterJ());
-    dataAccessMap.put(FiCaSchedulerAppLiveContainersDataAccess.class,
-            new FiCaSchedulerAppLiveContainersClusterJ());
     dataAccessMap.put(FiCaSchedulerAppReservedContainersDataAccess.class,
             new FiCaSchedulerAppReservedContainersClusterJ());
     dataAccessMap.put(FiCaSchedulerAppReservationsDataAccess.class,
