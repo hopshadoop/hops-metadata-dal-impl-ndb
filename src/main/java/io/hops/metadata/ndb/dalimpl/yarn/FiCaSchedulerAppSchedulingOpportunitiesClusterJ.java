@@ -166,6 +166,7 @@ public class FiCaSchedulerAppSchedulingOpportunitiesClusterJ implements
     schedulerAppSchedulingOpportunitiesDTO.setschedulerapp_id(hop.
             getSchedulerapp_id());
     schedulerAppSchedulingOpportunitiesDTO.setpriorityid(hop.getPriority_id());
+    schedulerAppSchedulingOpportunitiesDTO.setcounter(hop.getCounter());
 
     return schedulerAppSchedulingOpportunitiesDTO;
   }
