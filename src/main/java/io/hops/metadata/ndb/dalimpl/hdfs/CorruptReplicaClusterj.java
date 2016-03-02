@@ -60,10 +60,6 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     void setBlockId(long bid);
 
     @PrimaryKey
-    @Column(name = DATANODE_UUID)
-    String getDatanodeUuid();
-    void setDatanodeUuid(String uuid);
-
     @Column(name = STORAGE_ID)
     int getStorageId();
     void setStorageId(int storageId);
@@ -112,13 +108,13 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
   }
 
   @Override
-  public CorruptReplica findByPk(long blockId, String datanodeUuid, int inodeId)
+  public CorruptReplica findByPk(long blockId, int sid, int inodeId)
       throws StorageException {
     HopsSession dbSession = connector.obtainSession();
     Object[] keys = new Object[2];
     keys[0] = inodeId;
     keys[1] = blockId;
-    keys[2] = datanodeUuid;
+    keys[2] = sid;
 
     CorruptReplicaDTO corruptReplicaTable =
         dbSession.find(CorruptReplicaDTO.class, keys);
@@ -198,27 +194,26 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
   }
 
   @Override
-  public void removeByDatanodeUuid(long blockId, String datanodeUuid) throws
+  public void removeByBlockIdAndSid(long blockId, int sid) throws
       StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<CorruptReplicaDTO> qdt = qb.createQueryDefinition(CorruptReplicaDTO.class);
     HopsPredicate pred1 = qdt.get("block_id").equal(qdt.param("blockId"));
-    HopsPredicate pred2 = qdt.get("datanodeUuid").equal(qdt.param("datanodeUuid"));
+    HopsPredicate pred2 = qdt.get("storageId").equal(qdt.param("sid"));
     qdt.where(pred1.and(pred2));
 
     HopsQuery<CorruptReplicaDTO> query = session.createQuery(qdt);
     query.setParameter("blockId", blockId);
-    query.setParameter("datanodeUuid", datanodeUuid);
+    query.setParameter("sid", sid);
 
     query.deletePersistentAll();
   }
 
   private CorruptReplica createReplica(CorruptReplicaDTO corruptReplicaTable) {
-    return new CorruptReplica(corruptReplicaTable.getDatanodeUuid(),
-        corruptReplicaTable.getStorageId(), corruptReplicaTable.getBlockId(),
-        corruptReplicaTable.getINodeId());
+    return new CorruptReplica(corruptReplicaTable.getStorageId(),
+        corruptReplicaTable.getBlockId(), corruptReplicaTable.getINodeId());
   }
 
   private List<CorruptReplica> createCorruptReplicaList(
@@ -233,7 +228,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
   private void createPersistable(CorruptReplica corruptReplica,
       CorruptReplicaDTO corruptReplicaTable) {
     corruptReplicaTable.setBlockId(corruptReplica.getBlockId());
-    corruptReplicaTable.setDatanodeUuid(corruptReplica.getDatanodeUuid());
+    corruptReplicaTable.setStorageId(corruptReplica.getStorageId());
     corruptReplicaTable.setINodeId(corruptReplica.getInodeId());
     corruptReplicaTable.setTimestamp(System.currentTimeMillis());
   }
