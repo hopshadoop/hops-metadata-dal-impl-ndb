@@ -117,9 +117,7 @@ import io.hops.metadata.ndb.dalimpl.yarn.capacity.FiCaSchedulerAppReservedContai
 import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppSchedulingOpportunitiesClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.YarnProjectsDailyCostClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.YarnProjectsQuotaClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.capacity.CSLeafQueueUserInfoClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.capacity.CSLeafQueuesPendingAppsClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.capacity.CSQueueClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.fair.FSSchedulerNodeClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.fair.LocalityLevelClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.fair.PreemptionMapClusterJ;
@@ -173,9 +171,7 @@ import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservedContainersData
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppSchedulingOpportunitiesDataAccess;
 import io.hops.metadata.yarn.dal.YarnProjectsDailyCostDataAccess;
 import io.hops.metadata.yarn.dal.YarnProjectsQuotaDataAccess;
-import io.hops.metadata.yarn.dal.capacity.CSLeafQueueUserInfoDataAccess;
 import io.hops.metadata.yarn.dal.capacity.CSLeafQueuesPendingAppsDataAccess;
-import io.hops.metadata.yarn.dal.capacity.CSQueueDataAccess;
 import io.hops.metadata.yarn.dal.fair.FSSchedulerNodeDataAccess;
 import io.hops.metadata.yarn.dal.fair.LocalityLevelDataAccess;
 import io.hops.metadata.yarn.dal.fair.PreemptionMapDataAccess;
@@ -346,9 +342,6 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(RunnableAppsDataAccess.class, new RunnableAppsClusterJ());
     dataAccessMap.
             put(PreemptionMapDataAccess.class, new PreemptionMapClusterJ());
-    dataAccessMap.put(CSQueueDataAccess.class, new CSQueueClusterJ());
-    dataAccessMap.put(CSLeafQueueUserInfoDataAccess.class,
-            new CSLeafQueueUserInfoClusterJ());
     dataAccessMap.put(UserDataAccess.class, new UserClusterj());
     dataAccessMap.put(GroupDataAccess.class, new GroupClusterj());
     dataAccessMap.put(UserGroupDataAccess.class, new UserGroupClusterj());
