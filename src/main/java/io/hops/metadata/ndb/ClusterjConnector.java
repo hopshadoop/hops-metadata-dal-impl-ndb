@@ -51,6 +51,7 @@ import io.hops.metadata.hdfs.dal.ReplicaDataAccess;
 import io.hops.metadata.hdfs.dal.ReplicaUnderConstructionDataAccess;
 import io.hops.metadata.hdfs.dal.SafeBlocksDataAccess;
 import io.hops.metadata.hdfs.dal.SizeLogDataAccess;
+import io.hops.metadata.hdfs.dal.StorageDataAccess;
 import io.hops.metadata.hdfs.dal.StorageIdMapDataAccess;
 import io.hops.metadata.hdfs.dal.UnderReplicatedBlockDataAccess;
 import io.hops.metadata.hdfs.dal.UserDataAccess;
@@ -377,8 +378,10 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         SizeLogDataAccess.class, EncodingJobsDataAccess.class,
         RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
         UserGroupDataAccess.class,
+        StorageDataAccess.class,
         // YARN
-        RPCDataAccess.class, ApplicationStateDataAccess.class,
+        RPCDataAccess.class, 
+        ApplicationStateDataAccess.class,
         UpdatedNodeDataAccess.class,
         ApplicationAttemptStateDataAccess.class,
         RanNodeDataAccess.class,
@@ -424,7 +427,10 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     for (int i = 0; i < RETRIES; i++) {
       try {
         for (Class e : das) {
-          if (e == INodeDataAccess.class) {
+          if (e == StorageDataAccess.class) {
+            MysqlServerConnector
+                .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.StoragesTableDef.TABLE_NAME);
+          } else if (e == INodeDataAccess.class) {
             MysqlServerConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.INodeTableDef.TABLE_NAME);
           } else if (e == BlockInfoDataAccess.class) {
@@ -440,8 +446,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             MysqlServerConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.OnGoingSubTreeOpsDef.TABLE_NAME);
           } else if (e == ReplicaDataAccess.class) {
-            MysqlServerConnector
-                .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.ReplicaTableDef.TABLE_NAME);
+            MysqlServerConnector.truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.ReplicaTableDef.TABLE_NAME);
           } else if (e == ReplicaUnderConstructionDataAccess.class) {
             MysqlServerConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.ReplicaUnderConstructionTableDef.TABLE_NAME);

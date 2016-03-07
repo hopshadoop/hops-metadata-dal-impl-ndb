@@ -43,17 +43,14 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
     @PrimaryKey
     @Column(name = STORAGE_ID)
     int getStorageId();
-
-    void setStorageId(int storageId);
+    void setStorageId(int sid);
 
     @Column(name = HOST_ID)
     String getHostId();
-
     void setHostId(String hostId);
 
     @Column(name = STORAGE_TYPE)
     int getStorageType();
-
     void setStorageType(int storageType);
   }
 
@@ -64,12 +61,20 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
   }
 
   @Override
-  public Storage find(int storageId)
-      throws StorageException {
+  public void add(Storage s) throws StorageException {
     HopsSession session = connector.obtainSession();
-    Object[] key = new Object[1];
-    key[0] = storageId;
-    StorageDTO dto = session.find(StorageDTO.class, key);
+    StorageDTO sdto = session.newInstance(StorageDTO.class);
+    sdto.setStorageId(s.getStorageID());
+    sdto.setHostId(s.getHostID());
+    sdto.setStorageType(s.getStorageType());
+    session.savePersistent(sdto);
+    session.release(sdto);
+  }
+
+  @Override
+  public Storage findByPk(int storageId) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    StorageDTO dto = session.find(StorageDTO.class, storageId);
     Storage storage = create(dto);
     return storage;
   }
