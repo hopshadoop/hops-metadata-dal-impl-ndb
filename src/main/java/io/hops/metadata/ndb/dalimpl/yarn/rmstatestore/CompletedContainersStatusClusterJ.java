@@ -87,6 +87,30 @@ public static final Log LOG = LogFactory.getLog(CompletedContainersStatusCluster
     session.release(toPersist);
   }
 
+  @Override
+  public void removeAll(Collection<AllocateResponse> entries) throws
+          StorageException {
+    if (entries.isEmpty()) {
+      return;
+    }
+
+    HopsSession session = connector.obtainSession();
+    List<CompletedContainerDTO> toRemove =
+            new ArrayList<CompletedContainerDTO>();
+    for (AllocateResponse hop : entries) {
+      List<CompletedContainerDTO> pers =
+              createPersistable(hop, session);
+      if (!pers.isEmpty()) {
+        toRemove.addAll(pers);
+      }
+    }
+
+    if (!toRemove.isEmpty()) {
+      session.deletePersistentAll(toRemove);
+      session.release(toRemove);
+    }
+  }
+
   public Map<String, List<byte[]>> getAll() throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
