@@ -74,17 +74,18 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
   @Override
   public Storage findByPk(int storageId) throws StorageException {
     HopsSession session = connector.obtainSession();
-    StorageDTO dto = session.find(StorageDTO.class, storageId);
-    Storage storage = create(dto);
-    return storage;
+    StorageDTO sdto = session.find(StorageDTO.class, storageId);
+    if (sdto == null) {
+      return null;
+    }
+    return convertAndRelease(session, sdto);
   }
 
   @Override
   public List<Storage> findByHostUuid(String uuid) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
-    HopsQueryDomainType<StorageDTO> dobj =
-        qb.createQueryDefinition(StorageDTO.class);
+    HopsQueryDomainType<StorageDTO> dobj = qb.createQueryDefinition(StorageDTO.class);
 
     HopsPredicate pred1 = dobj.get("host_id").equal(dobj.param("hostId"));
 
@@ -114,27 +115,16 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
     ArrayList<Storage> list = new ArrayList<Storage>(dtos.size());
 
     for (StorageDTO dto : dtos) {
-      list.add(create(dto));
-      session.release(dto);
+      list.add(convertAndRelease(session, dto));
     }
 
     return list;
   }
 
-  private StorageDTO createPersistable(Storage storage,
-      HopsSession session) throws StorageException {
-    StorageDTO dto = session.newInstance(StorageDTO.class);
-    dto.setStorageId(storage.getStorageID());
-    dto.setHostId(storage.getHostID());
-    dto.setStorageType(storage.getStorageType());
-    return dto;
-  }
-
-  private Storage create(StorageDTO dto) {
-    Storage storage = new Storage(
-        dto.getStorageId(),
-        dto.getHostId(),
-        dto.getStorageType());
+  private Storage convertAndRelease(HopsSession session, StorageDTO sdto)
+      throws StorageException {
+    Storage storage = new Storage(sdto.getStorageId(), sdto.getHostId(), sdto.getStorageType());
+    session.release(sdto);
     return storage;
   }
 }
