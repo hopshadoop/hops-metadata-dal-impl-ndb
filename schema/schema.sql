@@ -402,7 +402,7 @@ CREATE TABLE `yarn_applicationattemptstate` (
   `applicationid` VARCHAR(45) NOT NULL,
   `applicationattemptid` VARCHAR(45) NOT NULL,
   `applicationattemptstate` VARBINARY(13000) NULL,
-  `applicationattempthost` VARCHAR(45) NULL,
+  `applicationattempthost` VARCHAR(255) NULL,
   `applicationattemptrpcport` INT NULL,
   `applicationattempttokens` VARBINARY(500) NULL,
   `applicationattempttrakingurl` VARCHAR(120) NULL,
@@ -473,9 +473,9 @@ CREATE TABLE `yarn_rmnode` (
   `hostname` VARCHAR(255) NULL,
   `commandport` INT NULL,
   `httpport` INT NULL,
-  `nodeaddress` VARCHAR(45) NULL,
-  `httpaddress` VARCHAR(45) NULL,
-  `nodeid` VARCHAR(45) NULL,
+  `nodeaddress` VARCHAR(255) NULL,
+  `httpaddress` VARCHAR(255) NULL,
+  `nodeid` VARCHAR(255) NULL,
   `healthreport` VARCHAR(500) NULL,
   `lasthealthreporttime` BIGINT NULL,
   `currentstate` VARCHAR(45) NULL,
@@ -491,7 +491,7 @@ PACK_KEYS = DEFAULT PARTITION BY KEY(rmnodeid)$$
 delimiter $$
 
 CREATE TABLE `yarn_resource` (
-  `id` VARCHAR(45) NOT NULL,
+  `id` VARCHAR(255) NOT NULL,
   `type` INT NOT NULL,
   `parent` INT NOT NULL,
   `memory` INT NULL,
@@ -656,14 +656,14 @@ delimiter $$
 CREATE TABLE `yarn_rmcontainer` (
   `containerid_id` VARCHAR(45) NOT NULL,
   `appattemptid_id` VARCHAR(45) NULL,
-  `nodeid_id` VARCHAR(45) NULL,
+  `nodeid_id` VARCHAR(255) NULL,
   `user` VARCHAR(45) NULL,
   `starttime` BIGINT NULL,
   `finishtime` BIGINT NULL,
   `state` VARCHAR(45) NULL,
   `finishedstatusstate` VARCHAR(45) NULL,
   `exitstatus` INT NULL,
-  `reservednode_id` VARCHAR(45) NULL,
+  `reservednode_id` VARCHAR(255) NULL,
   `reservedpriority` INT NULL,
   `reservedmemory` INT NULL,
   `reservedvcores` INT NULL,
@@ -759,7 +759,7 @@ delimiter $$
 CREATE TABLE `yarn_schedulerapp_reservedcontainers` (
   `schedulerapp_id` VARCHAR(45) NOT NULL,
   `priority_id` INT NULL,
-  `nodeid` VARCHAR(45) NULL,
+  `nodeid` VARCHAR(255) NULL,
   `rmcontainer_id` VARCHAR(45) NULL,
 PRIMARY KEY (`schedulerapp_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`schedulerapp_id`)$$
@@ -805,7 +805,7 @@ delimiter $$
 
 CREATE TABLE `yarn_appschedulinginfo_blacklist` (
   `applicationattemptid` VARCHAR(45) NOT NULL,
-  `blacklisted` VARCHAR(45) NOT NULL,
+  `blacklisted` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`applicationattemptid`, `blacklisted`),
   CONSTRAINT `applicationattemptid`
     FOREIGN KEY (`applicationattemptid`)
@@ -844,7 +844,7 @@ delimiter $$
 CREATE TABLE `yarn_resourcerequest` (
   `applicationattemptid` VARCHAR(45) NOT NULL,
   `priority` INT NOT NULL,
-  `name` VARCHAR(45) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
   `resourcerequeststate` VARBINARY(13500) NULL,
   PRIMARY KEY (`applicationattemptid`, `priority`, `name`)#,
 #  CONSTRAINT `applicationattemptid`
@@ -871,7 +871,7 @@ delimiter $$
 
 
 CREATE TABLE `yarn_secret_manager_keys` (
-  `id` VARCHAR(45) NOT NULL,
+  `id` VARCHAR(255) NOT NULL,
   `key` VARBINARY(13500) NULL,
 PRIMARY KEY (`id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
@@ -1010,30 +1010,6 @@ CREATE TABLE `yarn_localitylevel` (
   PRIMARY KEY (`schedulerapp_id`, `priority_id`))
 ENGINE = ndbcluster$$
 
-delimiter $$
-
-CREATE TABLE `yarn_csleafqueueuserinfo` (
-  `username` VARCHAR(45) NOT NULL,
-  `consumed_memory` INT NULL,
-  `consumed_vcores` INT NULL,
-  `pending_applications` INT NULL,
-  `active_applications` INT NULL,
-  PRIMARY KEY (`username`))
-ENGINE = ndbcluster$$
-
-delimiter $$
-
-CREATE TABLE `yarn_csqueue` (
-  `path` VARCHAR(45) NOT NULL,
-  `name` VARCHAR(45) NULL,
-  `used_capacity` FLOAT NULL,
-  `used_resource_memory` INT NULL,
-  `used_resource_vcores` INT NULL,
-  `absolute_used_capacity` FLOAT NULL,
-  `is_parent` INT NULL,
-  `num_containers` INT NULL,
-  PRIMARY KEY (`path`))
-ENGINE = ndbcluster$$
 
 delimiter $$
 
