@@ -94,7 +94,8 @@ public class ContainerStatusClusterJ implements
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
 
   @Override
-  public ContainerStatus findEntry(String containerId, String rmNodeId)
+  public ContainerStatus findEntry(String containerId, String rmNodeId, 
+          String type)
       throws StorageException {
     LOG.debug("HOP :: ClusterJ ContainerStatus.findById - START");
     HopsSession session = connector.obtainSession();
@@ -102,7 +103,8 @@ public class ContainerStatusClusterJ implements
     ContainerStatusDTO uciDTO;
     if (session != null) {
       uciDTO = session
-          .find(ContainerStatusDTO.class, new Object[]{containerId, rmNodeId});
+          .find(ContainerStatusDTO.class, new Object[]{containerId, rmNodeId, 
+              type});
       LOG.debug("HOP :: ClusterJ ContainerStatus.findById - FINISH");
       if (uciDTO != null) {
           ContainerStatus result = createHopContainerStatus(uciDTO);
