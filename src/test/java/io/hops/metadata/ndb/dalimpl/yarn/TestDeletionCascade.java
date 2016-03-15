@@ -417,18 +417,24 @@ public class TestDeletionCascade extends NDBBaseTest {
     public void testRemoveContainerStatusForRMNode() throws Exception {
         final List<ContainerStatus> containerStatus0 =
                 new ArrayList<ContainerStatus>();
-        containerStatus0.add(new ContainerStatus("cont0_0", "running", "healthy", 0, "host0:1234", 1));
-        containerStatus0.add(new ContainerStatus("cont0_1", "running", "healthy", 0, "host0:1234", 1));
+        containerStatus0.add(new ContainerStatus("cont0_0", "running", "healthy", 0, "host0:1234", 1,
+                ContainerStatus.Type.JUST_LAUNCHED));
+        containerStatus0.add(new ContainerStatus("cont0_1", "running", "healthy", 0, "host0:1234", 1,
+                ContainerStatus.Type.JUST_LAUNCHED));
 
         final List<ContainerStatus> containerStatus1 =
                 new ArrayList<ContainerStatus>();
-        containerStatus1.add(new ContainerStatus("cont1_0", "running", "healthy", 0, "host1:1234", 1));
-        containerStatus1.add(new ContainerStatus("cont1_1", "running", "healthy", 0, "host1:1234", 1));
+        containerStatus1.add(new ContainerStatus("cont1_0", "running", "healthy", 0, "host1:1234", 1,
+                ContainerStatus.Type.JUST_LAUNCHED));
+        containerStatus1.add(new ContainerStatus("cont1_1", "running", "healthy", 0, "host1:1234", 1,
+                ContainerStatus.Type.JUST_LAUNCHED));
 
         final List<ContainerStatus> containerStatus2 =
                 new ArrayList<ContainerStatus>();
-        containerStatus2.add(new ContainerStatus("cont2_0", "running", "healthy", 0, "host2:1234", 1));
-        containerStatus2.add(new ContainerStatus("cont2_1", "running", "healthy", 0, "host2:1234", 1));
+        containerStatus2.add(new ContainerStatus("cont2_0", "running", "healthy", 0, "host2:1234", 1,
+                ContainerStatus.Type.JUST_LAUNCHED));
+        containerStatus2.add(new ContainerStatus("cont2_1", "running", "healthy", 0, "host2:1234", 1,
+                ContainerStatus.Type.JUST_LAUNCHED));
 
         // Persist them in DB
         LightWeightRequestHandler populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
