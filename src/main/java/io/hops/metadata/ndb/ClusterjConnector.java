@@ -107,8 +107,10 @@ import io.hops.metadata.yarn.dal.FiCaSchedulerAppSchedulingOpportunitiesDataAcce
 import io.hops.metadata.yarn.dal.NodeHBResponseDataAccess;
 import io.hops.metadata.yarn.dal.SchedulerApplicationDataAccess;
 import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
+import io.hops.metadata.yarn.dal.YarnHistoryPriceDataAccess;
 import io.hops.metadata.yarn.dal.YarnProjectsDailyCostDataAccess;
 import io.hops.metadata.yarn.dal.YarnProjectsQuotaDataAccess;
+import io.hops.metadata.yarn.dal.YarnRunningPriceDataAccess;
 import io.hops.metadata.yarn.dal.YarnVariablesDataAccess;
 import io.hops.metadata.yarn.dal.capacity.CSLeafQueuesPendingAppsDataAccess;
 import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservedContainersDataAccess;
@@ -414,7 +416,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         NodeHBResponseDataAccess.class, 
         YarnProjectsQuotaDataAccess.class, YarnProjectsDailyCostDataAccess.class,
         ContainersCheckPointsDataAccess.class,
-        CSLeafQueuesPendingAppsDataAccess.class);
+        CSLeafQueuesPendingAppsDataAccess.class,
+        YarnHistoryPriceDataAccess.class,
+        YarnRunningPriceDataAccess.class);
   }
 
   private boolean format(boolean transactional,
@@ -677,6 +681,10 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.RunnableAppsTableDef.TABLE_NAME);
           } else if (e==CSLeafQueuesPendingAppsDataAccess.class){
             truncate(transactional, io.hops.metadata.yarn.TablesDef.CSLeafQueuesPendingAppsTableDef.TABLE_NAME);
+          } else if (e==YarnHistoryPriceDataAccess.class){
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.YarnHistoryPriceTableDef.TABLE_NAME);
+          } else if (e==YarnRunningPriceDataAccess.class){
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.YarnRunningPriceTableDef.TABLE_NAME);
           }
         }
         MysqlServerConnector.truncateTable(transactional,

@@ -63,14 +63,14 @@ public class YarnProjectsQuotaClusterJ implements
     void setProjectid(String projectid);
 
     @Column(name = REMAINING_QUOTA)
-    int getRemainingQuota();
+    float getRemainingQuota();
 
-    void setRemainingQuota(int credit);
+    void setRemainingQuota(float credit);
 
     @Column(name = TOTAL_USED_QUOTA)
-    int getTotalUsedQuota();
+    float getTotalUsedQuota();
 
-    void setTotalUsedQuota(int credit);
+    void setTotalUsedQuota(float credit);
 
   }
 
