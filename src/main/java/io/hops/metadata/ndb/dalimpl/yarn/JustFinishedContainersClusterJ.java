@@ -108,10 +108,7 @@ public class JustFinishedContainersClusterJ implements
             createQueryDefinition(JustFinishedContainersDTO.class);
     HopsQuery<JustFinishedContainersDTO> query = session.createQuery(dobj);
     List<JustFinishedContainersDTO> QueryResults = query.getResultList();
-    Map<String, List<JustFinishedContainer>> result = null;
-    if (QueryResults != null && !QueryResults.isEmpty()) {
-      result = createMap(QueryResults);
-    }
+    Map<String, List<JustFinishedContainer>> result = createMap(QueryResults);
     session.release(QueryResults);
     return result;
   }
