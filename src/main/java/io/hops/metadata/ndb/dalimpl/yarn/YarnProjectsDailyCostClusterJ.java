@@ -79,9 +79,9 @@ public class YarnProjectsDailyCostClusterJ implements
     void setDay(long day);
 
     @Column(name = CREDITS_USED)
-    int getCreditUsed();
+    float getCreditUsed();
 
-    void setCreditUsed(int credit);
+    void setCreditUsed(float credit);
 
   }
 
