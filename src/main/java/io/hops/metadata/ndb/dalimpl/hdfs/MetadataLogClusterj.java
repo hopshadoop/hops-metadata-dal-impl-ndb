@@ -55,10 +55,20 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     void setInodeId(int inodeId);
 
     @PrimaryKey
-    @Column(name = LOGICAL_TIME)
-    int getLogicalTime();
+    @Column(name = TIMESTAMP)
+    long getTimestamp();
 
-    void setLogicalTime(int logicalTime);
+    void setTimestamp(long timestamp);
+
+    @Column(name = INODE_PID)
+    int getInodePId();
+
+    void setInodePId(int inodePId);
+
+    @Column(name = INODE_NAME)
+    String getInodeName();
+
+    void setInodeName(String inodeName);
 
     @Column(name = OPERATION)
     short getOperation();
@@ -75,7 +85,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     for (MetadataLogEntry logEntry : logEntries) {
       added.add(createPersistable(logEntry));
     }
-    session.savePersistentAll(added);
+    session.makePersistentAll(added);
     session.release(added);
   }
 
@@ -94,7 +104,9 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     MetadataLogEntryDto dto = session.newInstance(MetadataLogEntryDto.class);
     dto.setDatasetId(logEntry.getDatasetId());
     dto.setInodeId(logEntry.getInodeId());
-    dto.setLogicalTime(logEntry.getLogicalTime());
+    dto.setInodePId(logEntry.getInodeParentId());
+    dto.setInodeName(logEntry.getInodeName());
+    dto.setTimestamp(logEntry.getTimestamp());
     dto.setOperation(logEntry.getOperationOrdinal());
     return dto;
   }
@@ -130,7 +142,9 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     return new MetadataLogEntry(
         dto.getDatasetId(),
         dto.getInodeId(),
-        dto.getLogicalTime(),
+        dto.getInodePId(),
+        dto.getInodeName(),
+        dto.getTimestamp(),
         MetadataLogEntry.Operation.values()[dto.getOperation()]);
   }
 
@@ -142,7 +156,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
         new ArrayList<MetadataLogEntryDto>();
     for (MetadataLogEntry logEntry : logEntries) {
       Object[] pk = new Object[]{logEntry.getDatasetId(), logEntry.getInodeId(),
-          logEntry.getLogicalTime()};
+          logEntry.getTimestamp()};
       MetadataLogEntryDto dto =
           session.newInstance(MetadataLogEntryDto.class, pk);
       dto = session.load(dto);
