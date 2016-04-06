@@ -104,6 +104,7 @@ import io.hops.metadata.yarn.dal.ResourceRequestDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppLastScheduledContainerDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppReservationsDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppSchedulingOpportunitiesDataAccess;
+import io.hops.metadata.yarn.dal.JustFinishedContainersDataAccess;
 import io.hops.metadata.yarn.dal.NodeHBResponseDataAccess;
 import io.hops.metadata.yarn.dal.SchedulerApplicationDataAccess;
 import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
@@ -417,6 +418,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         YarnProjectsQuotaDataAccess.class, YarnProjectsDailyCostDataAccess.class,
         ContainersCheckPointsDataAccess.class,
         CSLeafQueuesPendingAppsDataAccess.class,
+        JustFinishedContainersDataAccess.class,
         YarnHistoryPriceDataAccess.class,
         YarnRunningPriceDataAccess.class);
   }
@@ -681,6 +683,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.RunnableAppsTableDef.TABLE_NAME);
           } else if (e==CSLeafQueuesPendingAppsDataAccess.class){
             truncate(transactional, io.hops.metadata.yarn.TablesDef.CSLeafQueuesPendingAppsTableDef.TABLE_NAME);
+          } else if (e==JustFinishedContainersDataAccess.class){
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.JustFinishedContainersTableDef.TABLE_NAME);
           } else if (e==YarnHistoryPriceDataAccess.class){
             truncate(transactional, io.hops.metadata.yarn.TablesDef.YarnHistoryPriceTableDef.TABLE_NAME);
           } else if (e==YarnRunningPriceDataAccess.class){

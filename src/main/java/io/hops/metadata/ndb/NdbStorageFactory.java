@@ -115,6 +115,7 @@ import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppLastScheduledContainerC
 import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppReservationsClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.capacity.FiCaSchedulerAppReservedContainersClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppSchedulingOpportunitiesClusterJ;
+import io.hops.metadata.ndb.dalimpl.yarn.JustFinishedContainersClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.YarnHistoryPriceClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.YarnProjectsDailyCostClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.YarnProjectsQuotaClusterJ;
@@ -171,6 +172,7 @@ import io.hops.metadata.yarn.dal.FiCaSchedulerAppLastScheduledContainerDataAcces
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppReservationsDataAccess;
 import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservedContainersDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppSchedulingOpportunitiesDataAccess;
+import io.hops.metadata.yarn.dal.JustFinishedContainersDataAccess;
 import io.hops.metadata.yarn.dal.YarnHistoryPriceDataAccess;
 import io.hops.metadata.yarn.dal.YarnProjectsDailyCostDataAccess;
 import io.hops.metadata.yarn.dal.YarnProjectsQuotaDataAccess;
@@ -351,6 +353,8 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(UserGroupDataAccess.class, new UserGroupClusterj());
     dataAccessMap.put(CSLeafQueuesPendingAppsDataAccess.class,
             new CSLeafQueuesPendingAppsClusterJ());
+    dataAccessMap.put(JustFinishedContainersDataAccess.class,
+            new JustFinishedContainersClusterJ());
     // Quota Scheduling
     dataAccessMap.put(YarnProjectsQuotaDataAccess.class, new YarnProjectsQuotaClusterJ());
     dataAccessMap.put(YarnProjectsDailyCostDataAccess.class, new YarnProjectsDailyCostClusterJ());

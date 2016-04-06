@@ -1,7 +1,20 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Hops Database abstraction layer for storing the hops metadata in MySQL Cluster
+ * Copyright (C) 2015  hops.io
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
 package io.hops.metadata.ndb.dalimpl.yarn.rmstatestore;
@@ -48,16 +61,26 @@ public class UpdatedNodeClusterJ implements
   
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
   @Override
-  public void addAll(Collection<List<UpdatedNode>> toAdd)
+  public void addAll(Collection<UpdatedNode> toAdd)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     List<UpdatedNodeDTO> toPersist = new ArrayList<UpdatedNodeDTO>();
-    for(List<UpdatedNode> l : toAdd){
-      for (UpdatedNode n : l) {
-        toPersist.add(createPersistable(n, session));
-      }
+    for (UpdatedNode n : toAdd) {
+      toPersist.add(createPersistable(n, session));
     }
     session.savePersistentAll(toPersist);
+    session.release(toPersist);
+  }
+  
+  @Override
+  public void removeAll(Collection<UpdatedNode> toRemove)
+      throws StorageException {
+    HopsSession session = connector.obtainSession();
+    List<UpdatedNodeDTO> toPersist = new ArrayList<UpdatedNodeDTO>();
+    for (UpdatedNode n : toRemove) {
+      toPersist.add(createPersistable(n, session));
+    }
+    session.deletePersistentAll(toPersist);
     session.release(toPersist);
   }
   

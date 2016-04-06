@@ -1201,3 +1201,12 @@ CREATE TABLE `yarn_cs_leaf_queue_pending_apps` (
   `path` varchar(200) NOT NULL,
   PRIMARY KEY (`app_attempt_id`))
 ENGINE = ndbcluster PARTITION BY KEY(app_attempt_id)$$
+
+delimiter $$
+
+CREATE TABLE `yarn_just_finished_containers` (
+  `containerid` varchar(200) NOT NULL,
+  `appattemptid` varchar(200) NOT NULL,
+  `container` varbinary(1000) NOT NULL,
+  PRIMARY KEY (`containerid`,`appattemptid`))
+ENGINE = ndbcluster PARTITION BY KEY(`appattemptid`)$$
