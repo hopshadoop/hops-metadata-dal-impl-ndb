@@ -279,7 +279,7 @@ public class InvalidatedBlockClusterj implements
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<InvalidateBlocksDTO> qdt =
         qb.createQueryDefinition(InvalidateBlocksDTO.class);
-    qdt.where(qdt.get("storage_id").equal(qdt.param("sid")));
+    qdt.where(qdt.get("storageId").equal(qdt.param("sid")));
     HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
     query.setParameter("sid", sid);
     query.deletePersistentAll();
@@ -318,8 +318,8 @@ public class InvalidatedBlockClusterj implements
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<InvalidateBlocksDTO> qdt = qb.createQueryDefinition(InvalidateBlocksDTO.class);
-    HopsPredicate pred1 = qdt.get("block_id").equal(qdt.param("blockId"));
-    HopsPredicate pred2 = qdt.get("storage_id").equal(qdt.param("storageId"));
+    HopsPredicate pred1 = qdt.get("blockId").equal(qdt.param("blockId"));
+    HopsPredicate pred2 = qdt.get("storageId").equal(qdt.param("storageId"));
     qdt.where(pred1.and(pred2));
 
     HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);

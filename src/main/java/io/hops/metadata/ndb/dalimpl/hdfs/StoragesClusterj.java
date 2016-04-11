@@ -85,9 +85,10 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
   public List<Storage> findByHostUuid(String uuid) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
-    HopsQueryDomainType<StorageDTO> dobj = qb.createQueryDefinition(StorageDTO.class);
+    HopsQueryDomainType<StorageDTO> dobj =
+        qb.createQueryDefinition(StorageDTO.class);
 
-    HopsPredicate pred1 = dobj.get("host_id").equal(dobj.param("hostId"));
+    HopsPredicate pred1 = dobj.get("hostId").equal(dobj.param("hostId"));
 
     dobj.where(pred1);
 
@@ -115,7 +116,8 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
     ArrayList<Storage> list = new ArrayList<Storage>(dtos.size());
 
     for (StorageDTO dto : dtos) {
-      list.add(convertAndRelease(session, dto));
+      list.add(create(dto));
+      session.release(dto);
     }
 
     return list;
@@ -123,8 +125,17 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
 
   private Storage convertAndRelease(HopsSession session, StorageDTO sdto)
       throws StorageException {
-    Storage storage = new Storage(sdto.getStorageId(), sdto.getHostId(), sdto.getStorageType());
+    Storage storage = new Storage(sdto.getStorageId(), sdto.getHostId(), sdto
+        .getStorageType());
     session.release(sdto);
+    return storage;
+  }
+
+  private Storage create(StorageDTO dto) {
+    Storage storage = new Storage(
+        dto.getStorageId(),
+        dto.getHostId(),
+        dto.getStorageType());
     return storage;
   }
 }

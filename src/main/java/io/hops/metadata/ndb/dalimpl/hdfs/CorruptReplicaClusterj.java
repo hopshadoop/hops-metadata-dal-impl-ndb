@@ -200,7 +200,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<CorruptReplicaDTO> qdt = qb.createQueryDefinition(CorruptReplicaDTO.class);
-    HopsPredicate pred1 = qdt.get("block_id").equal(qdt.param("blockId"));
+    HopsPredicate pred1 = qdt.get("blockId").equal(qdt.param("blockId"));
     HopsPredicate pred2 = qdt.get("storageId").equal(qdt.param("sid"));
     qdt.where(pred1.and(pred2));
 
