@@ -122,26 +122,30 @@ public class TestFullRMNodeClusterJ {
     hopContainersStatus.add(
             new ContainerStatus("container1",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
-                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID));
+                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
+                    ContainerStatus.Type.JUST_LAUNCHED));
     hopContainersStatus.add(
             new ContainerStatus("container2",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
-                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID));
+                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
+                    ContainerStatus.Type.JUST_LAUNCHED));
     hopContainersStatus.add(
             new ContainerStatus("container3",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
-                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID));
+                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
+                    ContainerStatus.Type.UCI));
     hopContainersStatus.add(
             new ContainerStatus("container4",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
-                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID));
+                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
+                    ContainerStatus.Type.UCI));
     hopContainersStatus.add(new ContainerStatus("container5",
             TablesDef.ContainerStatusTableDef.STATE_COMPLETED,
             "every thing is good", 0,
-            "70", DEFAULT_PENDIND_ID));
+            "70", DEFAULT_PENDIND_ID, ContainerStatus.Type.UCI));
     hopContainersStatus.add(new ContainerStatus("container6",
             TablesDef.ContainerStatusTableDef.STATE_COMPLETED, "finish", 1, "70",
-            DEFAULT_PENDIND_ID));
+            DEFAULT_PENDIND_ID, ContainerStatus.Type.UCI));
 
     LightWeightRequestHandler fillDB
             = new LightWeightRequestHandler(YARNOperationType.TEST) {

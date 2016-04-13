@@ -75,6 +75,7 @@ void HopsEventAPI::dropEvents() {
 		}
 		//finally cancel the event thread
 		m_ptrEventThread->CancelEventThread();
+    m_bAPIInitialized=false;
 		delete m_ptrEventThread;
 	}
   pthread_mutex_unlock(&lock);

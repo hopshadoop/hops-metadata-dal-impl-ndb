@@ -51,6 +51,15 @@ public class ContainersLogsClusterJ implements
     int getexitstatus();
 
     void setexitstatus(int exitstate);
+    
+    @Column(name = PRICE)
+    float getPrice();
+
+    void setPrice(float price);
+
+    
+
+    
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -80,6 +89,7 @@ public class ContainersLogsClusterJ implements
     }
 
     session.deletePersistentAll(toRemove);
+    session.flush();
     session.release(toRemove);
   }
   
@@ -125,6 +135,7 @@ public class ContainersLogsClusterJ implements
     clDTO.setstart(hopCL.getStart());
     clDTO.setstop(hopCL.getStop());
     clDTO.setexitstatus(hopCL.getExitstatus());
+    clDTO.setPrice(hopCL.getPrice());
     return clDTO;
   }
 
@@ -144,7 +155,8 @@ public class ContainersLogsClusterJ implements
             clDTO.getcontainerid(),
             clDTO.getstart(),
             clDTO.getstop(),
-            clDTO.getexitstatus()
+            clDTO.getexitstatus(), 
+            clDTO.getPrice()
     );
     return hop;
   }

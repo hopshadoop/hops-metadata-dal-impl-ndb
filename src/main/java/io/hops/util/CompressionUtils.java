@@ -42,17 +42,22 @@ public class CompressionUtils {
   }
 
   public static byte[] decompress(byte[] data)
-      throws IOException, DataFormatException {
-    Inflater decompresser = new Inflater();
-    decompresser.setInput(data);
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
-    byte[] buffer = new byte[1024];
-    while (!decompresser.finished()) {
-      int count = decompresser.inflate(buffer);
-      outputStream.write(buffer, 0, count);
+          throws IOException, DataFormatException {
+    if (data != null && data.length != 0) {
+      Inflater decompresser = new Inflater();
+      decompresser.setInput(data);
+      ByteArrayOutputStream outputStream
+              = new ByteArrayOutputStream(data.length);
+      byte[] buffer = new byte[1024];
+      while (!decompresser.finished()) {
+        int count = decompresser.inflate(buffer);
+        outputStream.write(buffer, 0, count);
+      }
+      decompresser.end();
+      outputStream.close();
+      return outputStream.toByteArray();
+    } else {
+      return null;
     }
-    decompresser.end();
-    outputStream.close();
-    return outputStream.toByteArray();
   }
 }
