@@ -193,24 +193,6 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     return crl;
   }
 
-  @Override
-  public void removeByBlockIdAndSid(long blockId, int sid) throws
-      StorageException {
-    HopsSession session = connector.obtainSession();
-    HopsQueryBuilder qb = session.getQueryBuilder();
-
-    HopsQueryDomainType<CorruptReplicaDTO> qdt = qb.createQueryDefinition(CorruptReplicaDTO.class);
-    HopsPredicate pred1 = qdt.get("blockId").equal(qdt.param("blockId"));
-    HopsPredicate pred2 = qdt.get("storageId").equal(qdt.param("sid"));
-    qdt.where(pred1.and(pred2));
-
-    HopsQuery<CorruptReplicaDTO> query = session.createQuery(qdt);
-    query.setParameter("blockId", blockId);
-    query.setParameter("sid", sid);
-
-    query.deletePersistentAll();
-  }
-
   private CorruptReplica createReplica(CorruptReplicaDTO corruptReplicaTable) {
     return new CorruptReplica(corruptReplicaTable.getStorageId(),
         corruptReplicaTable.getBlockId(), corruptReplicaTable.getINodeId());
