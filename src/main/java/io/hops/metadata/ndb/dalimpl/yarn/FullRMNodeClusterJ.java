@@ -57,8 +57,6 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
   public RMNodeComps findByNodeId(String nodeId) throws StorageException {
 
     HopsSession session = connector.obtainSession();
-    List<JustLaunchedContainers> hopJustLaunchedContainers = justLaunchedDA.
-            findByRMNode(nodeId);
     List<UpdatedContainerInfo> hopUpdatedContainerInfo
             = updatedContainerDA.findByRMNodeList(nodeId);
     Resource hopResource = resourceDA.findEntry(nodeId,
@@ -95,17 +93,6 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
 
     List<ContainerStatusClusterJ.ContainerStatusDTO> containerStatusDTOs =
         new ArrayList<ContainerStatusClusterJ.ContainerStatusDTO>();
-    if (hopJustLaunchedContainers != null) {
-      for (JustLaunchedContainers hop : hopJustLaunchedContainers) {
-        Object[] pk = new Object[]{hop.getContainerId(), hop.getRmnodeid(),
-        ContainerStatus.Type.JUST_LAUNCHED.name()};
-        ContainerStatusClusterJ.ContainerStatusDTO containerStatusDTO = session.
-                newInstance(ContainerStatusClusterJ.ContainerStatusDTO.class, pk);
-        containerStatusDTO = session.load(containerStatusDTO);
-        containerStatusDTOs.add(containerStatusDTO);
-      }
-    }
-
 
     if (hopUpdatedContainerInfo != null) {
       
@@ -166,7 +153,7 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
       rmNodeId = hopRMNode.getNodeId();
     }
     RMNodeComps result = new RMNodeComps(hopRMNode, hopNextHeartbeat, hopNode,
-        hopNodeHBResponse, hopResource, hopPendingEvent, hopJustLaunchedContainers,
+        hopNodeHBResponse, hopResource, hopPendingEvent,
         hopUpdatedContainerInfo, hopContainerIdsToClean,
         hopFinishedApplications,
         ContainerStatusClusterJ.createList(containerStatusDTOs), rmNodeId);
