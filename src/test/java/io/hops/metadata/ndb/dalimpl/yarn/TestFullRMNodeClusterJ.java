@@ -240,30 +240,6 @@ public class TestFullRMNodeClusterJ {
     Assert.assertTrue(resourceFinal.getParent() == hopResourceOrigin.
             getParent());
 
-    List<JustLaunchedContainers> hopJustLaunchedContainersFinal
-            = hopRMNodeFull.getHopJustLaunchedContainers();
-    for (JustLaunchedContainers justLaunched : hopJustLaunchedContainersFinal) {
-      boolean flag = false;
-      for (ContainerStatus containerStatus : hopRMNodeFull.
-              getHopContainersStatus()) {
-        if (containerStatus.getContainerid().equals(justLaunched.
-                getContainerId())) {
-          flag = true;
-        }
-      }
-
-      Assert.assertTrue(flag);
-      flag = false;
-      for (JustLaunchedContainers justLaunchedOringin
-              : hopJustLaunchedContainers) {
-        if (justLaunchedOringin.getContainerId().equals(justLaunched.
-                getContainerId())) {
-          flag = true;
-          break;
-        }
-      }
-      Assert.assertTrue(flag);
-    }
 
     List<UpdatedContainerInfo> hopUpdatedContainersFinal
             = hopRMNodeFull.getHopUpdatedContainerInfo();
