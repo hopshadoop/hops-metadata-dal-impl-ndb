@@ -467,7 +467,6 @@ CREATE TABLE `yarn_rmnode` (
   `currentstate` VARCHAR(45) NULL,
   `overcommittimeout` INT NULL,
   `nodemanager_version` VARCHAR(45) NULL,
-  `uci_id` INT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`))
 ENGINE = ndbcluster DEFAULT CHARSET=latin1
