@@ -23,6 +23,7 @@ struct SimulationNdbValues
 		m_dataType = NdbDictionary::Column::Undefined;
 		m_isThisNull = false;
 		m_int32Value = 0;
+    m_float = 0;
 		memset(m_zColName,0,sizeof(m_zColName));
 	}
 	~SimulationNdbValues() {
@@ -51,11 +52,19 @@ struct SimulationNdbValues
 		}
 	}
 
+  float getFLoatValue(){
+    if (m_isThisNull)
+			return -1;
+		else {
+			return m_float;
+		}
+  }
 
 	char m_zValue[100];
 	char m_zColName[100];
 	Int32 m_int32Value;
 	bool m_isThisNull;
+  float m_float;
 
 	NdbDictionary::Column::Type m_dataType;
 
