@@ -81,8 +81,7 @@ const char* HopsConfigFile::GetValue(const char* zTag, bool _bNoExit) {
 	std::map<std::string, std::string>::iterator iteConfig;
 	iteConfig = map_ConfigValues.find(s);
 	if (iteConfig != map_ConfigValues.end()) {
-		std::string sValue = iteConfig->second;
-		return sValue.data();
+		return iteConfig->second.data();
 	} else {
 		if (!_bNoExit) {
 			std::cout << "\033[22;33m\aError in reading Config File\033[0m"
