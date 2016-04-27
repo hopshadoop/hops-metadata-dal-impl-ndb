@@ -106,11 +106,6 @@ public class RMNodeClusterJ
     String getnodemanagerversion();
 
     void setnodemanagerversion(String nodemanagerversion);
-
-    @Column(name = UCI_ID)
-    int getuciId();
-
-    void setuciId(int uciId);
     
     @Column(name = PENDING_EVENT_ID)
     int getpendingeventid();
@@ -210,7 +205,6 @@ public class RMNodeClusterJ
     rmDTO.setcurrentstate(hopRMNode.getCurrentState());
     rmDTO.setovercommittimeout(hopRMNode.getOvercommittimeout());
     rmDTO.setnodemanagerversion(hopRMNode.getNodemanagerVersion());
-    rmDTO.setuciId(hopRMNode.getUciId());
     rmDTO.setpendingeventid(hopRMNode.getPendingEventId());
     return rmDTO;
   }
@@ -223,10 +217,10 @@ public class RMNodeClusterJ
    */
   public static RMNode createHopRMNode(RMNodeDTO rmDTO) {
     return new RMNode(rmDTO.getNodeid(), rmDTO.getHostname(),
-        rmDTO.getCommandport(), rmDTO.getHttpport(), rmDTO.getNodeaddress(),
-        rmDTO.getHttpaddress(), rmDTO.getHealthreport(),
-        rmDTO.getLasthealthreporttime(), rmDTO.getcurrentstate(),
-        rmDTO.getnodemanagerversion(), rmDTO.getovercommittimeout(),
-        rmDTO.getuciId(),rmDTO.getpendingeventid());
+            rmDTO.getCommandport(), rmDTO.getHttpport(), rmDTO.getNodeaddress(),
+            rmDTO.getHttpaddress(), rmDTO.getHealthreport(),
+            rmDTO.getLasthealthreporttime(), rmDTO.getcurrentstate(),
+            rmDTO.getnodemanagerversion(), rmDTO.getovercommittimeout(), rmDTO.
+            getpendingeventid());
   }
 }
