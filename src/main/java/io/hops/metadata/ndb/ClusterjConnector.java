@@ -267,7 +267,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
    * This is called only when MiniDFSCluster wants to format the Namenode.
    */
   @Override
-  public boolean formatAllStorage() throws StorageException {
+  public boolean formatStorage() throws StorageException {
     return formatAll(true);
   }
 

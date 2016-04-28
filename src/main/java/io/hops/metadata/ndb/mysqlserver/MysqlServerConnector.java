@@ -183,7 +183,7 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
   }
 
   @Override
-  public boolean formatAllStorage() throws StorageException {
+  public boolean formatStorage() throws StorageException {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
