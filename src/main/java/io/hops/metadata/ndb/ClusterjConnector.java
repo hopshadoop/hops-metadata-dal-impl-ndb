@@ -268,9 +268,14 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
    */
   @Override
   public boolean formatStorage() throws StorageException {
-    return format(true);
+    return formatAll(true);
   }
 
+  @Override
+  public boolean formatYarnStorage() throws StorageException {
+    return formatYarn(true);
+  }
+  
   @Override
   public boolean formatStorage(Class<? extends EntityDataAccess>... das)
       throws StorageException {
@@ -356,32 +361,18 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   }
 
   @Override
-  public boolean formatStorageNonTransactional() throws StorageException {
-    return format(false);
+  public boolean formatAllStorageNonTransactional() throws StorageException {
+    return formatAll(false);
   }
 
-  private boolean format(boolean transactional) throws StorageException {
+  @Override
+  public boolean formatYarnStorageNonTransactional() throws StorageException {
+    return formatAll(false);
+  }
+  
+  private boolean formatYarn(boolean transactional) throws StorageException{
     return format(transactional,
-        // shared
-        VariableDataAccess.class,
-        // HDFS
-        INodeDataAccess.class, BlockInfoDataAccess.class, LeaseDataAccess.class,
-        LeasePathDataAccess.class, ReplicaDataAccess.class,
-        ReplicaUnderConstructionDataAccess.class,
-        InvalidateBlockDataAccess.class, ExcessReplicaDataAccess.class,
-        PendingBlockDataAccess.class, CorruptReplicaDataAccess.class,
-        UnderReplicatedBlockDataAccess.class, HdfsLeDescriptorDataAccess.class,
-        INodeAttributesDataAccess.class, StorageIdMapDataAccess.class,
-        BlockLookUpDataAccess.class, SafeBlocksDataAccess.class,
-        MisReplicatedRangeQueueDataAccess.class, QuotaUpdateDataAccess.class,
-        EncodingStatusDataAccess.class, BlockChecksumDataAccess.class,
-        OngoingSubTreeOpsDataAccess.class,
-        MetadataLogDataAccess.class, AccessTimeLogDataAccess.class,
-        SizeLogDataAccess.class, EncodingJobsDataAccess.class,
-        RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
-        UserGroupDataAccess.class,
-        // YARN
-        RPCDataAccess.class, HeartBeatRPCDataAccess.class,
+    RPCDataAccess.class, HeartBeatRPCDataAccess.class,
         AllocateRPCDataAccess.class,
         ApplicationStateDataAccess.class,
         UpdatedNodeDataAccess.class,
@@ -415,12 +406,48 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         RunnableAppsDataAccess.class,
         NextHeartbeatDataAccess.class,
         NodeHBResponseDataAccess.class, 
-        YarnProjectsQuotaDataAccess.class, YarnProjectsDailyCostDataAccess.class,
         ContainersCheckPointsDataAccess.class,
         CSLeafQueuesPendingAppsDataAccess.class,
-        JustFinishedContainersDataAccess.class,
-        YarnHistoryPriceDataAccess.class,
-        YarnRunningPriceDataAccess.class);
+        JustFinishedContainersDataAccess.class);
+  }
+  
+  private boolean formatHDFS(boolean transactional) throws StorageException{
+    return format(transactional,
+        INodeDataAccess.class, BlockInfoDataAccess.class, LeaseDataAccess.class,
+        LeasePathDataAccess.class, ReplicaDataAccess.class,
+        ReplicaUnderConstructionDataAccess.class,
+        InvalidateBlockDataAccess.class, ExcessReplicaDataAccess.class,
+        PendingBlockDataAccess.class, CorruptReplicaDataAccess.class,
+        UnderReplicatedBlockDataAccess.class, HdfsLeDescriptorDataAccess.class,
+        INodeAttributesDataAccess.class, StorageIdMapDataAccess.class,
+        BlockLookUpDataAccess.class, SafeBlocksDataAccess.class,
+        MisReplicatedRangeQueueDataAccess.class, QuotaUpdateDataAccess.class,
+        EncodingStatusDataAccess.class, BlockChecksumDataAccess.class,
+        OngoingSubTreeOpsDataAccess.class,
+        MetadataLogDataAccess.class, AccessTimeLogDataAccess.class,
+        SizeLogDataAccess.class, EncodingJobsDataAccess.class,
+        RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
+        UserGroupDataAccess.class);
+  }
+  
+  private boolean formatAll(boolean transactional) throws StorageException {
+    //HDFS
+    if (!formatHDFS(transactional)) {
+      return false;
+    }
+    //YARN
+    if (!formatYarn(transactional)) {
+      return false;
+    }
+
+    // shared
+    return format(transactional,
+            VariableDataAccess.class,
+            YarnProjectsQuotaDataAccess.class,
+            YarnProjectsDailyCostDataAccess.class,
+            YarnHistoryPriceDataAccess.class,
+            YarnRunningPriceDataAccess.class
+    );
   }
 
   private boolean format(boolean transactional,
