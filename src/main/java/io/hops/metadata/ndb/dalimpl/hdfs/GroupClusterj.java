@@ -27,9 +27,11 @@ import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.GroupDataAccess;
 import io.hops.metadata.hdfs.entity.Group;
-import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 
@@ -40,57 +42,61 @@ public class GroupClusterj implements TablesDef.GroupsTableDef, GroupDataAccess<
 
     @PrimaryKey
     @Column(name = ID)
-    byte[] getId();
+    int getId();
 
-    void setId(byte[] id);
+    void setId(int id);
 
-    @Column(name = Name)
+    @Column(name = NAME)
     String getName();
 
     void setName(String name);
   }
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
-  public Group getGroup(byte[] id) throws StorageException {
-    HopsSession session = connector.obtainSession();
-    GroupDTO groupDTO = session.find(GroupDTO.class, id);
-    Group group = new Group(groupDTO.getId(), groupDTO.getName());
-    session.release(groupDTO);
-    return group;
+  public Group getGroup(final int groupId) throws StorageException {
+    final String query = String.format("SELECT %s FROM %s WHERE %s=%d",
+        NAME, TABLE_NAME, ID, groupId);
+
+    return MySQLQueryHelper.execute(query,
+        new MySQLQueryHelper.ResultSetHandler<Group>() {
+
+          @Override
+          public Group handle(ResultSet result)
+              throws SQLException, StorageException {
+            if (!result.next()) {
+              return null;
+            }
+            return  new Group(groupId, result.getString(NAME));
+          }
+        });
   }
 
   @Override
-  public void addGroup(Group group) throws StorageException {
-    HopsSession session = connector.obtainSession();
-    GroupDTO groupDTO = session.newInstance(GroupDTO.class);
-    groupDTO.setId(group.getId());
-    groupDTO.setName(group.getName());
-    session.savePersistent(groupDTO);
-    session.release(groupDTO);
+  public Group getGroup(final String groupName) throws StorageException {
+    final String query = String.format("SELECT %s FROM %s WHERE %s='%s'",
+        ID, TABLE_NAME, NAME, groupName);
+
+    return MySQLQueryHelper.execute(query,
+        new MySQLQueryHelper.ResultSetHandler<Group>() {
+
+          @Override
+          public Group handle(ResultSet result)
+              throws SQLException, StorageException {
+            if (!result.next()) {
+              return null;
+            }
+            return  new Group(result.getInt(ID), groupName);
+          }
+        });
   }
+
 
   @Override
-  public Collection<Group> getGroups(Collection<byte[]> ids)
-      throws StorageException {
-    HopsSession session = connector.obtainSession();
-    Collection<GroupDTO> groupDTOs = getGroups(session, ids);
-    return convertAndRelease(session, groupDTOs);
-  }
-
-  static Collection<GroupDTO> getGroups(HopsSession session, Collection<byte[]>
-      ids)
-      throws StorageException {
-    List<GroupDTO> groupDTOs = Lists.newArrayListWithCapacity(ids.size());
-    for(byte[] id : ids){
-      GroupClusterj.GroupDTO groupDTO = session.newInstance(GroupClusterj
-          .GroupDTO.class, id);
-      session.load(groupDTO);
-      groupDTOs.add(groupDTO);
-    }
-    session.flush();
-    return groupDTOs;
+  public Group addGroup(String groupName) throws StorageException {
+    final String query = String.format("INSERT IGNORE INTO %s (%s) VALUES" +
+        "('%s')", TABLE_NAME, NAME, groupName);
+    MySQLQueryHelper.execute(query);
+    return getGroup(groupName);
   }
 
   static List<Group> convertAndRelease(HopsSession session, Collection<GroupDTO>

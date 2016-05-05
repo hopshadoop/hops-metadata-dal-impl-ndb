@@ -18,6 +18,7 @@
  */
 package io.hops.metadata.ndb.mysqlserver;
 
+import com.mysql.jdbc.exceptions.MySQLIntegrityConstraintViolationException;
 import io.hops.exception.StorageException;
 
 import java.sql.Connection;
@@ -132,11 +133,23 @@ public class MySQLQueryHelper {
       }
     });
   }
-  
-  public static interface ResultSetHandler<R> {
+
+  public static int execute(String query) throws StorageException {
+    try {
+      Connection conn = connector.obtainSession();
+      PreparedStatement s = conn.prepareStatement(query);
+      return s.executeUpdate();
+    } catch (SQLException ex) {
+      throw HopsSQLExceptionHelper.wrap(ex);
+    } finally {
+      connector.closeSession();
+    }
+  }
+
+  public interface ResultSetHandler<R> {
     R handle(ResultSet result) throws SQLException, StorageException;
   }
-  
+
   public static <R> R execute(String query, ResultSetHandler<R> handler)
       throws StorageException {
     try {
@@ -145,7 +158,7 @@ public class MySQLQueryHelper {
       ResultSet result = s.executeQuery();
       return handler.handle(result);
     } catch (SQLException ex) {
-      throw new StorageException(ex);
+      throw HopsSQLExceptionHelper.wrap(ex);
     } finally {
       connector.closeSession();
     }

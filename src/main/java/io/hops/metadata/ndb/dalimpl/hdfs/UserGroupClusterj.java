@@ -43,15 +43,15 @@ public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
 
     @PrimaryKey
     @Column(name = USER_ID)
-    byte[] getUserId();
+    int getUserId();
 
-    void setUserId(byte[] id);
+    void setUserId(int id);
 
     @PrimaryKey
     @Column(name = GROUP_ID)
-    byte[] getGroupId();
+    int getGroupId();
 
-    void setGroupId(byte[] id);
+    void setGroupId(int id);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -62,7 +62,7 @@ public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
   }
 
   @Override
-  public void addUserToGroup(byte[] userId, byte[] groupId)
+  public void addUserToGroup(int userId, int groupId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     UserGroupDTO dto = session.newInstance(UserGroupDTO.class);
@@ -78,7 +78,7 @@ public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
   }
 
   @Override
-  public List<Group> getGroupsForUser(byte[] userId)
+  public List<Group> getGroupsForUser(int userId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
 

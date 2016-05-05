@@ -18,82 +18,63 @@
  */
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
-import com.google.common.collect.Lists;
-import com.mysql.clusterj.annotation.Column;
-import com.mysql.clusterj.annotation.PersistenceCapable;
-import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.UserDataAccess;
 import io.hops.metadata.hdfs.entity.User;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
 
-import java.util.Collection;
-import java.util.List;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 
 public class UserClusterj implements TablesDef.UsersTableDef, UserDataAccess<User>{
 
-  @PersistenceCapable(table = TABLE_NAME)
-  public interface UserDTO {
-
-    @PrimaryKey
-    @Column(name = ID)
-    byte[] getId();
-
-    void setId(byte[] id);
-
-    @Column(name = Name)
-    String getName();
-
-    void setName(String name);
-  }
-
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
-  public User getUser(byte[] id) throws StorageException {
-    HopsSession session = connector.obtainSession();
-    UserDTO userDTO = session.find(UserDTO.class, id);
-    User user  = new User(userDTO.getId(), userDTO.getName());
-    session.release(userDTO);
-    return user;
+  public User getUser(final int userId) throws StorageException {
+    final String query = String.format("SELECT %s FROM %s WHERE %s=%d",
+        NAME, TABLE_NAME, ID, userId);
+
+    return MySQLQueryHelper.execute(query,
+        new MySQLQueryHelper.ResultSetHandler<User>() {
+
+          @Override
+          public User handle(ResultSet result)
+              throws SQLException, StorageException {
+            if (!result.next()){
+              return null;
+            }
+            return  new User(userId, result.getString(NAME));
+          }
+        });
   }
 
   @Override
-  public void addUser(User user) throws StorageException{
-    HopsSession session = connector.obtainSession();
-    UserDTO userDTO = session.newInstance(UserDTO.class);
-    userDTO.setId(user.getId());
-    userDTO.setName(user.getName());
-    session.savePersistent(userDTO);
-    session.release(userDTO);
+  public User getUser(final String userName) throws StorageException {
+    final String query = String.format("SELECT %s FROM %s WHERE %s='%s'",
+        ID, TABLE_NAME, NAME, userName);
+
+    return MySQLQueryHelper.execute(query,
+        new MySQLQueryHelper.ResultSetHandler<User>() {
+
+          @Override
+          public User handle(ResultSet result)
+              throws SQLException, StorageException {
+            if (!result.next()) {
+              return null;
+            }
+            return  new User(result.getInt(ID), userName);
+          }
+        });
   }
 
   @Override
-  public Collection<User> getUsers(Collection<byte[]> ids) throws StorageException{
-    HopsSession session = connector.obtainSession();
-    Collection<UserDTO> userDTOs = getUsers(session, ids);
-    List<User> users = Lists.newArrayListWithExpectedSize(userDTOs.size());
-    for(UserDTO userDTO : userDTOs){
-      users.add(new User(userDTO.getId(), userDTO.getName()));
-      session.release(userDTO);
-    }
-    return users;
-  }
-
-  static Collection<UserDTO> getUsers(HopsSession session, Collection<byte[]>
-      ids) throws StorageException{
-    List<UserDTO> userDTOs = Lists.newArrayListWithExpectedSize(ids.size());
-
-    for(byte[] id : ids) {
-      UserDTO userDTO = session.newInstance(UserDTO.class, id);
-      session.load(userDTO);
-      userDTOs.add(userDTO);
-    }
-
-    session.flush();
-    return userDTOs;
+  public User addUser(String userName) throws StorageException{
+    final String query = String.format("INSERT IGNORE INTO %s (%s) VALUES" +
+        "('%s')", TABLE_NAME, NAME, userName);
+    MySQLQueryHelper.execute(query);
+    return getUser(userName);
   }
 
 }
