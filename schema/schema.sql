@@ -943,9 +943,11 @@ delimiter $$
 CREATE TABLE `hdfs_metadata_log` (
   `dataset_id` int(11) NOT NULL,
   `inode_id` int(11) NOT NULL,
-  `logical_time` int(11) NOT NULL,
+  `timestamp` bigint(20) NOT NULL,
+  `inode_pid` int(11) NOT NULL,
+  `inode_name` varchar(255) NOT NULL DEFAULT '',
   `operation` smallint(11) NOT NULL,
-  PRIMARY KEY (`dataset_id` ,`inode_id` , `logical_time`)
+  PRIMARY KEY (`dataset_id` ,`inode_id` , `timestamp`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
 delimiter $$
