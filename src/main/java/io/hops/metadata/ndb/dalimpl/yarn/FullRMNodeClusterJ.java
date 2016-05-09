@@ -23,6 +23,7 @@ import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
 import io.hops.metadata.yarn.entity.ContainerId;
+import io.hops.metadata.yarn.entity.ContainerStatus;
 import io.hops.metadata.yarn.entity.FinishedApplications;
 import io.hops.metadata.yarn.entity.JustLaunchedContainers;
 import io.hops.metadata.yarn.entity.NextHeartbeat;
@@ -56,8 +57,6 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
   public RMNodeComps findByNodeId(String nodeId) throws StorageException {
 
     HopsSession session = connector.obtainSession();
-    List<JustLaunchedContainers> hopJustLaunchedContainers = justLaunchedDA.
-            findByRMNode(nodeId);
     List<UpdatedContainerInfo> hopUpdatedContainerInfo
             = updatedContainerDA.findByRMNodeList(nodeId);
     Resource hopResource = resourceDA.findEntry(nodeId,
@@ -94,21 +93,12 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
 
     List<ContainerStatusClusterJ.ContainerStatusDTO> containerStatusDTOs =
         new ArrayList<ContainerStatusClusterJ.ContainerStatusDTO>();
-    if (hopJustLaunchedContainers != null) {
-      for (JustLaunchedContainers hop : hopJustLaunchedContainers) {
-        Object[] pk = new Object[]{hop.getContainerId(), hop.getRmnodeid()};
-        ContainerStatusClusterJ.ContainerStatusDTO containerStatusDTO = session.
-                newInstance(ContainerStatusClusterJ.ContainerStatusDTO.class, pk);
-        containerStatusDTO = session.load(containerStatusDTO);
-        containerStatusDTOs.add(containerStatusDTO);
-      }
-    }
-
 
     if (hopUpdatedContainerInfo != null) {
       
         for (UpdatedContainerInfo hop : hopUpdatedContainerInfo) {
-          Object[] pk = new Object[]{hop.getContainerId(), hop.getRmnodeid()};
+          Object[] pk = new Object[]{hop.getContainerId(), hop.getRmnodeid(),
+          ContainerStatus.Type.UCI.name()};
           ContainerStatusClusterJ.ContainerStatusDTO containerStatusDTO =
               session.
                   newInstance(ContainerStatusClusterJ.ContainerStatusDTO.class,
@@ -163,7 +153,7 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
       rmNodeId = hopRMNode.getNodeId();
     }
     RMNodeComps result = new RMNodeComps(hopRMNode, hopNextHeartbeat, hopNode,
-        hopNodeHBResponse, hopResource, hopPendingEvent, hopJustLaunchedContainers,
+        hopNodeHBResponse, hopResource, hopPendingEvent,
         hopUpdatedContainerInfo, hopContainerIdsToClean,
         hopFinishedApplications,
         ContainerStatusClusterJ.createList(containerStatusDTOs), rmNodeId);

@@ -78,6 +78,14 @@ struct NdbValues {
 		}
 	}
 
+  float getFLoatValue() {
+		if (m_isThisNull)
+			return -1;
+		else {
+			return m_float;
+		}
+	}
+  
 	const char * getByteArray() {
 		return m_zbyteArray;
 	}
@@ -92,6 +100,7 @@ struct NdbValues {
 	int m_byteLength;
 	bool m_isThisNull;
 	Int8 m_zSignedChar;
+  float m_float;
 
 	NdbDictionary::Column::Type m_dataType;
 

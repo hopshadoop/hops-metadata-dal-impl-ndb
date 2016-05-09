@@ -88,6 +88,18 @@ public class ContainerClusterJ
   }
 
   @Override
+  public void removeAll(Collection<Container> toRemove) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    List<ContainerDTO> toPersist = new ArrayList<ContainerDTO>();
+    for (Container container : toRemove) {
+      ContainerDTO persistable = createPersistable(container, session);
+      toPersist.add(persistable);
+    }
+    session.deletePersistentAll(toPersist);
+    session.release(toPersist);
+  }
+  
+  @Override
   public void createContainer(Container container) throws StorageException {
     HopsSession session = connector.obtainSession();
     ContainerDTO persistable = createPersistable(container, session);
@@ -113,13 +125,14 @@ public class ContainerClusterJ
       HopsSession session) throws StorageException {
     ContainerDTO containerDTO = session.newInstance(ContainerDTO.class);
     containerDTO.setcontainerid(hopContainer.getContainerId());
-    try {
-      containerDTO.setcontainerstate(CompressionUtils.compress(hopContainer.
-          getContainerState()));
-    } catch (IOException e) {
-      throw new StorageException(e);
+    if (hopContainer.getContainerState() != null) {
+        try {
+            containerDTO.setcontainerstate(CompressionUtils.compress(hopContainer.
+                    getContainerState()));
+        } catch (IOException e) {
+            throw new StorageException(e);
+        }
     }
-
     return containerDTO;
   }
 

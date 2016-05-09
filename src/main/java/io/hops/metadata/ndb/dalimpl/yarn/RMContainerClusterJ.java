@@ -53,6 +53,7 @@ private static final Log LOG = LogFactory.getLog(RMContainerClusterJ.class);
 
     void setcontaineridid(String containeridid);
 
+    @PrimaryKey //for partition key reasons
     @Column(name = APPLICATIONATTEMPTID_ID)
     String getappattemptidid();
 
@@ -153,23 +154,10 @@ private static final Log LOG = LogFactory.getLog(RMContainerClusterJ.class);
     List<RMContainerDTO> toPersist = new ArrayList<RMContainerDTO>(toRemove.
         size());
     for (RMContainer hop : toRemove) {
-      toPersist.add(session.
-          newInstance(RMContainerClusterJ.RMContainerDTO.class, hop.
-              getContainerIdID()));
+      toPersist.add(createPersistable(hop, session));
     }
     session.deletePersistentAll(toPersist);
     session.release(toPersist);
-  }
-
-  @Override
-  public void remove(RMContainer toRemove)
-      throws StorageException {
-    HopsSession session = connector.obtainSession();
-    RMContainerDTO dto = session.
-          newInstance(RMContainerClusterJ.RMContainerDTO.class, toRemove.
-              getContainerIdID());
-    session.deletePersistent(dto);
-    session.release(dto);
   }
   
   @Override
@@ -204,17 +192,17 @@ private static final Log LOG = LogFactory.getLog(RMContainerClusterJ.class);
     RMContainerClusterJ.RMContainerDTO rMContainerDTO =
         session.newInstance(RMContainerClusterJ.RMContainerDTO.class);
 
-    rMContainerDTO.setcontaineridid(hop.getContainerIdID());
-    rMContainerDTO.setappattemptidid(hop.getApplicationAttemptIdID());
-    rMContainerDTO.setnodeidid(hop.getNodeIdID());
+    rMContainerDTO.setcontaineridid(hop.getContainerId());
+    rMContainerDTO.setappattemptidid(hop.getApplicationAttemptId());
+    rMContainerDTO.setnodeidid(hop.getNodeId());
     rMContainerDTO.setuser(hop.getUser());
     rMContainerDTO.setstarttime(hop.getStarttime());
     rMContainerDTO.setfinishtime(hop.getFinishtime());
     rMContainerDTO.setstate(hop.getState());
     rMContainerDTO.setfinishedstatusstate(hop.getFinishedStatusState());
     rMContainerDTO.setexitstatus(hop.getExitStatus());
-    rMContainerDTO.setreservednodeid(hop.getReservedNodeIdID());
-    rMContainerDTO.setreservedpriority(hop.getReservedPriorityID());
+    rMContainerDTO.setreservednodeid(hop.getReservedNodeId());
+    rMContainerDTO.setreservedpriority(hop.getReservedPriority());
     rMContainerDTO.setreservedmemory(hop.getReservedMemory());
     rMContainerDTO.setreservedvcores(hop.getReservedVCores());
 
@@ -225,7 +213,7 @@ private static final Log LOG = LogFactory.getLog(RMContainerClusterJ.class);
     Map<String, RMContainer> map = new HashMap<String, RMContainer>();
     for (RMContainerDTO dto : results) {
       RMContainer hop = createHopRMContainer(dto);
-      map.put(hop.getContainerIdID(), hop);
+      map.put(hop.getContainerId(), hop);
     }
     return map;
   }

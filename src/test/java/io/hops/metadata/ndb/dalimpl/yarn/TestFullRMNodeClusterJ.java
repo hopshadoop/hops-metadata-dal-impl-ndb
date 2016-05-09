@@ -85,7 +85,7 @@ public class TestFullRMNodeClusterJ {
     final RMNode hopRMNodeOrigin
             = new RMNode("70", "rmnode70", 9999, 9876, "127.0.0.1",
                     "hop.sics.se",
-                    "life is good ", -10L, "relax", "hayarn", 10, 3, 0);
+                    "life is good ", -10L, "relax", "hayarn", 10, 0);
     final Node hopNodeOrigin
             = new Node("70", "rmnode70", "ici", 1000, "papa", 0);
     final List<NodeHBResponse> hopNHBROrigin = new ArrayList<NodeHBResponse>();
@@ -122,26 +122,30 @@ public class TestFullRMNodeClusterJ {
     hopContainersStatus.add(
             new ContainerStatus("container1",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
-                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID));
+                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
+                    ContainerStatus.Type.JUST_LAUNCHED));
     hopContainersStatus.add(
             new ContainerStatus("container2",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
-                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID));
+                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
+                    ContainerStatus.Type.JUST_LAUNCHED));
     hopContainersStatus.add(
             new ContainerStatus("container3",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
-                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID));
+                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
+                    ContainerStatus.Type.UCI));
     hopContainersStatus.add(
             new ContainerStatus("container4",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
-                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID));
+                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
+                    ContainerStatus.Type.UCI));
     hopContainersStatus.add(new ContainerStatus("container5",
             TablesDef.ContainerStatusTableDef.STATE_COMPLETED,
             "every thing is good", 0,
-            "70", DEFAULT_PENDIND_ID));
+            "70", DEFAULT_PENDIND_ID, ContainerStatus.Type.UCI));
     hopContainersStatus.add(new ContainerStatus("container6",
             TablesDef.ContainerStatusTableDef.STATE_COMPLETED, "finish", 1, "70",
-            DEFAULT_PENDIND_ID));
+            DEFAULT_PENDIND_ID, ContainerStatus.Type.UCI));
 
     LightWeightRequestHandler fillDB
             = new LightWeightRequestHandler(YARNOperationType.TEST) {
@@ -236,30 +240,6 @@ public class TestFullRMNodeClusterJ {
     Assert.assertTrue(resourceFinal.getParent() == hopResourceOrigin.
             getParent());
 
-    List<JustLaunchedContainers> hopJustLaunchedContainersFinal
-            = hopRMNodeFull.getHopJustLaunchedContainers();
-    for (JustLaunchedContainers justLaunched : hopJustLaunchedContainersFinal) {
-      boolean flag = false;
-      for (ContainerStatus containerStatus : hopRMNodeFull.
-              getHopContainersStatus()) {
-        if (containerStatus.getContainerid().equals(justLaunched.
-                getContainerId())) {
-          flag = true;
-        }
-      }
-
-      Assert.assertTrue(flag);
-      flag = false;
-      for (JustLaunchedContainers justLaunchedOringin
-              : hopJustLaunchedContainers) {
-        if (justLaunchedOringin.getContainerId().equals(justLaunched.
-                getContainerId())) {
-          flag = true;
-          break;
-        }
-      }
-      Assert.assertTrue(flag);
-    }
 
     List<UpdatedContainerInfo> hopUpdatedContainersFinal
             = hopRMNodeFull.getHopUpdatedContainerInfo();

@@ -29,6 +29,7 @@ import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.ContainersCheckPointsDataAccess;
+import io.hops.metadata.yarn.entity.Container;
 import io.hops.metadata.yarn.entity.ContainerCheckPoint;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,12 +53,19 @@ public class ContainersCheckPointsClusterJ implements
     long getCheckPoint();
 
     void setCheckPoint(long checkPoint);
+    
+    @Column(name = PRICE)
+    float getPrice();
+
+    void setPrice(float price);
+    
+    
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
 
   @Override
-  public Map<String, Long> getAll() throws StorageException {
+  public Map<String, ContainerCheckPoint> getAll() throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
@@ -66,7 +74,7 @@ public class ContainersCheckPointsClusterJ implements
     HopsQuery<ContainerCheckPointDTO> query = session.createQuery(dobj);
 
     List<ContainerCheckPointDTO> queryResults = query.getResultList();
-    Map<String, Long> result = createMap(queryResults);
+    Map<String, ContainerCheckPoint> result = createMap(queryResults);
     session.release(queryResults);
     return result;
   }
@@ -104,17 +112,18 @@ public class ContainersCheckPointsClusterJ implements
     //Set values to persist new ContainerStatus
     ccpDTO.setContainerID(checkPoint.getContainerId());
     ccpDTO.setCheckPoint(checkPoint.getCheckPoint());
+    ccpDTO.setPrice(checkPoint.getPrice());
 
     return ccpDTO;
   }
 
-  public static Map<String, Long> createMap(
+  public static Map<String, ContainerCheckPoint> createMap(
           List<ContainerCheckPointDTO> dtos) {
-    Map<String, Long> map
-            = new HashMap<String, Long>();
+    Map<String, ContainerCheckPoint> map = new HashMap<String, ContainerCheckPoint>();
     for (ContainerCheckPointDTO dto : dtos) {
-
-      map.put(dto.getContainerID(), dto.getCheckPoint());
+      map.put(dto.getContainerID(), new ContainerCheckPoint(dto.getContainerID()
+                                                           ,dto.getCheckPoint(), 
+                                                            dto.getPrice()));
     }
     return map;
   }

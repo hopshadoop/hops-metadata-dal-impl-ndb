@@ -91,8 +91,6 @@ import io.hops.metadata.ndb.dalimpl.yarn.ContainerIdToCleanClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.ContainerStatusClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.ContainersCheckPointsClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.ContainersLogsClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppLiveContainersClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppNewlyAllocatedContainersClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerNodeClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.FinishedApplicationsClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.FullRMNodeClusterJ;
@@ -117,9 +115,12 @@ import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppLastScheduledContainerC
 import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppReservationsClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.capacity.FiCaSchedulerAppReservedContainersClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppSchedulingOpportunitiesClusterJ;
+import io.hops.metadata.ndb.dalimpl.yarn.JustFinishedContainersClusterJ;
+import io.hops.metadata.ndb.dalimpl.yarn.YarnHistoryPriceClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.YarnProjectsDailyCostClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.YarnProjectsQuotaClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.capacity.CSLeafQueuesPendingAppsClusterJ;
+import io.hops.metadata.ndb.dalimpl.yarn.YarnRunningPriceClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.fair.FSSchedulerNodeClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.fair.LocalityLevelClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.fair.PreemptionMapClusterJ;
@@ -147,8 +148,6 @@ import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
 import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
 import io.hops.metadata.yarn.dal.ContainersCheckPointsDataAccess;
 import io.hops.metadata.yarn.dal.ContainersLogsDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerAppLiveContainersDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerAppNewlyAllocatedContainersDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerNodeDataAccess;
 import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
 import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
@@ -173,9 +172,12 @@ import io.hops.metadata.yarn.dal.FiCaSchedulerAppLastScheduledContainerDataAcces
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppReservationsDataAccess;
 import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservedContainersDataAccess;
 import io.hops.metadata.yarn.dal.FiCaSchedulerAppSchedulingOpportunitiesDataAccess;
+import io.hops.metadata.yarn.dal.JustFinishedContainersDataAccess;
+import io.hops.metadata.yarn.dal.YarnHistoryPriceDataAccess;
 import io.hops.metadata.yarn.dal.YarnProjectsDailyCostDataAccess;
 import io.hops.metadata.yarn.dal.YarnProjectsQuotaDataAccess;
 import io.hops.metadata.yarn.dal.capacity.CSLeafQueuesPendingAppsDataAccess;
+import io.hops.metadata.yarn.dal.YarnRunningPriceDataAccess;
 import io.hops.metadata.yarn.dal.fair.FSSchedulerNodeDataAccess;
 import io.hops.metadata.yarn.dal.fair.LocalityLevelDataAccess;
 import io.hops.metadata.yarn.dal.fair.PreemptionMapDataAccess;
@@ -268,14 +270,10 @@ public class NdbStorageFactory implements DalStorageFactory {
             new FinishedApplicationsClusterJ());
     dataAccessMap.put(SchedulerApplicationDataAccess.class,
             new SchedulerApplicationClusterJ());
-    dataAccessMap.put(FiCaSchedulerAppNewlyAllocatedContainersDataAccess.class,
-            new FiCaSchedulerAppNewlyAllocatedContainersClusterJ());
     dataAccessMap.put(FiCaSchedulerAppSchedulingOpportunitiesDataAccess.class,
             new FiCaSchedulerAppSchedulingOpportunitiesClusterJ());
     dataAccessMap.put(FiCaSchedulerAppLastScheduledContainerDataAccess.class,
             new FiCaSchedulerAppLastScheduledContainerClusterJ());
-    dataAccessMap.put(FiCaSchedulerAppLiveContainersDataAccess.class,
-            new FiCaSchedulerAppLiveContainersClusterJ());
     dataAccessMap.put(FiCaSchedulerAppReservedContainersDataAccess.class,
             new FiCaSchedulerAppReservedContainersClusterJ());
     dataAccessMap.put(FiCaSchedulerAppReservationsDataAccess.class,
@@ -355,10 +353,15 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(UserGroupDataAccess.class, new UserGroupClusterj());
     dataAccessMap.put(CSLeafQueuesPendingAppsDataAccess.class,
             new CSLeafQueuesPendingAppsClusterJ());
+    dataAccessMap.put(JustFinishedContainersDataAccess.class,
+            new JustFinishedContainersClusterJ());
     // Quota Scheduling
     dataAccessMap.put(YarnProjectsQuotaDataAccess.class, new YarnProjectsQuotaClusterJ());
     dataAccessMap.put(YarnProjectsDailyCostDataAccess.class, new YarnProjectsDailyCostClusterJ());
     dataAccessMap.put(ContainersCheckPointsDataAccess.class, new ContainersCheckPointsClusterJ());
+    
+    dataAccessMap.put(YarnRunningPriceDataAccess.class, new YarnRunningPriceClusterJ());
+    dataAccessMap.put(YarnHistoryPriceDataAccess.class, new YarnHistoryPriceClusterJ());
   }
 
   @Override
