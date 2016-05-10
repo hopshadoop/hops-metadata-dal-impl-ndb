@@ -74,8 +74,8 @@ CREATE TABLE `hdfs_inodes` (
   `name` varchar(255) NOT NULL DEFAULT '',
   `modification_time` bigint(20) DEFAULT NULL,
   `access_time` bigint(20) DEFAULT NULL,
-  `user_id` binary(16) DEFAULT NULL,
-  `group_id` binary(16) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `group_id` int(11) DEFAULT NULL,
   `permission` smallint DEFAULT NULL,
   `client_name` varchar(100) DEFAULT NULL,
   `client_machine` varchar(100) DEFAULT NULL,
@@ -98,24 +98,26 @@ CREATE TABLE `hdfs_inodes` (
 delimiter $$
 
 CREATE TABLE `hdfs_users` (
-  `id` binary(16) NOT NULL,
-  `name` varchar(1000) NOT NULL DEFAULT '',
-  PRIMARY KEY (`id`)
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY (`name`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
 delimiter $$
 
 CREATE TABLE `hdfs_groups` (
-  `id` binary(16) NOT NULL,
-  `name` varchar(1000) NOT NULL DEFAULT '',
-  PRIMARY KEY (`id`)
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY (`name`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
 delimiter $$
 
 CREATE TABLE `hdfs_users_groups` (
-  `user_id` binary(16) NOT NULL,
-  `group_id` binary(16) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `group_id` int(11)  NOT NULL,
   PRIMARY KEY (`user_id`, `group_id`),
   CONSTRAINT `user_id`
     FOREIGN KEY (`user_id`)
@@ -914,9 +916,11 @@ delimiter $$
 CREATE TABLE `hdfs_metadata_log` (
   `dataset_id` int(11) NOT NULL,
   `inode_id` int(11) NOT NULL,
-  `logical_time` int(11) NOT NULL,
+  `timestamp` bigint(20) NOT NULL,
+  `inode_pid` int(11) NOT NULL,
+  `inode_name` varchar(255) NOT NULL DEFAULT '',
   `operation` smallint(11) NOT NULL,
-  PRIMARY KEY (`dataset_id` ,`inode_id` , `logical_time`)
+  PRIMARY KEY (`dataset_id` ,`inode_id` , `timestamp`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
 delimiter $$
