@@ -89,6 +89,7 @@ CREATE TABLE `hdfs_inodes` (
   `subtree_lock_owner` bigint(20) DEFAULT NULL,
   `meta_enabled` bit(8) DEFAULT b'110000',
   `size` bigint(20) NOT NULL DEFAULT '0',
+  `storage_policy` bit(8) NOT NULL DEFAULT '0',
   PRIMARY KEY (`parent_id`,`name`),
   KEY `pidex` (`parent_id`),
   KEY `inode_idx` (`id`)

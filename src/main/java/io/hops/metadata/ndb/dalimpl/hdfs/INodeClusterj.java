@@ -169,6 +169,11 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     long getSize();
 
     void setSize(long size);
+
+    @Column(name = STORAGE_POLICY)
+    byte getStoragePolicy();
+
+    void setStoragePolicy(byte storagePolicy);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -262,12 +267,11 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   public List<ProjectedINode> findInodesForSubtreeOperationsWithWriteLock(
       int parentId) throws StorageException {
     final String query = String.format(
-        "SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s FROM %s " +
-            "WHERE %s=%d LOCK IN SHARE MODE",
+        "SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s " +
+            "FROM %s WHERE %s=%d LOCK IN SHARE MODE",
         ID, NAME, PARENT_ID, PERMISSION, USER_ID, GROUP_ID, HEADER, SYMLINK,
-        QUOTA_ENABLED,
-        UNDER_CONSTRUCTION, SUBTREE_LOCKED, SUBTREE_LOCK_OWNER, SIZE, TABLE_NAME,
-        PARENT_ID, parentId);
+        QUOTA_ENABLED, UNDER_CONSTRUCTION, SUBTREE_LOCKED, SUBTREE_LOCK_OWNER,
+        SIZE, STORAGE_POLICY, TABLE_NAME, PARENT_ID, parentId);
     ArrayList<ProjectedINode> resultList;
     try {
       Connection conn = mysqlConnector.obtainSession();
@@ -286,7 +290,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
                 result.getBoolean(UNDER_CONSTRUCTION),
                 result.getBoolean(SUBTREE_LOCKED),
                 result.getLong(SUBTREE_LOCK_OWNER),
-                result.getLong(SIZE)));
+                result.getLong(SIZE),
+                result.getByte(STORAGE_POLICY)));
       }
     } catch (SQLException ex) {
       throw HopsSQLExceptionHelper.wrap(ex);
@@ -450,7 +455,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         NdbBoolean.convert(persistable.getSubtreeLocked()),
         persistable.getSubtreeLockOwner(),
         NdbBoolean.convert(persistable.getMetaEnabled()),
-        persistable.getSize());
+        persistable.getSize(), persistable.getStoragePolicy());
     return node;
   }
 
