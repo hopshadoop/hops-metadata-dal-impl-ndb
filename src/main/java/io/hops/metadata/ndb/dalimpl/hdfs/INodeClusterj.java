@@ -219,8 +219,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     HopsSession session = connector.obtainSession();
 
     HopsQueryBuilder qb = session.getQueryBuilder();
-    HopsQueryDomainType<InodeDTO> dobj =
-        qb.createQueryDefinition(InodeDTO.class);
+    HopsQueryDomainType<InodeDTO> dobj = qb.createQueryDefinition(InodeDTO.class);
     HopsPredicate pred1 = dobj.get("id").equal(dobj.param("idParam"));
     dobj.where(pred1);
 
@@ -249,10 +248,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     HopsSession session = connector.obtainSession();
 
     HopsQueryBuilder qb = session.getQueryBuilder();
-    HopsQueryDomainType<InodeDTO> dobj =
-        qb.createQueryDefinition(InodeDTO.class);
-    HopsPredicate pred1 =
-        dobj.get("parentId").equal(dobj.param("parentIDParam"));
+    HopsQueryDomainType<InodeDTO> dobj = qb.createQueryDefinition(InodeDTO.class);
+    HopsPredicate pred1 = dobj.get("parentId").equal(dobj.param("parentIDParam"));
     dobj.where(pred1);
     HopsQuery<InodeDTO> query = session.createQuery(dobj);
     query.setParameter("parentIDParam", parentId);
@@ -443,19 +440,27 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 
 
   private INode convert(InodeDTO persistable) {
-    INode node = new INode(persistable.getId(), persistable.getName(),
+    INode node = new INode(persistable.getId(),
+        persistable.getName(),
         persistable.getParentId(),
         NdbBoolean.convert(persistable.getQuotaEnabled()),
-        persistable.getModificationTime(), persistable.getATime(),
-        persistable.getUserID(), persistable.getGroupID(),
-        persistable.getPermission(), persistable.getUnderConstruction(),
-        persistable.getClientName(), persistable.getClientMachine(),
-        persistable.getClientNode(), persistable.getGenerationStamp(),
-        persistable.getHeader(), persistable.getSymlink(),
+        persistable.getModificationTime(),
+        persistable.getATime(),
+        persistable.getUserID(),
+        persistable.getGroupID(),
+        persistable.getPermission(),
+        persistable.getUnderConstruction(),
+        persistable.getClientName(),
+        persistable.getClientMachine(),
+        persistable.getClientNode(),
+        persistable.getGenerationStamp(),
+        persistable.getHeader(),
+        persistable.getSymlink(),
         NdbBoolean.convert(persistable.getSubtreeLocked()),
         persistable.getSubtreeLockOwner(),
         NdbBoolean.convert(persistable.getMetaEnabled()),
-        persistable.getSize(), persistable.getStoragePolicy());
+        persistable.getSize(),
+        persistable.getStoragePolicy());
     return node;
   }
 
@@ -480,6 +485,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setSubtreeLockOwner(inode.getSubtreeLockOwner());
     persistable.setMetaEnabled(NdbBoolean.convert(inode.isMetaEnabled()));
     persistable.setSize(inode.getFileSize());
+    persistable.setStoragePolicy(inode.getStoragePolicy());
   }
 
   private void explain(HopsQuery<InodeDTO> query) {
