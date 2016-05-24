@@ -68,9 +68,11 @@ public class ContainerClusterJ
         qb.createQueryDefinition(ContainerDTO.class);
     HopsQuery<ContainerDTO> query = session.
         createQuery(dobj);
-    List<ContainerDTO> results = query.
+    List<ContainerDTO> queryResults = query.
         getResultList();
-    return createMap(results);
+    Map<String, Container> result = createMap(queryResults);
+    session.release(queryResults);
+    return result;
   }
 
   @Override
@@ -82,14 +84,27 @@ public class ContainerClusterJ
       toPersist.add(persistable);
     }
     session.savePersistentAll(toPersist);
-
-    session.flush();
+    session.release(toPersist);
   }
 
   @Override
+  public void removeAll(Collection<Container> toRemove) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    List<ContainerDTO> toPersist = new ArrayList<ContainerDTO>();
+    for (Container container : toRemove) {
+      ContainerDTO persistable = createPersistable(container, session);
+      toPersist.add(persistable);
+    }
+    session.deletePersistentAll(toPersist);
+    session.release(toPersist);
+  }
+  
+  @Override
   public void createContainer(Container container) throws StorageException {
     HopsSession session = connector.obtainSession();
-    session.savePersistent(createPersistable(container, session));
+    ContainerDTO persistable = createPersistable(container, session);
+    session.savePersistent(persistable);
+    session.release(persistable);
   }
 
   private Container createHopContainer(ContainerDTO containerDTO)
@@ -110,13 +125,14 @@ public class ContainerClusterJ
       HopsSession session) throws StorageException {
     ContainerDTO containerDTO = session.newInstance(ContainerDTO.class);
     containerDTO.setcontainerid(hopContainer.getContainerId());
-    try {
-      containerDTO.setcontainerstate(CompressionUtils.compress(hopContainer.
-          getContainerState()));
-    } catch (IOException e) {
-      throw new StorageException(e);
+    if (hopContainer.getContainerState() != null) {
+        try {
+            containerDTO.setcontainerstate(CompressionUtils.compress(hopContainer.
+                    getContainerState()));
+        } catch (IOException e) {
+            throw new StorageException(e);
+        }
     }
-
     return containerDTO;
   }
 

@@ -44,10 +44,10 @@ public class RPCClusterJ implements TablesDef.RPCTableDef, RPCDataAccess<RPC> {
   public interface RPCDTO {
 
     @PrimaryKey
-    @Column(name = ID)
-    int getid();
+    @Column(name = RPCID)
+    int getrpcid();
 
-    void setid(int id);
+    void setrpcid(int id);
 
     @Column(name = TYPE)
     String gettype();
@@ -71,17 +71,6 @@ public class RPCClusterJ implements TablesDef.RPCTableDef, RPCDataAccess<RPC> {
   @Override
   public boolean findByTypeAndUserId(String type, String userid)
       throws StorageException {
-    //    StackTraceElement[] elements = Thread.currentThread().getStackTrace();
-    //    StringBuilder sb = new StringBuilder();
-    //    sb.append(", caller-");
-    //    for (StackTraceElement elem : elements) {
-    //      if (elem.getClassName().contains("RMUtilities")) {
-    //        sb.append(elem.getClassName());
-    //        sb.append("-");
-    //        sb.append(elem.getMethodName());
-    //      }
-    //    }
-
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<RPCDTO> dobj = qb.
@@ -94,53 +83,55 @@ public class RPCClusterJ implements TablesDef.RPCTableDef, RPCDataAccess<RPC> {
         createQuery(dobj);
     query.setParameter(TYPE, type);
     query.setParameter(USERID, userid);
-    List<RPCDTO> results = query.getResultList();
-
-    return !(results == null || results.isEmpty());
+    List<RPCDTO> queryResults = query.getResultList();
+    
+    boolean result = !(queryResults == null || queryResults.isEmpty());
+    session.release(queryResults);
+    return result;
   }
 
   @Override
   public void add(io.hops.metadata.yarn.entity.appmasterrpc.RPC toAdd)
       throws StorageException {
     HopsSession session = connector.obtainSession();
-    session.savePersistent(createPersistable(toAdd, session));
+    RPCDTO dto = createPersistable(toAdd, session);
+    session.savePersistent(dto);
+    session.release(dto);
   }
 
   @Override
-  public void remove(io.hops.metadata.yarn.entity.appmasterrpc.RPC toRemove)
+  public void removeAll(List<io.hops.metadata.yarn.entity.appmasterrpc.RPC> toRemove)
       throws StorageException {
     HopsSession session = connector.obtainSession();
+    List<RPCDTO> dtoToRemove = new ArrayList<RPCDTO>();
+    for(io.hops.metadata.yarn.entity.appmasterrpc.RPC rpc : toRemove){
+      RPCDTO toRemoveDTO = session.newInstance(RPCDTO.class);
+      toRemoveDTO.setrpcid(rpc.getRPCId());
+      dtoToRemove.add(toRemoveDTO);
+    }
     session
-        .deletePersistent(session.newInstance(RPCDTO.class, toRemove.getId()));
+        .deletePersistentAll(dtoToRemove);
+    session.release(dtoToRemove);
   }
 
   @Override
   public List<io.hops.metadata.yarn.entity.appmasterrpc.RPC> getAll()
-      throws StorageException {
-    try {
-      HopsSession session = connector.obtainSession();
-      HopsQueryBuilder qb = session.getQueryBuilder();
-      HopsQueryDomainType<RPCClusterJ.RPCDTO> dobj = qb.
-          createQueryDefinition(RPCClusterJ.RPCDTO.class);
-      //Predicate pred1 = dobj.get("applicationid").equal(dobj.param("applicationid"));
-      //dobj.where(pred1);
-      HopsQuery<RPCClusterJ.RPCDTO> query = session.createQuery(dobj);
-      //query.setParameter("applicationid", applicationid);
-      List<RPCClusterJ.RPCDTO> results = query.getResultList();
-      //            if (results != null && !results.isEmpty()) {
-      return createHopRPCList(results);
-      //            } else {
-
-      //            }
-    } catch (Exception e) {
-      throw new StorageException(e);
-    }
+          throws StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<RPCClusterJ.RPCDTO> dobj = qb.
+            createQueryDefinition(RPCClusterJ.RPCDTO.class);
+    HopsQuery<RPCClusterJ.RPCDTO> query = session.createQuery(dobj);
+    List<RPCClusterJ.RPCDTO> queryResults = query.getResultList();
+    List<RPC> result = createHopRPCList(queryResults);
+    session.release(queryResults);
+    return result;
   }
 
   private io.hops.metadata.yarn.entity.appmasterrpc.RPC createHopRPC(
       RPCDTO appMasterRPCDTO) throws StorageException {
     try {
-      return new RPC(appMasterRPCDTO.getid(),
+      return new RPC(appMasterRPCDTO.getrpcid(),
           io.hops.metadata.yarn.entity.appmasterrpc.RPC.Type
               .valueOf(appMasterRPCDTO.gettype()),
           CompressionUtils.decompress(appMasterRPCDTO.getrpc()),
@@ -168,10 +159,14 @@ public class RPCClusterJ implements TablesDef.RPCTableDef, RPCDataAccess<RPC> {
       throws StorageException {
     RPCClusterJ.RPCDTO appMasterRPCDTO =
         session.newInstance(RPCClusterJ.RPCDTO.class);
-    appMasterRPCDTO.setid(hop.getId());
+    appMasterRPCDTO.setrpcid(hop.getRPCId());
     appMasterRPCDTO.settype(hop.getType().name());
     try {
-      appMasterRPCDTO.setrpc(CompressionUtils.compress(hop.getRpc()));
+      if (hop.getRpc() != null) {
+        appMasterRPCDTO.setrpc(CompressionUtils.compress(hop.getRpc()));
+      } else {
+        appMasterRPCDTO.setrpc(new byte[0]);
+      }
     } catch (IOException e) {
       throw new StorageException(e);
     }
