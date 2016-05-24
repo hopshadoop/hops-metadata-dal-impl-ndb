@@ -952,6 +952,15 @@ CREATE TABLE `hdfs_metadata_log` (
 
 delimiter $$
 
+CREATE TABLE `hdfs_inode_dataset_lookup` (
+  `inode_id` int(11) NOT NULL,
+  `dataset_id` int(11) NOT NULL,
+  KEY(`dataset_id`),
+  PRIMARY KEY (`inode_id`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+
+delimiter $$
+
 CREATE TABLE `hdfs_access_log` (
   `inode_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
