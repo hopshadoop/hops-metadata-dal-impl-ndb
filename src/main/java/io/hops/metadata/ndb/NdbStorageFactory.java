@@ -48,6 +48,7 @@ import io.hops.metadata.hdfs.dal.ReplicaDataAccess;
 import io.hops.metadata.hdfs.dal.ReplicaUnderConstructionDataAccess;
 import io.hops.metadata.hdfs.dal.SafeBlocksDataAccess;
 import io.hops.metadata.hdfs.dal.SizeLogDataAccess;
+import io.hops.metadata.hdfs.dal.StorageDataAccess;
 import io.hops.metadata.hdfs.dal.StorageIdMapDataAccess;
 import io.hops.metadata.hdfs.dal.UnderReplicatedBlockDataAccess;
 import io.hops.metadata.hdfs.dal.UserDataAccess;
@@ -80,6 +81,7 @@ import io.hops.metadata.ndb.dalimpl.hdfs.ReplicaUnderConstructionClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.SafeBlocksClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.SizeLogClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.StorageIdMapClusterj;
+import io.hops.metadata.ndb.dalimpl.hdfs.StoragesClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.UnderReplicatedBlockClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.UserClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.UserGroupClusterj;
@@ -224,8 +226,10 @@ public class NdbStorageFactory implements DalStorageFactory {
   private void initDataAccessMap() {
     dataAccessMap
             .put(RMStateVersionDataAccess.class, new RMStateVersionClusterJ());
+    dataAccessMap.put(StorageDataAccess.class, new StoragesClusterj());
     dataAccessMap
-            .put(ApplicationStateDataAccess.class, new ApplicationStateClusterJ());
+            .put(ApplicationStateDataAccess.class,
+                new ApplicationStateClusterJ());
     dataAccessMap.put(UpdatedNodeDataAccess.class, new UpdatedNodeClusterJ());
     dataAccessMap.put(ApplicationAttemptStateDataAccess.class,
             new ApplicationAttemptStateClusterJ());
