@@ -142,6 +142,25 @@ public class ReplicaUnderConstructionClusterj
     return convertAndRelease(session, query.getResultList());
   }
 
+  @Override
+  public void removeByBlockIdAndInodeId(long blockId, int inodeId) throws
+      StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+
+    HopsQueryDomainType<ReplicaUcDTO> qdt = qb.createQueryDefinition
+        (ReplicaUcDTO.class);
+    HopsPredicate pred1 = qdt.get("blockId").equal(qdt.param("blockIdParam"));
+    HopsPredicate pred2 = qdt.get("iNodeId").equal(qdt.param("iNodeIdParam"));
+    qdt.where(pred1.and(pred2));
+
+    HopsQuery<ReplicaUcDTO> query = session.createQuery(qdt);
+    query.setParameter("blockIdParam", blockId);
+    query.setParameter("iNodeIdParam", inodeId);
+
+    query.deletePersistentAll();
+  }
+
   private List<ReplicaUnderConstruction> convertAndRelease(HopsSession session,
       List<ReplicaUcDTO> replicaUc) throws StorageException {
     List<ReplicaUnderConstruction> replicas =

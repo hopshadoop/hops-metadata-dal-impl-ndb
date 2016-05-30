@@ -56,29 +56,24 @@ public class InvalidatedBlockClusterj implements
     @PrimaryKey
     @Column(name = INODE_ID)
     int getINodeId();
-
     void setINodeId(int inodeID);
     
     @PrimaryKey
     @Column(name = BLOCK_ID)
     long getBlockId();
-
     void setBlockId(long blockId);
     
     @PrimaryKey
     @Column(name = STORAGE_ID)
     int getStorageId();
-
     void setStorageId(int storageId);
     
     @Column(name = GENERATION_STAMP)
     long getGenerationStamp();
-
     void setGenerationStamp(long generationStamp);
 
     @Column(name = NUM_BYTES)
     long getNumBytes();
-
     void setNumBytes(long numBytes);
   }
 
@@ -106,15 +101,15 @@ public class InvalidatedBlockClusterj implements
   }
 
   @Override
-  public List<InvalidatedBlock> findInvalidatedBlockByStorageId(int storageId)
+  public List<InvalidatedBlock> findInvalidatedBlockBySid(int sid)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<InvalidateBlocksDTO> qdt =
         qb.createQueryDefinition(InvalidateBlocksDTO.class);
-    qdt.where(qdt.get("storageId").equal(qdt.param("param")));
+    qdt.where(qdt.get("storageId").equal(qdt.param("sid")));
     HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
-    query.setParameter("param", storageId);
+  query.setParameter("sid", sid);
     
     List<InvalidateBlocksDTO> dtos = query.getResultList();
     List<InvalidatedBlock> ivl = createList(dtos);
@@ -123,9 +118,12 @@ public class InvalidatedBlockClusterj implements
   }
   
   @Override
-  public Map<Long, Long> findInvalidatedBlockByStorageIdUsingMySQLServer(int storageId) throws StorageException {
-  return MySQLQueryHelper.execute(String.format("SELECT %s, %s "
-            + "FROM %s WHERE %s='%d'", BLOCK_ID, GENERATION_STAMP, TABLE_NAME, STORAGE_ID, storageId), new MySQLQueryHelper.ResultSetHandler<Map<Long,Long>>() {
+  public Map<Long, Long> findInvalidatedBlockBySidUsingMySQLServer
+      (int sid) throws StorageException {
+    return MySQLQueryHelper.execute(String.format("SELECT %s, %s "
+            + "FROM %s WHERE %s='%d'", BLOCK_ID, GENERATION_STAMP,
+      TABLE_NAME, STORAGE_ID, sid), new MySQLQueryHelper
+      .ResultSetHandler<Map<Long,Long>>() {
       @Override
       public Map<Long,Long> handle(ResultSet result) throws SQLException {
         Map<Long,Long> blockInodeMap = new HashMap<Long,Long>();
@@ -195,13 +193,13 @@ public class InvalidatedBlockClusterj implements
   }
   
   @Override
-  public InvalidatedBlock findInvBlockByPkey(long blockId, int storageId,
+  public InvalidatedBlock findInvBlockByPkey(long blockId, int sid,
       int inodeId) throws StorageException {
     HopsSession session = connector.obtainSession();
     Object[] pk = new Object[3];
     pk[0] = inodeId;
     pk[1] = blockId;
-    pk[2] = storageId;
+    pk[2] = sid;
 
     InvalidateBlocksDTO invTable = session.find(InvalidateBlocksDTO.class, pk);
     if (invTable == null) {
@@ -276,14 +274,14 @@ public class InvalidatedBlockClusterj implements
   }
 
   @Override
-  public void removeAllByStorageId(int storageId) throws StorageException {
+  public void removeAllBySid(int sid) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<InvalidateBlocksDTO> qdt =
         qb.createQueryDefinition(InvalidateBlocksDTO.class);
-    qdt.where(qdt.get("storageId").equal(qdt.param("param")));
+    qdt.where(qdt.get("storageId").equal(qdt.param("sid")));
     HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
-    query.setParameter("param", storageId);
+    query.setParameter("sid", sid);
     query.deletePersistentAll();
   }
 
@@ -311,5 +309,23 @@ public class InvalidatedBlockClusterj implements
     newInvTable.setGenerationStamp(invBlock.getGenerationStamp());
     newInvTable.setNumBytes(invBlock.getNumBytes());
     newInvTable.setINodeId(invBlock.getInodeId());
+  }
+
+  @Override
+  public void removeByBlockIdAndSid(long blockId, int sid) throws
+      StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+
+    HopsQueryDomainType<InvalidateBlocksDTO> qdt = qb.createQueryDefinition(InvalidateBlocksDTO.class);
+    HopsPredicate pred1 = qdt.get("blockId").equal(qdt.param("blockId"));
+    HopsPredicate pred2 = qdt.get("storageId").equal(qdt.param("storageId"));
+    qdt.where(pred1.and(pred2));
+
+    HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
+    query.setParameter("blockId", blockId);
+    query.setParameter("storageId", sid);
+
+    query.deletePersistentAll();
   }
 }
