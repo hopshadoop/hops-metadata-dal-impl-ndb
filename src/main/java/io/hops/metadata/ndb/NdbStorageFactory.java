@@ -97,6 +97,7 @@ public class NdbStorageFactory implements DalStorageFactory {
   }
 
   private void initDataAccessMap() {
+    dataAccessMap.put(StorageDataAccess.class, new StoragesClusterj());
     dataAccessMap.put(ResourceDataAccess.class, new ResourceClusterJ());
     dataAccessMap.put(ResourceDataAccess.class, new ResourceClusterJ());
     dataAccessMap.put(RMNodeDataAccess.class, new RMNodeClusterJ());

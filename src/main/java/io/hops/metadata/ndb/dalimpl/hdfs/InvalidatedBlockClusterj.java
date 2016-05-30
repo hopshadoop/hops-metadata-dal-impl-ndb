@@ -56,29 +56,24 @@ public class InvalidatedBlockClusterj implements
     @PrimaryKey
     @Column(name = INODE_ID)
     int getINodeId();
-
     void setINodeId(int inodeID);
     
     @PrimaryKey
     @Column(name = BLOCK_ID)
     long getBlockId();
-
     void setBlockId(long blockId);
     
     @PrimaryKey
     @Column(name = STORAGE_ID)
     int getStorageId();
-
     void setStorageId(int storageId);
     
     @Column(name = GENERATION_STAMP)
     long getGenerationStamp();
-
     void setGenerationStamp(long generationStamp);
 
     @Column(name = NUM_BYTES)
     long getNumBytes();
-
     void setNumBytes(long numBytes);
   }
 
@@ -123,8 +118,8 @@ public class InvalidatedBlockClusterj implements
   }
   
   @Override
-  public Map<Long, Long> findInvalidatedBlockByStorageIdUsingMySQLServer(int storageId) throws StorageException {
-  return MySQLQueryHelper.execute(String.format("SELECT %s, %s "
+  public Map<Long, Long> findInvalidatedBlockBySidUsingMySQLServer(int storageId) throws StorageException {
+    return MySQLQueryHelper.execute(String.format("SELECT %s, %s "
             + "FROM %s WHERE %s='%d'", BLOCK_ID, GENERATION_STAMP, TABLE_NAME, STORAGE_ID, storageId), new MySQLQueryHelper.ResultSetHandler<Map<Long,Long>>() {
       @Override
       public Map<Long,Long> handle(ResultSet result) throws SQLException {
@@ -317,5 +312,23 @@ public class InvalidatedBlockClusterj implements
     newInvTable.setGenerationStamp(invBlock.getGenerationStamp());
     newInvTable.setNumBytes(invBlock.getNumBytes());
     newInvTable.setINodeId(invBlock.getInodeId());
+  }
+
+  @Override
+  public void removeByBlockIdAndStorageId(long blockId, int storageId) throws
+      StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+
+    HopsQueryDomainType<InvalidateBlocksDTO> qdt = qb.createQueryDefinition(InvalidateBlocksDTO.class);
+    HopsPredicate pred1 = qdt.get("blockId").equal(qdt.param("blockId"));
+    HopsPredicate pred2 = qdt.get("storageId").equal(qdt.param("storageId"));
+    qdt.where(pred1.and(pred2));
+
+    HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
+    query.setParameter("blockId", blockId);
+    query.setParameter("storageId", storageId);
+
+    query.deletePersistentAll();
   }
 }

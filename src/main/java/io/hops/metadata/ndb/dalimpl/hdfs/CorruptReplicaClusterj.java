@@ -52,24 +52,20 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     @PrimaryKey
     @Column(name = INODE_ID)
     int getINodeId();
-
     void setINodeId(int inodeId);
     
     @PrimaryKey
     @Column(name = BLOCK_ID)
     long getBlockId();
-
     void setBlockId(long bid);
 
     @PrimaryKey
     @Column(name = STORAGE_ID)
     int getStorageId();
-
-    void setStorageId(int id);
+    void setStorageId(int storageId);
     
     @Column(name = TIMESTAMP)
     long getTimestamp();
-
     void setTimestamp(long timestamp);
   }
 
@@ -115,13 +111,13 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
   }
 
   @Override
-  public CorruptReplica findByPk(long blockId, int storageId, int inodeId)
+  public CorruptReplica findByPk(long blockId, int sid, int inodeId)
       throws StorageException {
     HopsSession dbSession = connector.obtainSession();
     Object[] keys = new Object[2];
     keys[0] = inodeId;
     keys[1] = blockId;
-    keys[2] = storageId;
+    keys[2] = sid;
 
     CorruptReplicaDTO corruptReplicaTable =
         dbSession.find(CorruptReplicaDTO.class, keys);
@@ -172,8 +168,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
       throws StorageException {
     HopsSession dbSession = connector.obtainSession();
     HopsQueryBuilder qb = dbSession.getQueryBuilder();
-    HopsQueryDomainType<CorruptReplicaDTO> dobj =
-        qb.createQueryDefinition(CorruptReplicaDTO.class);
+    HopsQueryDomainType<CorruptReplicaDTO> dobj = qb.createQueryDefinition(CorruptReplicaDTO.class);
     HopsPredicate pred1 = dobj.get("iNodeId").equal(dobj.param("iNodeIdParam"));
     dobj.where(pred1);
     HopsQuery<CorruptReplicaDTO> query = dbSession.createQuery(dobj);
@@ -202,8 +197,8 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
   }
 
   private CorruptReplica createReplica(CorruptReplicaDTO corruptReplicaTable) {
-    return new CorruptReplica(corruptReplicaTable.getBlockId(),
-        corruptReplicaTable.getStorageId(), corruptReplicaTable.getINodeId());
+    return new CorruptReplica(corruptReplicaTable.getStorageId(),
+        corruptReplicaTable.getBlockId(), corruptReplicaTable.getINodeId());
   }
 
   private List<CorruptReplica> createCorruptReplicaList(
