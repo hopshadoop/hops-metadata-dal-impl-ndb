@@ -346,7 +346,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         MetadataLogDataAccess.class, EncodingJobsDataAccess.class,
         RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
         UserGroupDataAccess.class,VariableDataAccess.class,
-        HashBucketDataAccess.class);
+        HashBucketDataAccess.class, StorageDataAccess.class);
   }
   
   private boolean formatAll(boolean transactional) throws StorageException {
@@ -372,7 +372,10 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     for (int i = 0; i < RETRIES; i++) {
       try {
         for (Class e : das) {
-          if (e == INodeDataAccess.class) {
+          if (e == StorageDataAccess.class) {
+            MysqlServerConnector
+                .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.StoragesTableDef.TABLE_NAME);
+          } else if (e == INodeDataAccess.class) {
             MysqlServerConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.INodeTableDef.TABLE_NAME);
           } else if(e == InMemoryInodeDataAccess.class){

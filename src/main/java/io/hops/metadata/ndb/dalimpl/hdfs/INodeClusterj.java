@@ -174,6 +174,11 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     @Column(name = LOGICAL_TIME)
     int getLogicalTime();
     void setLogicalTime(int logicalTime);
+
+    @Column(name = STORAGE_POLICY)
+    byte getStoragePolicy();
+
+    void setStoragePolicy(byte storagePolicy);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -345,7 +350,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
               NdbBoolean.convert(inode.getSubtreeLocked()),
               inode.getSubtreeLockOwner(),
               inode.getSize(),
-              inode.getLogicalTime());
+              inode.getLogicalTime(),
+              inode.getStoragePolicy());
   }
 //  public List<ProjectedINode> findInodesForSubtreeOperationsWithWriteLockFTIS(
 //      int parentId) throws StorageException {
@@ -637,6 +643,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     return inodes;
   }
 
+
   protected static INode convert(InodeDTO persistable) {
     INode node = new INode(persistable.getId(), persistable.getName(),
         persistable.getParentId(), persistable.getPartitionId(),
@@ -652,7 +659,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         persistable.getSubtreeLockOwner(),
         NdbBoolean.convert(persistable.getMetaEnabled()),
         persistable.getSize(), NdbBoolean.convert(persistable
-        .getFileStoredInDd()), persistable.getLogicalTime());
+        .getFileStoredInDd()), persistable.getLogicalTime(),
+        persistable.getStoragePolicy());
     return node;
   }
 
@@ -681,6 +689,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setIsDir(NdbBoolean.convert(inode.isDirectory()));
     persistable.setPartitionId(inode.getPartitionId());
     persistable.setLogicalTime(inode.getLogicalTime());
+    persistable.setStoragePolicy(inode.getStoragePolicy());
   }
 
   private void explain(HopsQuery<InodeDTO> query) {
