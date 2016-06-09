@@ -1,3 +1,6 @@
+CREATE DATABASE  IF NOT EXISTS `hop_pushparaj`;
+USE `hop_pushparaj`;
+
 delimiter $$
 
 CREATE TABLE `hdfs_block_infos` (

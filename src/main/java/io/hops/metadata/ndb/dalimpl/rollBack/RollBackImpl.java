@@ -22,6 +22,7 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import io.hops.metadata.hdfs.snapshots.SnapShotConstants;
 import io.hops.metadata.ndb.wrapper.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,17 +49,20 @@ public class RollBackImpl implements RollBackAccess {
         ExecutorService pool = Executors.newCachedThreadPool();
         int intervalStart;
         int maxId = 0;
+        int minId;
         //Delete all rows with status=2 or status=3
 
         try {
-            maxId = execMySqlQuery("select max(id) from inodes where status=2 or status=3");
+            maxId = execMySqlQuery("select max(id) from hdfs_inodes where status=2 or status=3");
+            //An inode created after taking snapshot and deleted will have negative_id and isDeleted=1.
+            minId = execMySqlQuery("select min(id) from hdfs_inodes where status=2 or status=3");
 
         } catch (StorageException ex) {
             // Logger.getLogger(RollBackImpl.class.getName()).log(Level.SEVERE, null, ex);
             throw new StorageException(ex);
         }
 
-        intervalStart = 0;
+        intervalStart = minId;
         InodesPhase1Callable dr;
         while (intervalStart <= maxId) {
             dr = new InodesPhase1Callable(intervalStart, intervalStart + BUFFER_SIZE);
@@ -72,7 +76,7 @@ public class RollBackImpl implements RollBackAccess {
         //Confirm that the task has done.
         int count = 1;
         try {
-            count = execMySqlQuery("select count(*) from inodes where status=2 or status=3");
+            count = execMySqlQuery("select count(*) from hdfs_inodes where status=2 or status=3");
 
         } catch (StorageException ex) {
             // Logger.getLogger(RollBackImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -84,15 +88,13 @@ public class RollBackImpl implements RollBackAccess {
 
     @Override
     public boolean processInodesPhase2() throws IOException {
-
-
         ExecutorService pool = Executors.newCachedThreadPool();
         int intervalStart = 0;
-        int maxId = 0;
+        int minId = 0;
         //Update all rows with id>0 and isDeleted=1 to isDeleted=0
 
         try {
-            maxId = execMySqlQuery("select max(id) from inodes where id >0 and isDeleted=1");
+            minId = execMySqlQuery("select min(id) from hdfs_inodes where id <0 and isDeleted=1");
         } catch (StorageException ex) {
             //LOG.error(ex, ex);
             throw new StorageException(ex);
@@ -101,9 +103,9 @@ public class RollBackImpl implements RollBackAccess {
 
         intervalStart = 0;
         InodesPhase2Callable mr;
-        while (intervalStart <= maxId) {
-            mr = new InodesPhase2Callable(intervalStart, intervalStart + BUFFER_SIZE);
-            intervalStart = intervalStart + BUFFER_SIZE;
+        while (intervalStart > minId) {
+            mr = new InodesPhase2Callable(intervalStart, intervalStart - BUFFER_SIZE);
+            intervalStart = intervalStart - BUFFER_SIZE;
             pool.submit(mr);
         }
 
@@ -113,7 +115,7 @@ public class RollBackImpl implements RollBackAccess {
         //Confirm that the task has done.
         int count = 1;
         try {
-            count = execMySqlQuery("select count(*) from inodes where  id >0 and isDeleted=1");
+            count = execMySqlQuery("select count(*) from hdfs_inodes where  id <0 and isDeleted=1");
 
         } catch (StorageException ex) {
             //Logger.getLogger(RollBackImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -169,7 +171,7 @@ public class RollBackImpl implements RollBackAccess {
 
         try {
             //Get total number of backup records.
-            minId = execMySqlQuery("select min(id) from inodes where id <0 ");
+            minId = execMySqlQuery("select min(id) from hdfs_inodes where id <0 ");
             LOG.debug("The minimum id id " + minId);
             //System.out.println(backUpRowsCnt);
         } catch (StorageException ex) {
@@ -194,7 +196,7 @@ public class RollBackImpl implements RollBackAccess {
         //Confirm that the task has done.
         int count = 1;
         try {
-            count = execMySqlQuery("select count(*) from inodes where id<0");
+            count = execMySqlQuery("select count(*) from hdfs_inodes where id<0");
 
         } catch (StorageException ex) {
             // Logger.getLogger(RollBackImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -212,7 +214,7 @@ public class RollBackImpl implements RollBackAccess {
         //Delete all rows with status=2 or status=3
 
         try {
-            maxId = execMySqlQuery("select max(inodeId) from inode_attributes where status=2 or status=3");
+            maxId = execMySqlQuery("select max(inodeId) from hdfs_inode_attributes where status=2 or status=3");
 
         } catch (StorageException ex) {
             //  Logger.getLogger(RollBackImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -233,7 +235,7 @@ public class RollBackImpl implements RollBackAccess {
         //Confirm that the task has done.
         int count = 1;
         try {
-            count = execMySqlQuery("select count(*) from inode_attributes where status=2 or status=3");
+            count = execMySqlQuery("select count(*) from hdfs_inode_attributes where status=2 or status=3");
 
         } catch (StorageException ex) {
             // Logger.getLogger(RollBackImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -253,7 +255,7 @@ public class RollBackImpl implements RollBackAccess {
 
         try {
             //Get total number of backup records.
-            minId = execMySqlQuery("select min(inodeId) from inode_attributes  where inodeId <0 ");
+            minId = execMySqlQuery("select min(inodeId) from hdfs_inode_attributes  where inodeId <0 ");
             //System.out.println(backUpRowsCnt);
         } catch (StorageException ex) {
             LOG.error(ex, ex);
@@ -277,7 +279,7 @@ public class RollBackImpl implements RollBackAccess {
         //Confirm that the task has done.
         int count = 1;
         try {
-            count = execMySqlQuery("select count(*) from inode_attributes where inodeId<0");
+            count = execMySqlQuery("select count(*) from hdfs_inode_attributes where inodeId<0");
 
         } catch (StorageException ex) {
             //Logger.getLogger(RollBackImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -296,7 +298,7 @@ public class RollBackImpl implements RollBackAccess {
         //Delete all rows with status=2 or status=3
 
         try {
-            maxId = execMySqlQuery("select max(block_id) from block_infos where status=2 or status=3");
+            maxId = execMySqlQuery("select max(block_id) from hdfs_block_infos where status=2 or status=3");
 
         } catch (StorageException ex) {
             //Logger.getLogger(RollBackImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -317,7 +319,7 @@ public class RollBackImpl implements RollBackAccess {
         //Confirm that the task has done.
         int count = 1;
         try {
-            count = execMySqlQuery("select count(*) from block_infos where status=2 or status=3");
+            count = execMySqlQuery("select count(*) from hdfs_block_infos where status=2 or status=3");
 
         } catch (StorageException ex) {
             //Logger.getLogger(RollBackImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -336,7 +338,7 @@ public class RollBackImpl implements RollBackAccess {
 
         try {
             //Get total number of backup records.
-            minId = execMySqlQuery("select min(block_id) from block_infos   where block_id <0 ");
+            minId = execMySqlQuery("select min(block_id) from hdfs_block_infos   where block_id <0 ");
             //System.out.println(backUpRowsCnt);
         } catch (StorageException ex) {
             LOG.error(ex, ex);
@@ -358,7 +360,7 @@ public class RollBackImpl implements RollBackAccess {
         //Confirm that the task has done.
         int count = 1;
         try {
-            count = execMySqlQuery("select count(*) from block_infos  where block_id<0");
+            count = execMySqlQuery("select count(*) from hdfs_block_infos  where block_id<0");
 
         } catch (StorageException ex) {
             //Logger.getLogger(RollBackImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -386,7 +388,7 @@ public class RollBackImpl implements RollBackAccess {
 
         int maxId;
 
-        maxId = execMySqlQuery("select max(id) from inodes where id >0");
+        maxId = execMySqlQuery("select max(id) from hdfs_inodes where id >0");
 
         InodeDTO newInode = session.newInstance(InodeDTO.class);
 
@@ -424,7 +426,7 @@ public class RollBackImpl implements RollBackAccess {
         HopsSession session = ClusterjConnector.getInstance().obtainSession();
         int maxId;
 
-        maxId = execMySqlQuery("select max(id) from inodes where id >0");
+        maxId = execMySqlQuery("select max(id) from hdfs_inodes where id >0");
 
         InodeDTO oldRoot = session.find(InodeDTO.class, new Integer(maxId));
 
@@ -519,13 +521,13 @@ class BlocksPhase2Callable implements Callable {
             //System.err.println(Thread.currentThread().getId() + ": Started. StartId=" + startId + ", endId=" + endId);
 
             HopsQueryBuilder qb = session.getQueryBuilder();
-            HopsQueryDomainType<BlockInfoDTO> updateInodes = qb.createQueryDefinition(BlockInfoDTO.class);
-            HopsPredicate pred3 = updateInodes.get("block_Id").lessEqual(updateInodes.param("startId"));
-            HopsPredicate pred4 = updateInodes.get("block_Id").greaterEqual(updateInodes.param("endId"));
+            HopsQueryDomainType<BlockInfoDTO> updateBlockNodes = qb.createQueryDefinition(BlockInfoDTO.class);
+            HopsPredicate pred3 = updateBlockNodes.get("block_Id").lessEqual(updateBlockNodes.param("startId"));
+            HopsPredicate pred4 = updateBlockNodes.get("block_Id").greaterEqual(updateBlockNodes.param("endId"));
 
-            updateInodes.where(pred3.and(pred4));
+            updateBlockNodes.where(pred3.and(pred4));
 
-            HopsQuery<BlockInfoDTO> UpdateQuery = session.createQuery(updateInodes);
+            HopsQuery<BlockInfoDTO> UpdateQuery = session.createQuery(updateBlockNodes);
             UpdateQuery.setParameter("startId", startId);
             UpdateQuery.setParameter("endId", endId);
 
@@ -601,15 +603,15 @@ class InodeAttributesPhase1Callable implements Callable {
 
         HopsQueryBuilder qb = session.getQueryBuilder();
         //Delete inodes with status=2 or status=3
-        HopsQueryDomainType<INodeAttributesDTO> deleteInodes = qb.createQueryDefinition(INodeAttributesDTO.class);
-        HopsPredicate pred1 = deleteInodes.get("status").equal(deleteInodes.param("statusParam2"));
-        HopsPredicate pred2 = deleteInodes.get("status").equal(deleteInodes.param("statusParam3"));
-        HopsPredicate pred3 = deleteInodes.get("inodeId").greaterEqual(deleteInodes.param("startId"));
-        HopsPredicate pred4 = deleteInodes.get("inodeId").lessEqual(deleteInodes.param("endId"));
+        HopsQueryDomainType<INodeAttributesDTO> deleteInodeAttributes = qb.createQueryDefinition(INodeAttributesDTO.class);
+        HopsPredicate pred1 = deleteInodeAttributes.get("status").equal(deleteInodeAttributes.param("statusParam2"));
+        HopsPredicate pred2 = deleteInodeAttributes.get("status").equal(deleteInodeAttributes.param("statusParam3"));
+        HopsPredicate pred3 = deleteInodeAttributes.get("id").greaterEqual(deleteInodeAttributes.param("startId"));
+        HopsPredicate pred4 = deleteInodeAttributes.get("id").lessEqual(deleteInodeAttributes.param("endId"));
         HopsPredicate pred5 = pred3.and(pred4);
         HopsPredicate pred6 = pred1.or(pred2);
-        deleteInodes.where(pred5.and(pred6));
-        HopsQuery<INodeAttributesDTO> query = session.createQuery(deleteInodes);
+        deleteInodeAttributes.where(pred5.and(pred6));
+        HopsQuery<INodeAttributesDTO> query = session.createQuery(deleteInodeAttributes);
         query.setParameter("statusParam2", 2);
         query.setParameter("statusParam3", 3);
         query.setParameter("startId", startId);
@@ -646,8 +648,8 @@ class InodeAttributesPhase2Callable implements Callable {
 
             HopsQueryBuilder qb = session.getQueryBuilder();
             HopsQueryDomainType<INodeAttributesDTO> updateInodes = qb.createQueryDefinition(INodeAttributesDTO.class);
-            HopsPredicate pred3 = updateInodes.get("inodeId").lessEqual(updateInodes.param("startId"));
-            HopsPredicate pred4 = updateInodes.get("inodeId").greaterEqual(updateInodes.param("endId"));
+            HopsPredicate pred3 = updateInodes.get("id").lessEqual(updateInodes.param("startId"));
+            HopsPredicate pred4 = updateInodes.get("id").greaterEqual(updateInodes.param("endId"));
 
             updateInodes.where(pred3.and(pred4));
 
@@ -683,8 +685,8 @@ class InodeAttributesPhase2Callable implements Callable {
 
             HopsQueryBuilder qbd = session.getQueryBuilder();
             HopsQueryDomainType<INodeAttributesDTO> deleteInodesWithNegativeId = qbd.createQueryDefinition(INodeAttributesDTO.class);
-            HopsPredicate pred3d = deleteInodesWithNegativeId.get("inodeId").lessEqual(deleteInodesWithNegativeId.param("startId"));
-            HopsPredicate pred4d = deleteInodesWithNegativeId.get("inodeId").greaterEqual(deleteInodesWithNegativeId.param("endId"));
+            HopsPredicate pred3d = deleteInodesWithNegativeId.get("id").lessEqual(deleteInodesWithNegativeId.param("startId"));
+            HopsPredicate pred4d = deleteInodesWithNegativeId.get("id").greaterEqual(deleteInodesWithNegativeId.param("endId"));
 
             deleteInodesWithNegativeId.where(pred3d.and(pred4d));
             HopsQuery<INodeAttributesDTO> queryToDeleteNegative = session.createQuery(deleteInodesWithNegativeId);
@@ -760,18 +762,13 @@ class InodesPhase2Callable implements Callable {
     @Override
     public Boolean call() throws StorageException {
 
-
-
         HopsSession session = ClusterjConnector.getInstance().obtainSession();
-//            Transaction tx = session.currentTransaction();
-//            tx.begin();
-
         HopsQueryBuilder qb = session.getQueryBuilder();
         HopsQueryDomainType<InodeDTO> updateInodes = qb.createQueryDefinition(InodeDTO.class);
 
         HopsPredicate pred4 = updateInodes.get("isDeleted").equal(updateInodes.param("isDeletedParam"));
-        HopsPredicate pred5 = updateInodes.get("id").greaterEqual(updateInodes.param("startId"));
-        HopsPredicate pred6 = updateInodes.get("id").lessEqual(updateInodes.param("endId"));
+        HopsPredicate pred5 = updateInodes.get("id").lessEqual(updateInodes.param("startId"));
+        HopsPredicate pred6 = updateInodes.get("id").greaterEqual(updateInodes.param("endId"));
         updateInodes.where(pred6.and(pred5).and(pred4));
 
         HopsQuery<InodeDTO> UpdateQuery = session.createQuery(updateInodes);
@@ -781,12 +778,45 @@ class InodesPhase2Callable implements Callable {
         UpdateQuery.setParameter("endId", endId);
 
         List<InodeDTO> results = UpdateQuery.getResultList();
+        List<InodeDTO> newResults = new ArrayList<InodeDTO>(results.size());
+        List<InodeDTO> tobeDeleted = new ArrayList<InodeDTO>(results.size());
 
+        int id;
+        InodeDTO newInode;
         for (InodeDTO row : results) {
-            row.setIsDeleted(0);
+            if((id=row.getParentId())<0) {
+                newInode = session.newInstance(InodeDTO.class);
+                newInode.setId(-row.getId());
+                //newInode.setName(row.getName().split("\\$DEL\\$")[0]);
+                newInode.setName(row.getName().split("\\$DEL:[0-9]+\\$",2)[0]);
+                newInode.setParentId(-id);
+                newInode.setQuotaEnabled(row.getQuotaEnabled());
+                newInode.setModificationTime(row.getModificationTime());
+                newInode.setATime(row.getATime());
+                newInode.setPermission(row.getPermission());
+                newInode.setUnderConstruction(row.getUnderConstruction());
+                newInode.setClientName(row.getClientName());
+                newInode.setClientMachine(row.getClientMachine());
+                newInode.setClientNode(row.getClientNode());
+                newInode.setGenerationStamp(row.getGenerationStamp());
+                newInode.setHeader(row.getHeader());
+                newInode.setSymlink(row.getSymlink());
+                newInode.setSubtreeLocked(row.getSubtreeLocked());
+                newInode.setSubtreeLockOwner(row.getSubtreeLockOwner());
+                newInode.setIsDeleted(SnapShotConstants.isNotDeleted);
+                newInode.setStatus(row.getStatus());
+
+                newResults.add(newInode);
+                tobeDeleted.add(row);
+
+
+            }
         }
 
-        session.updatePersistentAll(results);
+        if(!newResults.isEmpty())
+        session.makePersistentAll(newResults);
+        if(!tobeDeleted.isEmpty())
+        session.deletePersistentAll(tobeDeleted);
 
         //System.out.println("SetIsDeleted from id=" + factor * BUFFER_SIZE + " ,to id=" + (factor + 1) * BUFFER_SIZE + ". Time= " + (end - start) / 1000 + "Seconds");
 
