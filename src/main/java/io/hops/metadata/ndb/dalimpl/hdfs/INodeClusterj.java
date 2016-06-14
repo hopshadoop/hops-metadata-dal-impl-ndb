@@ -88,10 +88,22 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     void setATime(long modificationTime);
 
     // Inode
-    @Column(name = PERMISSION)
-    byte[] getPermission();
+    @Column(name = USER_ID)
+    int getUserID();
 
-    void setPermission(byte[] permission);
+    void setUserID(int userID);
+
+    // Inode
+    @Column(name = GROUP_ID)
+    int getGroupID();
+
+    void setGroupID(int groupID);
+
+    // Inode
+    @Column(name = PERMISSION)
+    short getPermission();
+
+    void setPermission(short permission);
 
     // InodeFileUnderConstruction
     @Column(name = CLIENT_NAME)
@@ -217,7 +229,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     }
     
     if (results.size() == 1) {
-      INode inode = createInode(results.get(0));
+      INode inode = convert(results.get(0));
       session.release(results);
       return inode;
     } else {
@@ -241,7 +253,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     query.setParameter("parentIDParam", parentId);
 
     List<InodeDTO> results = query.getResultList();
-    List<INode> inodeList = createInodeList(results);
+    List<INode> inodeList = convert(results);
     session.release(results);
     return inodeList;
   }
@@ -250,8 +262,10 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   public List<ProjectedINode> findInodesForSubtreeOperationsWithWriteLock(
       int parentId) throws StorageException {
     final String query = String.format(
-        "SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s FROM %s WHERE %s=%d FOR UPDATE ",
-        ID, NAME, PARENT_ID, PERMISSION, HEADER, SYMLINK, QUOTA_ENABLED,
+        "SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s FROM %s " +
+            "WHERE %s=%d LOCK IN SHARE MODE",
+        ID, NAME, PARENT_ID, PERMISSION, USER_ID, GROUP_ID, HEADER, SYMLINK,
+        QUOTA_ENABLED,
         UNDER_CONSTRUCTION, SUBTREE_LOCKED, SUBTREE_LOCK_OWNER, SIZE, TABLE_NAME,
         PARENT_ID, parentId);
     ArrayList<ProjectedINode> resultList;
@@ -264,7 +278,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
       while (result.next()) {
         resultList.add(
             new ProjectedINode(result.getInt(ID), result.getInt(PARENT_ID),
-                result.getString(NAME), result.getBytes(PERMISSION),
+                result.getString(NAME), result.getShort(PERMISSION),
+                result.getInt(USER_ID), result.getInt(GROUP_ID),
                 result.getLong(HEADER),
                 result.getString(SYMLINK) == null ? false : true,
                 result.getBoolean(QUOTA_ENABLED),
@@ -292,7 +307,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 
     InodeDTO result = session.find(InodeDTO.class, pk);
     if (result != null) {
-      INode inode = createInode(result);
+      INode inode = convert(result);
       session.release(result);
       return inode;
     } else {
@@ -313,7 +328,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
       dtos.add(dto);
     }
     session.flush();
-    List<INode> inodeList = createInodeList(dtos);
+    List<INode> inodeList = convert(dtos);
     session.release(dtos);
     return inodeList;
   }
@@ -384,7 +399,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQuery<InodeDTO> query =
         session.createQuery(qb.createQueryDefinition(InodeDTO.class));
-    return createInodeList(query.getResultList());
+    return convert(query.getResultList());
   }
   
   @Override
@@ -411,21 +426,23 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   }
 
   
-  private List<INode> createInodeList(List<InodeDTO> list) {
+  private List<INode> convert(List<InodeDTO> list) throws StorageException {
     List<INode> inodes = new ArrayList<INode>();
     for (InodeDTO persistable : list) {
       if (persistable.getId() != NOT_FOUND_ROW) {
-        inodes.add(createInode(persistable));
+        inodes.add(convert(persistable));
       }
     }
     return inodes;
   }
 
-  private INode createInode(InodeDTO persistable) {
+
+  private INode convert(InodeDTO persistable) {
     INode node = new INode(persistable.getId(), persistable.getName(),
         persistable.getParentId(),
         NdbBoolean.convert(persistable.getQuotaEnabled()),
         persistable.getModificationTime(), persistable.getATime(),
+        persistable.getUserID(), persistable.getGroupID(),
         persistable.getPermission(), persistable.getUnderConstruction(),
         persistable.getClientName(), persistable.getClientMachine(),
         persistable.getClientNode(), persistable.getGenerationStamp(),
@@ -444,6 +461,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setQuotaEnabled(NdbBoolean.convert(inode.isDirWithQuota()));
     persistable.setModificationTime(inode.getModificationTime());
     persistable.setATime(inode.getAccessTime());
+    persistable.setUserID(inode.getUserID());
+    persistable.setGroupID(inode.getGroupID());
     persistable.setPermission(inode.getPermission());
     persistable.setUnderConstruction(inode.isUnderConstruction());
     persistable.setClientName(inode.getClientName());
@@ -455,7 +474,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setSubtreeLocked(NdbBoolean.convert(inode.isSubtreeLocked()));
     persistable.setSubtreeLockOwner(inode.getSubtreeLockOwner());
     persistable.setMetaEnabled(NdbBoolean.convert(inode.isMetaEnabled()));
-    persistable.setSize(inode.getSize());
+    persistable.setSize(inode.getFileSize());
   }
 
   private void explain(HopsQuery<InodeDTO> query) {

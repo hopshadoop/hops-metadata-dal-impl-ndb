@@ -73,9 +73,11 @@ public class LaunchedContainersClusterJ implements
         qb.createQueryDefinition(LaunchedContainersDTO.class);
     HopsQuery<LaunchedContainersDTO> query = session.
         createQuery(dobj);
-    List<LaunchedContainersDTO> results = query.
+    List<LaunchedContainersDTO> queryResults = query.
         getResultList();
-    return createMap(results);
+    Map<String, List<LaunchedContainers>> result = createMap(queryResults);
+    session.release(queryResults);
+    return result;
   }
 
 
@@ -89,6 +91,7 @@ public class LaunchedContainersClusterJ implements
       toPersist.add(createPersistable(id, session));
     }
     session.savePersistentAll(toPersist);
+    session.release(toPersist);
   }
 
   @Override
@@ -98,12 +101,13 @@ public class LaunchedContainersClusterJ implements
     List<LaunchedContainersDTO> toPersist =
         new ArrayList<LaunchedContainersDTO>();
     for (LaunchedContainers hopContainerId : toRemove) {
-      Object[] objarr = new Object[2];
-      objarr[0] = hopContainerId.getSchedulerNodeID();
-      objarr[1] = hopContainerId.getContainerIdID();
-      toPersist.add(session.newInstance(LaunchedContainersDTO.class, objarr));
+      LaunchedContainersDTO persistable = session.newInstance(LaunchedContainersDTO.class);
+      persistable.setschedulernode_id(hopContainerId.getSchedulerNodeID());
+      persistable.setcontaineridid(hopContainerId.getContainerIdID());
+      toPersist.add(persistable);
     }
     session.deletePersistentAll(toPersist);
+    session.release(toPersist);
   }
 
   private LaunchedContainers createLaunchedContainersEntry(

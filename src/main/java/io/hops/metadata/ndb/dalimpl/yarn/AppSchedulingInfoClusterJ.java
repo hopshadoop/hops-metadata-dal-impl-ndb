@@ -29,11 +29,13 @@ import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.TablesDef;
+import static io.hops.metadata.yarn.TablesDef.AppSchedulingInfoTableDef.USER;
 import io.hops.metadata.yarn.dal.AppSchedulingInfoDataAccess;
 import io.hops.metadata.yarn.entity.AppSchedulingInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class AppSchedulingInfoClusterJ implements
@@ -78,6 +80,16 @@ public class AppSchedulingInfoClusterJ implements
     byte getStoped();
 
     void setStoped(byte stoped);
+    
+    @Column(name = USER_NAME)
+    String getusername();
+
+    void setusername(String username);
+    
+    @Column(name = PROJECT_NAME)
+    String getprojectname();
+
+    void setprojectname(String projectname);
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -92,27 +104,36 @@ public class AppSchedulingInfoClusterJ implements
             AppSchedulingInfoClusterJ.AppSchedulingInfoDTO.class);
     HopsQuery<AppSchedulingInfoClusterJ.AppSchedulingInfoDTO> query =
         session.createQuery(dobj);
-    List<AppSchedulingInfoClusterJ.AppSchedulingInfoDTO> results =
+    List<AppSchedulingInfoClusterJ.AppSchedulingInfoDTO> queryResults =
         query.getResultList();
-
-    return createHopAppSchedulingInfoList(results);
-
+    List<AppSchedulingInfo> result = 
+            createHopAppSchedulingInfoList(queryResults);
+    session.release(queryResults);
+    return result;
   }
 
   
   @Override
-  public void add(AppSchedulingInfo toAdd) throws StorageException {
+  public void addAll(Collection<AppSchedulingInfo> toAdd) throws StorageException {
     HopsSession session = connector.obtainSession();
-    AppSchedulingInfoClusterJ.AppSchedulingInfoDTO persistable =
-        createPersistable(toAdd, session);
-    session.savePersistent(persistable);
+    List<AppSchedulingInfoDTO> toPersist = new ArrayList<AppSchedulingInfoDTO>();
+    for(AppSchedulingInfo info: toAdd){
+     toPersist.add(createPersistable(info, session));
+    }
+    session.savePersistentAll(toPersist);
     session.flush();
+    session.release(toPersist);
   }
   
-  public void remove(AppSchedulingInfo toRemove) throws StorageException {
+  public void removeAll(Collection<AppSchedulingInfo> toRemove) throws StorageException {
     HopsSession session = connector.obtainSession();
-    session.deletePersistent(session
-        .newInstance(AppSchedulingInfoDTO.class, toRemove.getSchedulerAppId()));
+    List<AppSchedulingInfoDTO> toPersist = new ArrayList<AppSchedulingInfoDTO>();
+    for(AppSchedulingInfo info: toRemove){
+     toPersist.add(session
+        .newInstance(AppSchedulingInfoDTO.class, info.getSchedulerAppId()));
+    }
+    session.deletePersistentAll(toPersist);
+    session.release(toPersist);
   }
   
   
@@ -150,7 +171,8 @@ public class AppSchedulingInfoClusterJ implements
     appSchedulingInfoDTO.setuser(hop.getUser());
     appSchedulingInfoDTO.setPending(NdbBoolean.convert(hop.isPending()));
     appSchedulingInfoDTO.setStoped(NdbBoolean.convert(hop.isStoped()));
-    
+    appSchedulingInfoDTO.setusername(hop.getUserName());
+    appSchedulingInfoDTO.setprojectname(hop.getProjectName());
     return appSchedulingInfoDTO;
   }
 

@@ -80,9 +80,11 @@ public class ResourceRequestClusterJ implements
         qb.createQueryDefinition(ResourceRequestDTO.class);
     HopsQuery<ResourceRequestDTO> query = session.
         createQuery(dobj);
-    List<ResourceRequestDTO> results = query.
+    List<ResourceRequestDTO> queryResults = query.
         getResultList();
-    return createMap(results);
+    Map<String,List<ResourceRequest>> result = createMap(queryResults);
+    session.release(queryResults);
+    return result;
   }
 
   @Override
@@ -94,6 +96,7 @@ public class ResourceRequestClusterJ implements
       toPersist.add(createPersistable(req, session));
     }
     session.savePersistentAll(toPersist);
+    session.release(toPersist);
   }
 
   @Override
@@ -109,6 +112,7 @@ public class ResourceRequestClusterJ implements
       toPersist.add(session.newInstance(ResourceRequestDTO.class, pk));
     }
     session.deletePersistentAll(toPersist);
+    session.release(toPersist);
   }
 
   private ResourceRequest createHopResourceRequest(

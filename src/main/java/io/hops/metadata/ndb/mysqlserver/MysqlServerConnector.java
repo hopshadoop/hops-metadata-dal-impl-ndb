@@ -187,6 +187,11 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
+  @Override
+  public boolean formatYarnStorage() throws StorageException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+  
   public boolean formatStorage(Class<? extends EntityDataAccess>... das)
           throws StorageException {
     throw new UnsupportedOperationException("Not supported yet.");
@@ -223,7 +228,12 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
   }
 
   @Override
-  public boolean formatStorageNonTransactional() throws StorageException {
+  public boolean formatAllStorageNonTransactional() throws StorageException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public boolean formatYarnStorageNonTransactional() throws StorageException {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
@@ -288,4 +298,21 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
             StorageConnector.class.getClassLoader().getResourceAsStream(configFile);
     return inStream;
   }
+  
+  @Override
+  public void flush() {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public String getClusterConnectString() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public String getDatabaseName() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+  
+  
 }
