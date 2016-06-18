@@ -35,10 +35,14 @@ import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class InvalidatedBlockClusterj implements
     TablesDef.InvalidatedBlockTableDef,
@@ -93,7 +97,12 @@ public class InvalidatedBlockClusterj implements
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType qdt =
         qb.createQueryDefinition(InvalidateBlocksDTO.class);
-    return createList(session.createQuery(qdt).getResultList());
+    
+    List<InvalidateBlocksDTO> dtos = session.createQuery(qdt).getResultList();
+    List<InvalidatedBlock> ivl = createList(dtos);
+    session.release(dtos);
+    return ivl;
+    
   }
 
   @Override
@@ -106,7 +115,26 @@ public class InvalidatedBlockClusterj implements
     qdt.where(qdt.get("storageId").equal(qdt.param("param")));
     HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
     query.setParameter("param", storageId);
-    return createList(query.getResultList());
+    
+    List<InvalidateBlocksDTO> dtos = query.getResultList();
+    List<InvalidatedBlock> ivl = createList(dtos);
+    session.release(dtos);
+    return ivl;
+  }
+  
+  @Override
+  public Map<Long, Long> findInvalidatedBlockByStorageIdUsingMySQLServer(int storageId) throws StorageException {
+  return MySQLQueryHelper.execute(String.format("SELECT %s, %s "
+            + "FROM %s WHERE %s='%d'", BLOCK_ID, GENERATION_STAMP, TABLE_NAME, STORAGE_ID, storageId), new MySQLQueryHelper.ResultSetHandler<Map<Long,Long>>() {
+      @Override
+      public Map<Long,Long> handle(ResultSet result) throws SQLException {
+        Map<Long,Long> blockInodeMap = new HashMap<Long,Long>();
+        while (result.next()) {
+          blockInodeMap.put(result.getLong(BLOCK_ID),result.getLong(GENERATION_STAMP));
+        }
+        return blockInodeMap;
+      }
+    });
   }
 
   @Override
@@ -122,7 +150,12 @@ public class InvalidatedBlockClusterj implements
     HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
     query.setParameter("blockIdParam", bid);
     query.setParameter("iNodeIdParam", inodeId);
-    return createList(query.getResultList());
+    
+    List<InvalidateBlocksDTO> dtos = query.getResultList();
+    List<InvalidatedBlock> ivl = createList(dtos);
+    session.release(dtos);
+    return ivl;
+    
   }
   
   @Override
@@ -136,7 +169,11 @@ public class InvalidatedBlockClusterj implements
     qdt.where(pred1);
     HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
     query.setParameter("iNodeIdParam", inodeId);
-    return createList(query.getResultList());
+    
+    List<InvalidateBlocksDTO> dtos = query.getResultList();
+    List<InvalidatedBlock> ivl = createList(dtos);
+    session.release(dtos);
+    return ivl;
   }
 
   @Override
@@ -150,7 +187,11 @@ public class InvalidatedBlockClusterj implements
     qdt.where(pred1);
     HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
     query.setParameter("iNodeIdParam", Ints.asList(inodeIds));
-    return createList(query.getResultList());
+    
+    List<InvalidateBlocksDTO> dtos = query.getResultList();
+    List<InvalidatedBlock> ivl = createList(dtos);
+    session.release(dtos);
+    return ivl;
   }
   
   @Override
@@ -166,7 +207,9 @@ public class InvalidatedBlockClusterj implements
     if (invTable == null) {
       return null;
     }
-    return createReplica(invTable);
+    InvalidatedBlock ivb = createReplica(invTable);
+    session.release(invTable);
+    return ivb;
   }
 
   @Override
@@ -191,7 +234,9 @@ public class InvalidatedBlockClusterj implements
       invBlocks.add(invTable);
     }
     session.flush();
-    return createList(invBlocks);
+    List<InvalidatedBlock> ivbl = createList(invBlocks);
+    session.release(invBlocks);
+    return ivbl;
   }
 
   @Override
@@ -220,6 +265,8 @@ public class InvalidatedBlockClusterj implements
     }
     session.deletePersistentAll(deletions);
     session.savePersistentAll(changes);
+    session.release(deletions);
+    session.release(changes);
   }
 
   @Override

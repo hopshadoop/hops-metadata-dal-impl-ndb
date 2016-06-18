@@ -79,7 +79,8 @@ public class BlockChecksumClusterj
     HopsSession session = clusterjConnector.obtainSession();
     BlockChecksumDto dto = session.newInstance(BlockChecksumDto.class);
     copyState(blockChecksum, dto);
-    session.savePersistent(dto);
+    session.makePersistent(dto);
+    session.release(dto);
   }
 
   @Override
@@ -89,6 +90,7 @@ public class BlockChecksumClusterj
     BlockChecksumDto dto = session.newInstance(BlockChecksumDto.class);
     copyState(blockChecksum, dto);
     session.updatePersistent(dto);
+    session.release(dto);
   }
 
   @Override
@@ -98,6 +100,7 @@ public class BlockChecksumClusterj
     BlockChecksumDto dto = session.newInstance(BlockChecksumDto.class);
     copyState(blockChecksum, dto);
     session.deletePersistent(dto);
+    session.release(dto);
   }
 
   @Override
@@ -109,7 +112,10 @@ public class BlockChecksumClusterj
     if (dto == null) {
       return null;
     }
-    return createBlockChecksum(dto);
+    
+    BlockChecksum bcs = createBlockChecksum(dto);
+    session.release(dto);
+    return bcs;
   }
 
   @Override
@@ -123,7 +129,10 @@ public class BlockChecksumClusterj
     dobj.where(pred1);
     HopsQuery<BlockChecksumDto> query = session.createQuery(dobj);
     query.setParameter("iNodeParam", inodeId);
-    return createBlockChecksumList(query.getResultList());
+    List<BlockChecksumDto> dtos = query.getResultList();
+    Collection<BlockChecksum> csl = createBlockChecksumList(dtos);
+    session.release(dtos);
+    return csl;
   }
 
   @Override

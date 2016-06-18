@@ -78,7 +78,11 @@ public class INodeAttributesClusterj implements
       throws StorageException {
     HopsSession session = connector.obtainSession();
     INodeAttributesDTO dto = session.find(INodeAttributesDTO.class, inodeId);
-    INodeAttributes iNodeAttributes = makeINodeAttributes(dto);
+    INodeAttributes iNodeAttributes =  null;
+    if(dto != null){
+        iNodeAttributes = makeINodeAttributes(dto);
+        session.release(dto);
+    }
     return iNodeAttributes;
   }
   
@@ -103,6 +107,8 @@ public class INodeAttributesClusterj implements
       inodeAttributesBatchResponse
           .add(makeINodeAttributes(inodeAttributesBatchRequest.get(i)));
     }
+    
+    session.release(inodeAttributesBatchRequest);
     return inodeAttributesBatchResponse;
   }
 
@@ -127,6 +133,8 @@ public class INodeAttributesClusterj implements
     }
     session.deletePersistentAll(deletions);
     session.savePersistentAll(changes);
+    session.release(deletions);
+    session.release(changes);
   }
 
   private INodeAttributesDTO createPersistable(INodeAttributes attribute,

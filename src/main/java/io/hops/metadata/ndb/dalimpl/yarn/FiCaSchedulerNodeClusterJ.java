@@ -68,6 +68,7 @@ public class FiCaSchedulerNodeClusterJ implements
     HopsSession session = connector.obtainSession();
     FiCaSchedulerNodeDTO persistable = createPersistable(toAdd, session);
     session.savePersistent(persistable);
+    session.flush();
   }
 
   @Override
@@ -79,9 +80,9 @@ public class FiCaSchedulerNodeClusterJ implements
     for (FiCaSchedulerNode hop : toAdd) {
       FiCaSchedulerNodeDTO persistable = createPersistable(hop, session);
       toPersist.add(persistable);
-
-      session.savePersistentAll(toPersist);
     }
+      session.savePersistentAll(toPersist);
+      session.flush();
   }
 
   @Override

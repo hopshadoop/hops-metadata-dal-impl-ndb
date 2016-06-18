@@ -52,6 +52,7 @@ public class MisReplicatedRangeQueueClusterj
       MisReplicatedRangeQueueDTO dto = session
           .newInstance(MisReplicatedRangeQueueDTO.class, getRange(start, end));
       session.savePersistent(dto);
+      session.release(dto);
     } catch (Exception e) {
       throw new StorageException(e);
     }
@@ -65,6 +66,7 @@ public class MisReplicatedRangeQueueClusterj
       MisReplicatedRangeQueueDTO oldR = session
           .newInstance(MisReplicatedRangeQueueDTO.class, getRange(start, end));
       session.deletePersistent(oldR);
+      session.release(oldR);
     } catch (Exception e) {
       throw new StorageException(e);
     }

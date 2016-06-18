@@ -408,6 +408,8 @@ public class RollBackImpl implements RollBackAccess {
         newInode.setSymlink(backUpRow.getSymlink());
         newInode.setSubtreeLocked((byte)1);//SetSubTreeLockedToTree.
         newInode.setSubtreeLockOwner(nameNodeId);
+        newInode.setMetaEnabled(backUpRow.getMetaEnabled());
+        newInode.setSize(backUpRow.getSize());
         newInode.setIsDeleted(backUpRow.getIsDeleted());
         newInode.setStatus(backUpRow.getStatus());
 
@@ -448,6 +450,8 @@ public class RollBackImpl implements RollBackAccess {
         newRoot.setSymlink(oldRoot.getSymlink());
         newRoot.setSubtreeLocked((byte)0);//UnsetSubTreeLockedToTree.
         newRoot.setSubtreeLockOwner(oldRoot.getSubtreeLockOwner());
+        newRoot.setMetaEnabled(oldRoot.getMetaEnabled());
+        newRoot.setSize(oldRoot.getSize());
         newRoot.setIsDeleted(oldRoot.getIsDeleted());
         newRoot.setStatus(oldRoot.getStatus());
 
@@ -803,6 +807,8 @@ class InodesPhase2Callable implements Callable {
                 newInode.setSymlink(row.getSymlink());
                 newInode.setSubtreeLocked(row.getSubtreeLocked());
                 newInode.setSubtreeLockOwner(row.getSubtreeLockOwner());
+                newInode.setMetaEnabled(row.getMetaEnabled());
+                newInode.setSize(row.getSize());
                 newInode.setIsDeleted(SnapShotConstants.isNotDeleted);
                 newInode.setStatus(row.getStatus());
 
@@ -887,6 +893,8 @@ class InodesPhase3Callable implements Callable {
                 newInode.setSymlink(row.getSymlink());
                 newInode.setSubtreeLocked(row.getSubtreeLocked());
                 newInode.setSubtreeLockOwner(row.getSubtreeLockOwner());
+                newInode.setMetaEnabled(row.getMetaEnabled());
+                newInode.setSize(row.getSize());
                 newInode.setIsDeleted(row.getIsDeleted());
                 newInode.setStatus(row.getStatus());
 

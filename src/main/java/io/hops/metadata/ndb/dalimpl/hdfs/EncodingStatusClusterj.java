@@ -45,6 +45,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
@@ -130,6 +132,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     EncodingStatusDto dto = session.newInstance(EncodingStatusDto.class);
     copyState(status, dto);
     session.savePersistent(dto);
+    session.release(dto);
   }
 
   @Override
@@ -138,7 +141,8 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     HopsSession session = clusterjConnector.obtainSession();
     EncodingStatusDto dto = session.newInstance(EncodingStatusDto.class);
     copyState(status, dto);
-    session.updatePersistent(dto);
+    session.savePersistent(dto);
+    session.release(dto);
   }
 
   @Override
@@ -148,6 +152,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     copyState(status, dto);
     LOG.info("Delte " + status);
     session.deletePersistent(dto);
+    session.release(dto);
   }
 
   private void copyState(EncodingStatus status, EncodingStatusDto dto) {
@@ -209,7 +214,9 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     if (dto == null) {
       return null;
     }
-    return createHopEncoding(dto);
+    EncodingStatus es = createHopEncoding(dto);
+    session.release(dto);
+    return es;
   }
 
   @Override
@@ -231,14 +238,30 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
       return null;
     }
 
-    return createHopEncoding(results.get(0));
+    EncodingStatus es = createHopEncoding(results.get(0));
+    session.release(results);
+    return es;
   }
 
   @Override
-  public Collection<EncodingStatus> findRequestedEncodings(long limit)
+  public Collection<EncodingStatus> findRequestedEncodings(int limit)
       throws StorageException {
-    return findWithStatus(EncodingStatus.Status.ENCODING_REQUESTED.ordinal(),
-        limit);
+    Collection<EncodingStatus> normalEncodings = findWithStatus(
+        EncodingStatus.Status.ENCODING_REQUESTED.ordinal(), limit);
+    Collection<EncodingStatus> copyEncodings = findWithStatus(
+        EncodingStatus.Status.COPY_ENCODING_REQUESTED.ordinal(), limit);
+    ArrayList<EncodingStatus> requests = new ArrayList<EncodingStatus>(limit);
+    requests.addAll(normalEncodings);
+    requests.addAll(copyEncodings);
+    Collections.sort(requests, new Comparator<EncodingStatus>() {
+      @Override
+      public int compare(EncodingStatus o1, EncodingStatus o2) {
+        return o1.getStatusModificationTime()
+            .compareTo(o2.getStatusModificationTime());
+      }
+    });
+    return requests.subList(0, requests.size() < limit ?
+        requests.size() : limit);
   }
 
   @Override
@@ -248,7 +271,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   }
 
   @Override
-  public Collection<EncodingStatus> findRequestedRepairs(long limit)
+  public Collection<EncodingStatus> findRequestedRepairs(int limit)
       throws StorageException {
     /*
      * Prioritize files with more missing blocks and also prioritize source files over parity files.
@@ -260,8 +283,8 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
             STATUS_MODIFICATION_TIME + ", " + PARITY_STATUS_MODIFICATION_TIME +
             ", " + PARITY_INODE_ID + ", " + PARITY_FILE_NAME + ", " +
             LOST_BLOCKS + ", " + LOST_PARITY_BLOCKS + ", " + LOST_BLOCKS + "+" +
-            LOST_PARITY_BLOCKS + " AS " + LOST_BLOCK_SUM + " FROM " +
-            TABLE_NAME + " WHERE " + STATUS + "=" +
+            LOST_PARITY_BLOCKS + " AS " + LOST_BLOCK_SUM + ", " + REVOKED +
+            " FROM " + TABLE_NAME + " WHERE " + STATUS + "=" +
             EncodingStatus.Status.REPAIR_REQUESTED.ordinal() + " ORDER BY " +
             LOST_BLOCK_SUM + " DESC, " + LOST_BLOCKS + " DESC, " +
             STATUS_MODIFICATION_TIME + " ASC LIMIT " + limit;
@@ -287,7 +310,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   }
 
   @Override
-  public Collection<EncodingStatus> findEncoded(long limit)
+  public Collection<EncodingStatus> findEncoded(int limit)
       throws StorageException {
     return findWithStatus(EncodingStatus.Status.ENCODED.ordinal(), limit);
   }
@@ -311,7 +334,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   }
 
   @Override
-  public Collection<EncodingStatus> findRequestedParityRepairs(long limit)
+  public Collection<EncodingStatus> findRequestedParityRepairs(int limit)
       throws StorageException {
     final String queryString =
         "SELECT * FROM %s WHERE %s=%s AND %s!=%s AND %s!=%s ORDER BY %s ASC LIMIT %s";
@@ -363,7 +386,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   }
 
   @Override
-  public Collection<EncodingStatus> findDeleted(long limit)
+  public Collection<EncodingStatus> findDeleted(int limit)
       throws StorageException {
     return findWithStatus(EncodingStatus.Status.DELETED.ordinal(), limit);
   }
@@ -379,7 +402,9 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     query.setParameter(REVOKED, NdbBoolean.convert(true));
 
     List<EncodingStatusDto> results = query.getResultList();
-    return createHopEncodings(results);
+    List<EncodingStatus> esl = createHopEncodings(results);
+    session.release(results);
+    return esl;
   }
 
   private List<EncodingStatus> createHopEncodings(

@@ -100,7 +100,7 @@ public class UnderReplicatedBlockClusterj
     if (urbt == null) {
       return null;
     }
-    return createUrBlock(urbt);
+    return convertAndRelease(session, urbt);
   }
 
   @Override
@@ -134,6 +134,9 @@ public class UnderReplicatedBlockClusterj
     }
     session.deletePersistentAll(deletions);
     session.savePersistentAll(changes);
+
+    session.release(deletions);
+    session.release(changes);
   }
 
   private void createPersistable(UnderReplicatedBlock block,
@@ -144,18 +147,20 @@ public class UnderReplicatedBlockClusterj
     persistable.setTimestamp(System.currentTimeMillis());
   }
 
-  private UnderReplicatedBlock createUrBlock(UnderReplicatedBlocksDTO bit) {
+  private UnderReplicatedBlock convertAndRelease(HopsSession session,
+      UnderReplicatedBlocksDTO bit) throws StorageException {
     UnderReplicatedBlock block =
         new UnderReplicatedBlock(bit.getLevel(), bit.getBlockId(),
             bit.getINodeId());
+    session.release(bit);
     return block;
   }
 
-  private List<UnderReplicatedBlock> createUrBlockList(
-      List<UnderReplicatedBlocksDTO> bitList) {
+  private List<UnderReplicatedBlock> convertAndRelease(HopsSession session,
+      List<UnderReplicatedBlocksDTO> bitList) throws StorageException {
     List<UnderReplicatedBlock> blocks = new ArrayList<UnderReplicatedBlock>();
     for (UnderReplicatedBlocksDTO bit : bitList) {
-      blocks.add(createUrBlock(bit));
+      blocks.add(convertAndRelease(session, bit));
     }
     return blocks;
   }
@@ -173,9 +178,7 @@ public class UnderReplicatedBlockClusterj
         qb.createQueryDefinition(UnderReplicatedBlocksDTO.class);
     HopsQuery<UnderReplicatedBlocksDTO> query = session.createQuery(dobj);
     query.setOrdering(Query.Ordering.ASCENDING, "level", "timestamp");
-    List<UnderReplicatedBlock> blocks =
-        createUrBlockList(query.getResultList());
-    return blocks;
+    return convertAndRelease(session, query.getResultList());
   }
 
   @Override
@@ -190,7 +193,7 @@ public class UnderReplicatedBlockClusterj
     HopsQuery<UnderReplicatedBlocksDTO> query = session.createQuery(dobj);
     query.setParameter("level", level);
     query.setOrdering(Query.Ordering.ASCENDING, "level", "timestamp");
-    return createUrBlockList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
 
   @Override
@@ -206,7 +209,7 @@ public class UnderReplicatedBlockClusterj
     query.setParameter("level", level);
     query.setOrdering(Query.Ordering.ASCENDING, "level", "timestamp");
     query.setLimits(offset, count);
-    return createUrBlockList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
 
   @Override
@@ -223,7 +226,7 @@ public class UnderReplicatedBlockClusterj
     //FIXME[M]: it throws ClusterJUserException: There is no index containing the ordering fields.
     //http://bugs.mysql.com/bug.php?id=67765
     //query.setOrdering(HopsQuery.Ordering.ASCENDING, "level", "timestamp");
-    return createUrBlockList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
 
   @Override
@@ -237,7 +240,7 @@ public class UnderReplicatedBlockClusterj
     qdt.where(pred1);
     HopsQuery<UnderReplicatedBlocksDTO> query = session.createQuery(qdt);
     query.setParameter("idParam", Ints.asList(inodeIds));
-    return createUrBlockList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
   
   @Override

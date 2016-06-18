@@ -64,11 +64,6 @@ public class ReplicaUnderConstructionClusterj
 
     void setStorageId(int id);
 
-    @Column(name = REPLICA_INDEX)
-    int getIndex();
-
-    void setIndex(int index);
-
     @Column(name = STATE)
     int getState();
 
@@ -97,6 +92,9 @@ public class ReplicaUnderConstructionClusterj
     }
     session.deletePersistentAll(deletions);
     session.savePersistentAll(changes);
+
+    session.release(deletions);
+    session.release(changes);
   }
 
   @Override
@@ -112,7 +110,7 @@ public class ReplicaUnderConstructionClusterj
     HopsQuery<ReplicaUcDTO> query = session.createQuery(dobj);
     query.setParameter("blockIdParam", blockId);
     query.setParameter("iNodeIdParam", inodeId);
-    return createReplicaList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
   
   @Override
@@ -126,7 +124,7 @@ public class ReplicaUnderConstructionClusterj
     dobj.where(pred1);
     HopsQuery<ReplicaUcDTO> query = session.createQuery(dobj);
     query.setParameter("iNodeIdParam", inodeId);
-    return createReplicaList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
   
 
@@ -141,16 +139,17 @@ public class ReplicaUnderConstructionClusterj
     dobj.where(pred1);
     HopsQuery<ReplicaUcDTO> query = session.createQuery(dobj);
     query.setParameter("iNodeIdParam", Ints.asList(inodeIds));
-    return createReplicaList(query.getResultList());
+    return convertAndRelease(session, query.getResultList());
   }
 
-  private List<ReplicaUnderConstruction> createReplicaList(
+  private List<ReplicaUnderConstruction> convertAndRelease(HopsSession session,
       List<ReplicaUcDTO> replicaUc) throws StorageException {
     List<ReplicaUnderConstruction> replicas =
         new ArrayList<ReplicaUnderConstruction>(replicaUc.size());
     for (ReplicaUcDTO t : replicaUc) {
       replicas.add(new ReplicaUnderConstruction(t.getState(), t.getStorageId(),
-          t.getBlockId(), t.getINodeId(), t.getIndex()));
+          t.getBlockId(), t.getINodeId()));
+      session.release(t);
     }
     return replicas;
   }
@@ -158,7 +157,6 @@ public class ReplicaUnderConstructionClusterj
   private void createPersistable(ReplicaUnderConstruction replica,
       ReplicaUcDTO newInstance) {
     newInstance.setBlockId(replica.getBlockId());
-    newInstance.setIndex(replica.getIndex());
     newInstance.setStorageId(replica.getStorageId());
     newInstance.setState(replica.getState());
     newInstance.setINodeId(replica.getInodeId());
