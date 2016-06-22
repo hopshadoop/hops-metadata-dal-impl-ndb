@@ -100,25 +100,22 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
         logEntries.size());
     ArrayList<DatasetINodeLookupDTO> newLookupDTOS = new
         ArrayList<DatasetINodeLookupDTO>(logEntries.size());
-    ArrayList<DatasetINodeLookupDTO> removeLookupDTOS = new
-        ArrayList<DatasetINodeLookupDTO>(logEntries.size());
     for (MetadataLogEntry logEntry : logEntries) {
       added.add(createPersistable(logEntry));
       DatasetINodeLookupDTO lookupDTO = createLookupPersistable(logEntry);
       if(logEntry.getOperation() == MetadataLogEntry.Operation.ADD){
         newLookupDTOS.add(lookupDTO);
       }else if(logEntry.getOperation() == MetadataLogEntry.Operation.DELETE){
-        removeLookupDTOS.add(lookupDTO);
+        session.deletePersistent(lookupDTO);
+        session.release(lookupDTO);
       }
     }
 
     session.makePersistentAll(added);
     session.savePersistentAll(newLookupDTOS);
-    session.deletePersistentAll(removeLookupDTOS);
 
     session.release(added);
     session.release(newLookupDTOS);
-    session.release(removeLookupDTOS);
   }
 
   @Override
