@@ -613,7 +613,7 @@ delimiter $$
 
 CREATE TABLE `yarn_updated_node` (
   `applicationid` VARCHAR(45) NOT NULL,
-  `nodeid` VARCHAR(255) NULL,
+  `nodeid` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`applicationid`, `nodeid`),
   CONSTRAINT `nodeid`
     FOREIGN KEY (`nodeid`)
@@ -626,7 +626,7 @@ delimiter $$
 
 CREATE TABLE `yarn_ran_node` (
   `application_attempt_id` VARCHAR(45) NOT NULL,
-  `nodeid` VARCHAR(255) NULL,
+  `nodeid` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`application_attempt_id`, `nodeid`),
   CONSTRAINT `nodeid`
     FOREIGN KEY (`nodeid`)
@@ -657,7 +657,7 @@ delimiter $$
 
 CREATE TABLE `yarn_rmcontainer` (
   `containerid_id` VARCHAR(45) NOT NULL,
-  `appattemptid_id` VARCHAR(45) NULL,
+  `appattemptid_id` VARCHAR(45) NOT NULL,
   `nodeid_id` VARCHAR(255) NULL,
   `user` VARCHAR(45) NULL,
   `starttime` BIGINT NULL,
