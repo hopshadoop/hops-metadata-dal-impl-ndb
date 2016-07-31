@@ -409,14 +409,8 @@ CREATE TABLE `yarn_applicationattemptstate` (
   `applicationattempttokens` VARBINARY(500) NULL,
   `applicationattempttrakingurl` VARCHAR(120) NULL,
   PRIMARY KEY (`applicationid`, `applicationattemptid`),
-  INDEX `applicationid` (`applicationid` ASC),
-  CONSTRAINT `applicationid`
-  FOREIGN KEY (`applicationid`)
-  REFERENCES `yarn_applicationstate` (`applicationid`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION
+  INDEX `applicationid` (`applicationid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`applicationid`)$$
-
 
 delimiter $$
 
@@ -513,12 +507,7 @@ CREATE TABLE `yarn_node` (
   `parent` VARCHAR(255) NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`nodeid`),
-  INDEX `name` (`name` ASC, `location` ASC),
-  CONSTRAINT `nodeid`
-  FOREIGN KEY (`nodeid`)
-  REFERENCES `yarn_rmnode` (`rmnodeid`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION
+  INDEX `name` (`name` ASC, `location` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(nodeid) $$
 
 
@@ -549,12 +538,7 @@ CREATE TABLE `yarn_updatedcontainerinfo` (
   `updatedcontainerinfoid` INT NOT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`, `containerid`, `updatedcontainerinfoid`),
-  INDEX `containerid` (`containerid` ASC),
-  CONSTRAINT `rmnodeid`
-  FOREIGN KEY (`rmnodeid`)
-  REFERENCES `yarn_rmnode` (`rmnodeid`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION
+  INDEX `containerid` (`containerid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`rmnodeid`)$$
 
 
@@ -569,12 +553,7 @@ CREATE TABLE `yarn_containerstatus` (
   `exitstatus` INT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`containerid`, `rmnodeid`, `type`),
-  INDEX `rmnodeid_idx` (`rmnodeid` ASC),
-  CONSTRAINT `rmnodeid`
-  FOREIGN KEY (`rmnodeid`)
-  REFERENCES `yarn_rmnode` (`rmnodeid`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION
+  INDEX `rmnodeid_idx` (`rmnodeid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`rmnodeid`)$$
 
 
@@ -588,12 +567,7 @@ CREATE TABLE `yarn_justlaunchedcontainers` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `containerid` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`containerid`, `rmnodeid`),
-  INDEX `rmnodeid_idx` (`rmnodeid` ASC),
-  CONSTRAINT `rmnodeid`
-    FOREIGN KEY (`rmnodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  INDEX `rmnodeid_idx` (`rmnodeid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`rmnodeid`)$$
 
 delimiter $$
@@ -601,12 +575,7 @@ delimiter $$
 CREATE TABLE `yarn_latestnodehbresponse` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `response` VARBINARY(13500) NULL,
-  PRIMARY KEY (`rmnodeid`),
-  CONSTRAINT `rmnodeid`
-    FOREIGN KEY (`rmnodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  PRIMARY KEY (`rmnodeid`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(rmnodeid) $$
 
 delimiter $$
@@ -614,12 +583,7 @@ delimiter $$
 CREATE TABLE `yarn_updated_node` (
   `applicationid` VARCHAR(45) NOT NULL,
   `nodeid` VARCHAR(255) NULL,
-  PRIMARY KEY (`applicationid`, `nodeid`),
-  CONSTRAINT `nodeid`
-    FOREIGN KEY (`nodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  PRIMARY KEY (`applicationid`, `nodeid`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(applicationid) $$
 
 delimiter $$
@@ -627,12 +591,7 @@ delimiter $$
 CREATE TABLE `yarn_ran_node` (
   `application_attempt_id` VARCHAR(45) NOT NULL,
   `nodeid` VARCHAR(255) NULL,
-  PRIMARY KEY (`application_attempt_id`, `nodeid`),
-  CONSTRAINT `nodeid`
-    FOREIGN KEY (`nodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  PRIMARY KEY (`application_attempt_id`, `nodeid`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(application_attempt_id) $$
 
 delimiter $$
@@ -642,12 +601,7 @@ CREATE TABLE `yarn_containerid_toclean` (
   `containerid` VARCHAR(45) NOT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`, `containerid`),
-  INDEX `rmnodeId` (`containerid` ASC),
-  CONSTRAINT `rmnodeid`
-    FOREIGN KEY (`rmnodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  INDEX `rmnodeId` (`containerid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(rmnodeid) $$
 
 
@@ -679,12 +633,7 @@ CREATE TABLE `yarn_launchedcontainers` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `containerid_id` VARCHAR(45) NOT NULL,
   `rmcontainer_id` VARCHAR(45) NULL,
-  PRIMARY KEY (`rmnodeid`, `containerid_id`),
-  CONSTRAINT `rmnodeid`
-    FOREIGN KEY (`rmnodeid`)
-    REFERENCES `yarn_ficascheduler_node` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  PRIMARY KEY (`rmnodeid`, `containerid_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(containerid_id)$$
 
 
@@ -695,12 +644,7 @@ CREATE TABLE `yarn_rmnode_finishedapplications` (
   `applicationid` VARCHAR(45) NOT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`, `applicationid`),
-  INDEX `index2` (`rmnodeid` ASC),
-  CONSTRAINT `rmnodeid`
-    FOREIGN KEY (`rmnodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  INDEX `index2` (`rmnodeid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(applicationid) $$
 
 
@@ -729,12 +673,7 @@ CREATE TABLE `yarn_appschedulinginfo` (
   `username` varchar(150) NULL,
   `projectname` varchar(100) NULL,
   PRIMARY KEY (`applicationattemptid`),
-  INDEX `appid_idx` (`appid` ASC),
-  CONSTRAINT `appid`
-    FOREIGN KEY (`appid`)
-    REFERENCES `yarn_schedulerapplication` (`appid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  INDEX `appid_idx` (`appid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(applicationattemptid)$$
 
 
@@ -778,13 +717,8 @@ delimiter $$
 
 CREATE TABLE `yarn_appschedulinginfo_blacklist` (
   `applicationattemptid` VARCHAR(45) NOT NULL,
-  `blacklisted` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`applicationattemptid`, `blacklisted`),
-  CONSTRAINT `applicationattemptid`
-    FOREIGN KEY (`applicationattemptid`)
-    REFERENCES `yarn_appschedulinginfo` (`applicationattemptid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  `blacklisted` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`applicationattemptid`, `blacklisted`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
 
 
@@ -863,48 +797,24 @@ delimiter $$
 
 CREATE TABLE `yarn_allocated_containers` (
   `applicationattemptid` VARCHAR(45) NOT NULL,
- `containerid` VARCHAR(45) NOT NULL,
- `responseid` INT NOT NULL,
+  `containerid` VARCHAR(45) NOT NULL,
+  `responseid` INT NOT NULL,
 PRIMARY KEY (`applicationattemptid`, `containerid`,`responseid`),
 INDEX `applicationattemptid` (`applicationattemptid` ASC),
-INDEX `responseid` (`responseid` ASC),
-CONSTRAINT `appandresponseid`
-    FOREIGN KEY (`applicationattemptid`)
-    REFERENCES `yarn_allocate_response` (`applicationattemptid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+INDEX `responseid` (`responseid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(applicationattemptid)$$
 
 delimiter $$
 
 CREATE TABLE `yarn_completed_containers_status` (
   `applicationattemptid` VARCHAR(45) NOT NULL,
- `containerid` VARCHAR(45) NOT NULL,
- `responseid` INT NOT NULL,
- `status` varbinary(1000),
+  `containerid` VARCHAR(45) NOT NULL,
+  `responseid` INT NOT NULL,
+  `status` varbinary(1000),
 PRIMARY KEY (`applicationattemptid`, `containerid`,`responseid`),
 INDEX `applicationattemptid` (`applicationattemptid` ASC),
-INDEX `responseid` (`responseid` ASC),
-CONSTRAINT `appandresponseid`
-    FOREIGN KEY (`applicationattemptid`)
-    REFERENCES `yarn_allocate_response` (`applicationattemptid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+INDEX `responseid` (`responseid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(responseid)$$
-
-delimiter $$
-
-CREATE TABLE `yarn_allocated_nmtokens` (
-  `applicationattemptid` VARCHAR(45) NOT NULL,
- `nmtoken` VARBINARY(1000) NOT NULL,
-  `responseid` INT NOT NULL,
-PRIMARY KEY (`applicationattemptid`, `nmtoken`,`responseid`),
-CONSTRAINT `applicationattemptid`
-    FOREIGN KEY (`applicationattemptid`)
-    REFERENCES `yarn_allocate_response` (`applicationattemptid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(applicationattemptid)$$
 
 delimiter $$
 
@@ -920,12 +830,7 @@ CREATE TABLE `yarn_nextheartbeat` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `nextheartbeat` INT NULL,
   `pendingeventid` INT,
-  PRIMARY KEY (`rmnodeid`),
-  CONSTRAINT `rmnodeid`
-    FOREIGN KEY (`rmnodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  PRIMARY KEY (`rmnodeid`)
 )ENGINE = ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(rmnodeid)$$
 
 delimiter $$

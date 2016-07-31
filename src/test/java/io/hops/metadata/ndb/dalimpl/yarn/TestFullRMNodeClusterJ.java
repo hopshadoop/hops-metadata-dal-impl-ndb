@@ -18,65 +18,21 @@
  */
 package io.hops.metadata.ndb.dalimpl.yarn;
 
-import io.hops.StorageConnector;
 import io.hops.exception.StorageException;
-import io.hops.metadata.ndb.NdbStorageFactory;
 import io.hops.metadata.yarn.TablesDef;
-import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
-import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
-import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
-import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
-import io.hops.metadata.yarn.dal.JustLaunchedContainersDataAccess;
-import io.hops.metadata.yarn.dal.NodeDataAccess;
-import io.hops.metadata.yarn.dal.NodeHBResponseDataAccess;
-import io.hops.metadata.yarn.dal.RMNodeDataAccess;
-import io.hops.metadata.yarn.dal.ResourceDataAccess;
-import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
+import io.hops.metadata.yarn.dal.*;
 import io.hops.metadata.yarn.dal.util.YARNOperationType;
-import io.hops.metadata.yarn.entity.ContainerId;
-import io.hops.metadata.yarn.entity.ContainerStatus;
-import io.hops.metadata.yarn.entity.FinishedApplications;
-import io.hops.metadata.yarn.entity.JustLaunchedContainers;
-import io.hops.metadata.yarn.entity.Node;
-import io.hops.metadata.yarn.entity.NodeHBResponse;
-import io.hops.metadata.yarn.entity.RMNode;
-import io.hops.metadata.yarn.entity.RMNodeComps;
-import io.hops.metadata.yarn.entity.Resource;
-import io.hops.metadata.yarn.entity.UpdatedContainerInfo;
+import io.hops.metadata.yarn.entity.*;
 import io.hops.transaction.handler.LightWeightRequestHandler;
-import io.hops.transaction.handler.RequestHandler;
 import junit.framework.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
-public class TestFullRMNodeClusterJ {
+public class TestFullRMNodeClusterJ extends NDBBaseTest {
 
-  NdbStorageFactory storageFactory = new NdbStorageFactory();
-  StorageConnector connector = storageFactory.getConnector();
   private final int DEFAULT_PENDIND_ID = 0;
-
-  @Before
-  public void setup() throws IOException {
-    storageFactory.setConfiguration(getMetadataClusterConfiguration());
-    RequestHandler.setStorageConnector(connector);
-    LightWeightRequestHandler setRMDTMasterKeyHandler
-            = new LightWeightRequestHandler(YARNOperationType.TEST) {
-              @Override
-              public Object performTask() throws IOException {
-                connector.formatStorage();
-
-                return null;
-              }
-            };
-    setRMDTMasterKeyHandler.handle();
-  }
 
   @Test
   public void testFindByNodeId() throws StorageException, IOException {
@@ -204,26 +160,13 @@ public class TestFullRMNodeClusterJ {
     fillDB.handle();
 
     //get the RMNode
-    LightWeightRequestHandler getHopRMNode
-            = new LightWeightRequestHandler(YARNOperationType.TEST) {
-              @Override
-              public Object performTask() throws StorageException {
-                connector.beginTransaction();
-                connector.writeLock();
-                FullRMNodeDataAccess fullRMNodeDA
-                = (FullRMNodeDataAccess) storageFactory.
-                getDataAccess(FullRMNodeDataAccess.class);
-                RMNodeComps hopRMNodeFull = (RMNodeComps) fullRMNodeDA.
-                findByNodeId("70");
-                connector.commit();
-                return hopRMNodeFull;
-              }
-            };
+    LightWeightRequestHandler getHopRMNode =
+            new QueryFullRMNode(YARNOperationType.TEST, "70");
 
     RMNodeComps hopRMNodeFull = (RMNodeComps) getHopRMNode.handle();
 
     //check if the fetched RMNode is correct
-    RMNode rmNodeFinal = hopRMNodeFull.getHopRMNode();
+    final RMNode rmNodeFinal = hopRMNodeFull.getHopRMNode();
     Assert.assertTrue(rmNodeFinal.getNodeId().equals(hopRMNodeOrigin.
             getNodeId()));
     Assert.assertTrue(rmNodeFinal.getCurrentState().equals(hopRMNodeOrigin.
@@ -305,15 +248,76 @@ public class TestFullRMNodeClusterJ {
       }
       Assert.assertTrue(flag);
     }
+
+    // Removing RMNode should cascade the removal of all other entries as well
+    LightWeightRequestHandler removeRMNode = new LightWeightRequestHandler(YARNOperationType.TEST) {
+      @Override
+      public Object performTask() throws IOException {
+        connector.beginTransaction();
+        connector.writeLock();
+
+        RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess)
+                storageFactory.getDataAccess(RMNodeDataAccess.class);
+        List<RMNode> toBeRemoved = new ArrayList<RMNode>();
+        toBeRemoved.add(rmNodeFinal);
+        rmNodeDAO.removeAll(toBeRemoved);
+        connector.commit();
+
+        return null;
+      }
+    };
+    removeRMNode.handle();
+
+    // Add just an RMNode so we can search for it
+    LightWeightRequestHandler populate = new LightWeightRequestHandler(YARNOperationType.TEST) {
+      @Override
+      public Object performTask() throws IOException {
+        connector.beginTransaction();
+        connector.writeLock();
+        RMNodeDataAccess rmNodeDAO = (RMNodeDataAccess)
+                storageFactory.getDataAccess(RMNodeDataAccess.class);
+        rmNodeDAO.add(hopRMNodeOrigin);
+        connector.commit();
+
+        return null;
+      }
+    };
+    populate.handle();
+
+    // Fetch again the deleted RMNode and its components
+    hopRMNodeFull = (RMNodeComps) getHopRMNode.handle();
+    // Node#id is set explicitly to RMNode.id, thus it's never null
+    Assert.assertNull("HopNode name should not exist (null)", hopRMNodeFull.getHopNode().getName());
+    Assert.assertNull("NodeHBResponse response should be null", hopRMNodeFull.getHopNodeHBResponse());
+    Assert.assertNull("justlaunchedcontainers should be null", hopRMNodeFull.getHopJustLaunchedContainers());
+    Assert.assertNull("updatedcontainerinfo should be null", hopRMNodeFull.getHopUpdatedContainerInfo());
+    Assert.assertNull("containeridtoclean should be null", hopRMNodeFull.getHopContainerIdsToClean());
+    Assert.assertNull("finishedapplications should be null", hopRMNodeFull.getHopFinishedApplications());
+    Assert.assertTrue("containerstatus should not exist", hopRMNodeFull.getHopContainersStatus().isEmpty());
+    // That's weird!
+    Assert.assertEquals("nextheartbeat#pendingeventid should be zero", 0,
+            hopRMNodeFull.getHopNextHeartbeat().getPendingEventId());
   }
 
-  private Properties getMetadataClusterConfiguration()
-          throws IOException {
-    String configFile = "ndb-config.properties";
-    Properties clusterConf = new Properties();
-    InputStream inStream = StorageConnector.class.getClassLoader().
-            getResourceAsStream(configFile);
-    clusterConf.load(inStream);
-    return clusterConf;
+  private class QueryFullRMNode extends LightWeightRequestHandler {
+    private final String rmNodeId;
+
+    public QueryFullRMNode(OperationType opType, String rmNodeId) {
+      super(opType);
+      this.rmNodeId = rmNodeId;
+    }
+
+    @Override
+    public Object performTask() throws IOException {
+      connector.beginTransaction();
+      connector.writeLock();
+      FullRMNodeDataAccess fullRMNodeDA
+              = (FullRMNodeDataAccess) storageFactory.
+              getDataAccess(FullRMNodeDataAccess.class);
+      RMNodeComps hopRMNodeFull = (RMNodeComps) fullRMNodeDA.
+              findByNodeId(rmNodeId);
+      connector.commit();
+      return hopRMNodeFull;
+    }
   }
 }

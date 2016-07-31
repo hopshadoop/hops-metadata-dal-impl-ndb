@@ -111,6 +111,24 @@ public class NodeHBResponseClusterJ implements TablesDef.NodeHBResponseTableDef,
     session.release(toPersist);
   }
 
+  public void removeAllByRMNodeId(List<String> rmNodeIds) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    List<NodeHBResponseDTO> toBeRemoved = new ArrayList<NodeHBResponseDTO>();
+    NodeHBResponseDTO tmpHBResponse = null;
+
+    for (String rmNodeId : rmNodeIds) {
+      tmpHBResponse = session.find(NodeHBResponseDTO.class, rmNodeId);
+      if (tmpHBResponse != null) {
+        toBeRemoved.add(tmpHBResponse);
+      }
+    }
+
+    if (!toBeRemoved.isEmpty()) {
+      session.deletePersistentAll(toBeRemoved);
+      session.release(toBeRemoved);
+    }
+  }
+
   public static NodeHBResponse createHopNodeHBResponse(
       NodeHBResponseDTO nodeHBresponseDTO) throws StorageException {
     if (nodeHBresponseDTO.getresponse() == null) {

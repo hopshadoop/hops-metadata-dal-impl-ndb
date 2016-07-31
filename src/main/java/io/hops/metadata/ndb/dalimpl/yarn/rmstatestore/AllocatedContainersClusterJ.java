@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import io.hops.metadata.yarn.entity.rmstatestore.ApplicationAttemptState;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -95,6 +97,30 @@ public static final Log LOG = LogFactory.getLog(AllocatedContainersClusterJ.clas
       double avgt3 = tt3 / nbPersist;
       LOG.info("allocated containers update avg time: " + avgt1 + ", " + avgt2
               + ", " + avgt3);
+    }
+  }
+
+  @Override
+  public void removeAll(Collection<AllocateResponse> entries) throws
+          StorageException {
+    if (entries.isEmpty()) {
+      return;
+    }
+
+    HopsSession session = connector.obtainSession();
+    List<AllocatedContainerDTO> toRemove =
+            new ArrayList<AllocatedContainerDTO>();
+    for (AllocateResponse hop : entries) {
+      List<AllocatedContainerDTO> pers =
+              createPersistable(hop, session);
+      if (!pers.isEmpty()) {
+        toRemove.addAll(pers);
+      }
+    }
+
+    if (!toRemove.isEmpty()) {
+      session.deletePersistentAll(toRemove);
+      session.release(toRemove);
     }
   }
 

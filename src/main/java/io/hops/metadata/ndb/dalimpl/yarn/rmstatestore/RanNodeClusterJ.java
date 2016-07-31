@@ -10,10 +10,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.wrapper.*;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.rmstatestore.RanNodeDataAccess;
 import io.hops.metadata.yarn.entity.rmstatestore.RanNode;
@@ -73,7 +70,34 @@ public class RanNodeClusterJ implements
     session.release(queryResults);
     return result;
   }
-  
+
+  public void removeAllByRMNodeId(List<String> rmNodesId) throws StorageException {
+    List<RanNodeDTO> toBeRemoved = new ArrayList<RanNodeDTO>();
+    List<RanNodeDTO> ranNodesRemove = null;
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder queryBuilder = session.getQueryBuilder();
+
+    HopsQueryDomainType<RanNodeDTO> dto =
+            queryBuilder.createQueryDefinition(RanNodeDTO.class);
+
+    HopsPredicate pred = dto.get(NODEID).equal(dto.param(NODEID));
+    dto.where(pred);
+    HopsQuery<RanNodeDTO> query = session.createQuery(dto);
+
+    for (String rmNodeId : rmNodesId) {
+      query.setParameter(NODEID, rmNodeId);
+      ranNodesRemove = query.getResultList();
+
+      if (!ranNodesRemove.isEmpty()) {
+        toBeRemoved.addAll(ranNodesRemove);
+      }
+    }
+
+    if (!toBeRemoved.isEmpty()) {
+      session.deletePersistentAll(toBeRemoved);
+      session.release(toBeRemoved);
+    }
+  }
   
   private RanNodeDTO createPersistable(RanNode hop,
           HopsSession session) throws StorageException {
