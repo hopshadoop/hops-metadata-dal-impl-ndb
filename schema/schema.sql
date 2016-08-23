@@ -477,7 +477,6 @@ CREATE TABLE `yarn_rmnode` (
   `httpport` INT NULL,
   `nodeaddress` VARCHAR(255) NULL,
   `httpaddress` VARCHAR(255) NULL,
-  `nodeid` VARCHAR(255) NULL,
   `healthreport` VARCHAR(500) NULL,
   `lasthealthreporttime` BIGINT NULL,
   `currentstate` VARCHAR(45) NULL,
