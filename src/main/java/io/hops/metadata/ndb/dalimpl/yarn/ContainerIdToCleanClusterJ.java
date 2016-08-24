@@ -64,13 +64,8 @@ public class ContainerIdToCleanClusterJ implements
 
     void setcontainerid(String containerid);
     
-    @Column(name = PENDING_EVENT_ID)
-    int getpendingeventid();
-
-    void setpendingeventid(int pendingeventid);
-    
   }
-
+  
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
 
   @Override
@@ -130,6 +125,16 @@ public class ContainerIdToCleanClusterJ implements
   }
   
   @Override
+  public void add(ContainerId container)
+      throws StorageException {
+    HopsSession session = connector.obtainSession();
+    ContainerIdToCleanDTO toPersist = createPersistable(container, session);
+    
+    session.savePersistent(toPersist);
+    session.release(toPersist);
+  }
+  
+  @Override
   public void removeAll(Collection<ContainerId> containers)
       throws StorageException {
     HopsSession session = connector.obtainSession();
@@ -149,13 +154,13 @@ public class ContainerIdToCleanClusterJ implements
     //Set values to persist new ContainerStatus
     dto.setrmnodeid(hop.getRmnodeid());
     dto.setcontainerid(hop.getContainerId());
-    dto.setpendingeventid(hop.getPendingEventId());
+
     return dto;
   }
 
   private ContainerId createHopContainerIdToClean(ContainerIdToCleanDTO dto) {
     ContainerId hop = new ContainerId(dto.getrmnodeid(), dto.
-        getcontainerid(),dto.getpendingeventid());
+        getcontainerid());
     return hop;
   }
 

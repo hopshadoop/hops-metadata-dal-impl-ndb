@@ -475,13 +475,10 @@ CREATE TABLE `yarn_rmnode` (
   `hostname` VARCHAR(255) NULL,
   `commandport` INT NULL,
   `httpport` INT NULL,
-  `nodeaddress` VARCHAR(255) NULL,
-  `httpaddress` VARCHAR(255) NULL,
   `nodeid` VARCHAR(255) NULL,
   `healthreport` VARCHAR(500) NULL,
   `lasthealthreporttime` BIGINT NULL,
   `currentstate` VARCHAR(45) NULL,
-  `overcommittimeout` INT NULL,
   `nodemanager_version` VARCHAR(45) NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`))
@@ -493,8 +490,6 @@ delimiter $$
 
 CREATE TABLE `yarn_resource` (
   `id` VARCHAR(255) NOT NULL,
-  `type` INT NOT NULL,
-  `parent` INT NOT NULL,
   `memory` INT NULL,
   `virtualcores` INT NULL,
   `pendingeventid` INT,
@@ -640,7 +635,6 @@ delimiter $$
 CREATE TABLE `yarn_containerid_toclean` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `containerid` VARCHAR(45) NOT NULL,
-  `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`, `containerid`),
   INDEX `rmnodeId` (`containerid` ASC),
   CONSTRAINT `rmnodeid`
@@ -693,7 +687,6 @@ delimiter $$
 CREATE TABLE `yarn_rmnode_finishedapplications` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `applicationid` VARCHAR(45) NOT NULL,
-  `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`, `applicationid`),
   INDEX `index2` (`rmnodeid` ASC),
   CONSTRAINT `rmnodeid`
@@ -933,9 +926,8 @@ delimiter $$
 CREATE TABLE `yarn_pendingevents` (
   `id` INT NOT NULL,
   `rmnodeid` VARCHAR(255) NOT NULL,
-  `type` INT NULL,
-  `status` INT NULL,
-  `last_hb` INT NULL,
+  `type`  VARCHAR(255) NULL,
+  `status` VARCHAR(255) NULL,
   PRIMARY KEY (`id`, `rmnodeid`))
 ENGINE = ndbcluster DEFAULT CHARSET=latin1$$
 delimiter $$

@@ -62,11 +62,6 @@ public class FinishedApplicationsClusterJ
 
     void setapplicationid(String applicationid);
     
-    @Column(name = PENDING_EVENT_ID)
-    int getpendingeventid();
-
-    void setpendingeventid(int pendingeventid);
-    
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -129,6 +124,16 @@ public class FinishedApplicationsClusterJ
   }
 
   @Override
+  public void add(FinishedApplications application)
+      throws StorageException {
+    HopsSession session = connector.obtainSession();
+    FinishedApplicationsDTO toPersist = createPersistable(application, session);
+    session.savePersistent(toPersist);
+    
+    session.release(toPersist);
+  }
+  
+  @Override
   public void removeAll(Collection<FinishedApplications> applications)
       throws StorageException {
     HopsSession session = connector.obtainSession();
@@ -144,8 +149,7 @@ public class FinishedApplicationsClusterJ
 
   private FinishedApplications createHopFinishedApplications(
           FinishedApplicationsDTO dto) {
-    return new FinishedApplications(dto.getrmnodeid(), dto.getapplicationid(),
-            dto.getpendingeventid());
+    return new FinishedApplications(dto.getrmnodeid(), dto.getapplicationid());
   }
 
   private FinishedApplicationsDTO createPersistable(FinishedApplications hop,
@@ -154,7 +158,6 @@ public class FinishedApplicationsClusterJ
         session.newInstance(FinishedApplicationsDTO.class);
     dto.setrmnodeid(hop.getRMNodeID());
     dto.setapplicationid(hop.getApplicationId());
-    dto.setpendingeventid(hop.getPendingEventId());
     return dto;
   }
 

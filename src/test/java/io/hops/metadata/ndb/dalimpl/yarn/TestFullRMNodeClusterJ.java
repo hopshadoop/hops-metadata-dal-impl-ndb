@@ -83,16 +83,15 @@ public class TestFullRMNodeClusterJ {
     //TODO: Add test for nextheartbeat
     //fill the database with a RMNode
     final RMNode hopRMNodeOrigin
-            = new RMNode("70", "rmnode70", 9999, 9876, "127.0.0.1",
-                    "hop.sics.se",
-                    "life is good ", -10L, "relax", "hayarn", 10, 0);
+            = new RMNode("70", "rmnode70", 9999, 9876, 
+                    "life is good ", -10L, "relax", "hayarn", 0);
     final Node hopNodeOrigin
             = new Node("70", "rmnode70", "ici", 1000, "papa", 0);
     final List<NodeHBResponse> hopNHBROrigin = new ArrayList<NodeHBResponse>();
     hopNHBROrigin.add(new NodeHBResponse("70", new byte[]{new Integer(1).
       byteValue()}));
     final Resource hopResourceOrigin
-            = new Resource("70", Resource.TOTAL_CAPABILITY, Resource.RMNODE, 1,
+            = new Resource("70", 1,
                     100, 0);
 
     final List<JustLaunchedContainers> hopJustLaunchedContainers
@@ -109,13 +108,13 @@ public class TestFullRMNodeClusterJ {
             DEFAULT_PENDIND_ID));
 
     final List<ContainerId> hopContainerIds = new ArrayList<ContainerId>();
-    hopContainerIds.add(new ContainerId("70", "container5", 0));
-    hopContainerIds.add(new ContainerId("70", "container6", 0));
+    hopContainerIds.add(new ContainerId("70", "container5"));
+    hopContainerIds.add(new ContainerId("70", "container6"));
 
     final List<FinishedApplications> hopFinishedApps
             = new ArrayList<FinishedApplications>();
-    hopFinishedApps.add(new FinishedApplications("70", "app1", 0));
-    hopFinishedApps.add(new FinishedApplications("70", "app2", 0));
+    hopFinishedApps.add(new FinishedApplications("70", "app1"));
+    hopFinishedApps.add(new FinishedApplications("70", "app2"));
 
     final List<ContainerStatus> hopContainersStatus
             = new ArrayList<ContainerStatus>();
@@ -237,8 +236,7 @@ public class TestFullRMNodeClusterJ {
             getResponse()[0]));
 
     Resource resourceFinal = hopRMNodeFull.getHopResource();
-    Assert.assertTrue(resourceFinal.getParent() == hopResourceOrigin.
-            getParent());
+    Assert.assertTrue(resourceFinal.getId().equals(hopResourceOrigin.getId()));
 
 
     List<UpdatedContainerInfo> hopUpdatedContainersFinal
