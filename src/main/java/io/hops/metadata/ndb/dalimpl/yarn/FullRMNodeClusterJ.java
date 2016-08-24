@@ -76,11 +76,6 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
         .newInstance(NextHeartbeatClusterJ.NextHeartbeatDTO.class, nodeId);
     nextHBDTO = session.load(nextHBDTO);
     components.add(nextHBDTO);
-
-    NodeClusterJ.NodeDTO nodeDTO =
-        session.newInstance(NodeClusterJ.NodeDTO.class, nodeId);
-    nodeDTO = session.load(nodeDTO);
-    components.add(nodeDTO);
  
     NodeHBResponseClusterJ.NodeHBResponseDTO nodeHBResponseDTO = session.
             newInstance(NodeHBResponseClusterJ.NodeHBResponseDTO.class, nodeId);
@@ -110,7 +105,6 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
     session.flush();
     
     RMNode hopRMNode = null;
-    Node hopNode = null;
     NodeHBResponse hopNodeHBResponse = null;
     NextHeartbeat hopNextHeartbeat = null;
       
@@ -125,14 +119,10 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
           session.release(components);
           session.release(containerStatusDTOs);
           session.release(nextHBDTO);
-          session.release(nodeDTO);
           session.release(nodeHBResponseDTO);
           session.release(rmnodeDTO);
           return null;
         }
-      } else if (comp instanceof NodeClusterJ.NodeDTO) {
-        hopNode = NodeClusterJ.
-                createHopNode((NodeClusterJ.NodeDTO) comp);
       } else if (comp instanceof NodeHBResponseClusterJ.NodeHBResponseDTO) {
         hopNodeHBResponse = NodeHBResponseClusterJ.
                 createHopNodeHBResponse(
@@ -150,7 +140,7 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
     }else if(hopRMNode !=null){
       rmNodeId = hopRMNode.getNodeId();
     }
-    RMNodeComps result = new RMNodeComps(hopRMNode, hopNextHeartbeat, hopNode,
+    RMNodeComps result = new RMNodeComps(hopRMNode, hopNextHeartbeat,
         hopNodeHBResponse, hopResource, hopPendingEvent,
         hopUpdatedContainerInfo, hopContainerIdsToClean,
         hopFinishedApplications,
@@ -158,7 +148,6 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
     session.release(components);
     session.release(containerStatusDTOs);
     session.release(nextHBDTO);
-    session.release(nodeDTO);
     session.release(nodeHBResponseDTO);
     session.release(rmnodeDTO);
     return result;

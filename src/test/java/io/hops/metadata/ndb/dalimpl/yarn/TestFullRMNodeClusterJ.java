@@ -228,9 +228,6 @@ public class TestFullRMNodeClusterJ {
     Assert.assertTrue(rmNodeFinal.getCurrentState().equals(hopRMNodeOrigin.
             getCurrentState()));
 
-    Node nodeFinal = hopRMNodeFull.getHopNode();
-    Assert.assertTrue(nodeFinal.getLevel() == hopNodeOrigin.getLevel());
-
     NodeHBResponse nodeHBRFinal = hopRMNodeFull.getHopNodeHBResponse();
     Assert.assertTrue(nodeHBRFinal.getResponse()[0] == (hopNHBROrigin.get(0).
             getResponse()[0]));
