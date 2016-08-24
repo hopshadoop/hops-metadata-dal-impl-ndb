@@ -59,9 +59,7 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
     HopsSession session = connector.obtainSession();
     List<UpdatedContainerInfo> hopUpdatedContainerInfo
             = updatedContainerDA.findByRMNodeList(nodeId);
-    Resource hopResource = resourceDA.findEntry(nodeId,
-            Resource.TOTAL_CAPABILITY,
-            Resource.RMNODE);
+    Resource hopResource = resourceDA.findEntry(nodeId);
     List<ContainerId> hopContainerIdsToClean = containerToCleanDA.
             findByRMNode(nodeId);
 

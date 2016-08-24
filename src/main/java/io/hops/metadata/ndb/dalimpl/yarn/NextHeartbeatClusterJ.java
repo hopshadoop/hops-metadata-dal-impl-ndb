@@ -118,6 +118,22 @@ public class NextHeartbeatClusterJ
     session.release(toRemove);
   }
 
+  @Override
+  public void update(NextHeartbeat toUpdate)
+          throws StorageException {
+    HopsSession session = connector.obtainSession();
+
+    NextHeartbeatDTO hbDTO = createPersistable(toUpdate,
+            session);
+
+    if (toUpdate.isNextheartbeat()) {
+      session.savePersistent(hbDTO);
+    } else {
+      session.deletePersistent(hbDTO);
+    }
+    session.release(hbDTO);
+  }
+  
   private NextHeartbeatDTO createPersistable(NextHeartbeat hopNextHeartbeat,
           HopsSession session) throws StorageException {
     NextHeartbeatDTO DTO = session.newInstance(NextHeartbeatDTO.class);

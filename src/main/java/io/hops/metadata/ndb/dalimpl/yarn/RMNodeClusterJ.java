@@ -72,16 +72,6 @@ public class RMNodeClusterJ
 
     void setHttpport(int httpport);
 
-    @Column(name = NODE_ADDRESS)
-    String getNodeaddress();
-
-    void setNodeaddress(String nodeAddress);
-
-    @Column(name = HTTP_ADDRESS)
-    String getHttpaddress();
-
-    void setHttpaddress(String httpAddress);
-
     @Column(name = HEALTH_REPORT)
     String getHealthreport();
 
@@ -96,11 +86,6 @@ public class RMNodeClusterJ
     String getcurrentstate();
 
     void setcurrentstate(String currentstate);
-
-    @Column(name = OVERCOMMIT_TIMEOUT)
-    int getovercommittimeout();
-
-    void setovercommittimeout(int overcommittimeout);
 
     @Column(name = NODEMANAGER_VERSION)
     String getnodemanagerversion();
@@ -198,12 +183,9 @@ public class RMNodeClusterJ
     rmDTO.setHostname(hopRMNode.getHostName());
     rmDTO.setCommandport(hopRMNode.getCommandPort());
     rmDTO.setHttpport(hopRMNode.getHttpPort());
-    rmDTO.setNodeaddress(hopRMNode.getNodeAddress());
-    rmDTO.setHttpaddress(hopRMNode.getHttpAddress());
     rmDTO.setHealthreport(hopRMNode.getHealthReport());
     rmDTO.setLasthealthreporttime(hopRMNode.getLastHealthReportTime());
     rmDTO.setcurrentstate(hopRMNode.getCurrentState());
-    rmDTO.setovercommittimeout(hopRMNode.getOvercommittimeout());
     rmDTO.setnodemanagerversion(hopRMNode.getNodemanagerVersion());
     rmDTO.setpendingeventid(hopRMNode.getPendingEventId());
     return rmDTO;
@@ -217,10 +199,8 @@ public class RMNodeClusterJ
    */
   public static RMNode createHopRMNode(RMNodeDTO rmDTO) {
     return new RMNode(rmDTO.getNodeid(), rmDTO.getHostname(),
-            rmDTO.getCommandport(), rmDTO.getHttpport(), rmDTO.getNodeaddress(),
-            rmDTO.getHttpaddress(), rmDTO.getHealthreport(),
+            rmDTO.getCommandport(), rmDTO.getHttpport(), rmDTO.getHealthreport(),
             rmDTO.getLasthealthreporttime(), rmDTO.getcurrentstate(),
-            rmDTO.getnodemanagerversion(), rmDTO.getovercommittimeout(), rmDTO.
-            getpendingeventid());
+            rmDTO.getnodemanagerversion(), rmDTO.getpendingeventid());
   }
 }

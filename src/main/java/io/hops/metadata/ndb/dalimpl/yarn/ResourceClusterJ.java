@@ -53,16 +53,6 @@ public class ResourceClusterJ
 
     void setId(String id);
 
-    @Column(name = TYPE)
-    int getType();
-
-    void setType(int type);
-
-    @Column(name = PARENT)
-    int getParent();
-
-    void setParent(int parent);
-
     @Column(name = MEMORY)
     int getMemory();
 
@@ -83,15 +73,13 @@ public class ResourceClusterJ
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
 
   @Override
-  public Resource findEntry(String id, int type, int parent)
+  public Resource findEntry(String id)
       throws StorageException {
     LOG.debug("HOP :: ClusterJ Resource.findEntry - START:" + id);
     HopsSession session = connector.obtainSession();
     ResourceDTO resourceDTO;
     Object[] pk = new Object[3];
     pk[0] = id;
-    pk[1] = type;
-    pk[2] = parent;
     resourceDTO = session.find(ResourceDTO.class, pk);
     LOG.debug("HOP :: ClusterJ Resource.findEntry - FINISH:" + id);
     Resource result = null;
@@ -103,7 +91,7 @@ public class ResourceClusterJ
   }
 
   @Override
-  public Map<String, Map<Integer, Map<Integer, Resource>>> getAll()
+  public Map<String, Resource> getAll()
       throws StorageException {
     LOG.debug("HOP :: ClusterJ Resource.getAll - START");
     HopsSession session = connector.obtainSession();
@@ -115,7 +103,7 @@ public class ResourceClusterJ
     List<ResourceDTO> queryResults = query.
         getResultList();
     LOG.debug("HOP :: ClusterJ Resource.getAll - FINISH");
-    Map<String,Map<Integer, Map<Integer, Resource>>> result = createMap(queryResults);
+    Map<String, Resource> result = createMap(queryResults);
     session.release(queryResults);
     return result;
   }
@@ -139,8 +127,6 @@ public class ResourceClusterJ
     for (Resource req : toRemove) {
       Object[] pk = new Object[3];
       pk[0] = req.getId();
-      pk[1] = req.getType();
-      pk[2] = req.getParent();
       toPersist.add(session.newInstance(ResourceDTO.class, pk));
     }
     session.deletePersistentAll(toPersist);
@@ -160,8 +146,7 @@ public class ResourceClusterJ
       return null;
 
     }
-    return new Resource(resourceDTO.getId(), resourceDTO.getType(),
-        resourceDTO.getParent(), resourceDTO.getMemory(), resourceDTO.
+    return new Resource(resourceDTO.getId(), resourceDTO.getMemory(), resourceDTO.
         getVirtualcores(),resourceDTO.getpendingeventid());
   }
 
@@ -169,28 +154,19 @@ public class ResourceClusterJ
       throws StorageException {
     ResourceDTO resourceDTO = session.newInstance(ResourceDTO.class);
     resourceDTO.setId(resource.getId());
-    resourceDTO.setType(resource.getType());
-    resourceDTO.setParent(resource.getParent());
     resourceDTO.setMemory(resource.getMemory());
     resourceDTO.setVirtualcores(resource.getVirtualCores());
     resourceDTO.setpendingeventid(resource.getPendingEventId());
     return resourceDTO;
   }
 
-  private Map<String, Map<Integer, Map<Integer, Resource>>> createMap(
-      List<ResourceDTO> results) {
-    Map<String, Map<Integer, Map<Integer, Resource>>> map =
-        new HashMap<String, Map<Integer, Map<Integer, Resource>>>();
+  private Map<String, Resource> createMap(
+          List<ResourceDTO> results) {
+    Map<String, Resource> map;
+    map = new HashMap<String, Resource>();
     for (ResourceDTO dto : results) {
       Resource hop = createHopResource(dto);
-      if (map.get(hop.getId()) == null) {
-        map.put(hop.getId(), new HashMap<Integer, Map<Integer, Resource>>());
-      }
-      Map<Integer, Map<Integer, Resource>> inerMap = map.get(hop.getId());
-      if (inerMap.get(hop.getType()) == null) {
-        inerMap.put(hop.getType(), new HashMap<Integer, Resource>());
-      }
-      inerMap.get(hop.getType()).put(hop.getParent(), hop);
+      map.put(hop.getId(), hop);
     }
     return map;
   }
