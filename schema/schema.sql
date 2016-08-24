@@ -492,7 +492,7 @@ CREATE TABLE `yarn_resource` (
   `memory` INT NULL,
   `virtualcores` INT NULL,
   `pendingeventid` INT,
-  PRIMARY KEY (`id`, `type`, `parent`),
+  PRIMARY KEY (`id`),
   INDEX `id` (`id` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(id)$$
 
