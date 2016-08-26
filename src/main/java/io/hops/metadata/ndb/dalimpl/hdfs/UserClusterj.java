@@ -18,55 +18,72 @@
  */
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
+import com.mysql.clusterj.annotation.Column;
+import com.mysql.clusterj.annotation.PersistenceCapable;
+import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.UserDataAccess;
 import io.hops.metadata.hdfs.entity.User;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
+import io.hops.metadata.ndb.wrapper.HopsQuery;
+import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
+import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
+import io.hops.metadata.ndb.wrapper.HopsSession;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 
 public class UserClusterj implements TablesDef.UsersTableDef, UserDataAccess<User>{
 
+  @PersistenceCapable(table = TABLE_NAME)
+  public interface UserDTO {
+
+    @PrimaryKey
+    @Column(name = ID)
+    int getId();
+
+    void setId(int id);
+
+    @Column(name = NAME)
+    String getName();
+
+    void setName(String name);
+  }
+
+  private ClusterjConnector connector = ClusterjConnector.getInstance();
+
   @Override
   public User getUser(final int userId) throws StorageException {
-    final String query = String.format("SELECT %s FROM %s WHERE %s=%d",
-        NAME, TABLE_NAME, ID, userId);
-
-    return MySQLQueryHelper.execute(query,
-        new MySQLQueryHelper.ResultSetHandler<User>() {
-
-          @Override
-          public User handle(ResultSet result)
-              throws SQLException, StorageException {
-            if (!result.next()){
-              return null;
-            }
-            return  new User(userId, result.getString(NAME));
-          }
-        });
+    HopsSession session = connector.obtainSession();
+    UserDTO dto = session.find(UserDTO.class, userId);
+    User user = null;
+    if(dto != null) {
+      user = new User(dto.getId(), dto.getName());
+      session.release(dto);
+    }
+    return user;
   }
 
   @Override
   public User getUser(final String userName) throws StorageException {
-    final String query = String.format("SELECT %s FROM %s WHERE %s='%s'",
-        ID, TABLE_NAME, NAME, userName);
-
-    return MySQLQueryHelper.execute(query,
-        new MySQLQueryHelper.ResultSetHandler<User>() {
-
-          @Override
-          public User handle(ResultSet result)
-              throws SQLException, StorageException {
-            if (!result.next()) {
-              return null;
-            }
-            return  new User(result.getInt(ID), userName);
-          }
-        });
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<UserDTO> dobj =  qb.createQueryDefinition
+        (UserDTO.class);
+    dobj.where(dobj.get("name").equal(dobj.param("param")));
+    HopsQuery<UserDTO> query = session.createQuery(dobj);
+    query.setParameter("param", userName);
+    List<UserDTO> results = query.getResultList();
+    User user = null;
+    if(results.size() == 1) {
+      user = new User(results.get(0).getId(), results.get(0).getName());
+    }
+    session.release(results);
+    return user;
   }
 
   @Override
@@ -75,6 +92,14 @@ public class UserClusterj implements TablesDef.UsersTableDef, UserDataAccess<Use
         "('%s')", TABLE_NAME, NAME, userName);
     MySQLQueryHelper.execute(query);
     return getUser(userName);
+  }
+
+  @Override
+  public void removeUser(int userId) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    UserDTO dto = session.newInstance(UserDTO.class, userId);
+    session.deletePersistent(dto);
+    session.release(dto);
   }
 
 }
