@@ -78,9 +78,7 @@ public class ResourceClusterJ
     LOG.debug("HOP :: ClusterJ Resource.findEntry - START:" + id);
     HopsSession session = connector.obtainSession();
     ResourceDTO resourceDTO;
-    Object[] pk = new Object[3];
-    pk[0] = id;
-    resourceDTO = session.find(ResourceDTO.class, pk);
+    resourceDTO = session.find(ResourceDTO.class, id);
     LOG.debug("HOP :: ClusterJ Resource.findEntry - FINISH:" + id);
     Resource result = null;
     if (resourceDTO != null) {

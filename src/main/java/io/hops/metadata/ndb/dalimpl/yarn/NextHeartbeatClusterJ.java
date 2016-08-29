@@ -57,11 +57,6 @@ public class NextHeartbeatClusterJ
 
     void setNextheartbeat(int Nextheartbeat);
 
-    @Column(name = PENDING_EVENT_ID)
-    int getpendingeventid();
-
-    void setpendingeventid(int pendingeventid);
-
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -140,14 +135,13 @@ public class NextHeartbeatClusterJ
     //Set values to persist new persistedEvent
     DTO.setrmnodeid(hopNextHeartbeat.getRmnodeid());
     DTO.setNextheartbeat(booleanToInt(hopNextHeartbeat.isNextheartbeat()));
-    DTO.setpendingeventid(hopNextHeartbeat.getPendingEventId());
     return DTO;
   }
 
   public static NextHeartbeat createHopNextHeartbeat(
           NextHeartbeatDTO nextHBDTO) {
     return new NextHeartbeat(nextHBDTO.getrmnodeid(), intToBoolean(nextHBDTO.
-            getNextheartbeat()), nextHBDTO.getpendingeventid());
+            getNextheartbeat()));
   }
 
   private Map<String, Boolean> createMap(List<NextHeartbeatDTO> results) {

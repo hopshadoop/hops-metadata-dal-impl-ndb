@@ -911,7 +911,6 @@ delimiter $$
 CREATE TABLE `yarn_nextheartbeat` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `nextheartbeat` INT NULL,
-  `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`),
   CONSTRAINT `rmnodeid`
     FOREIGN KEY (`rmnodeid`)
