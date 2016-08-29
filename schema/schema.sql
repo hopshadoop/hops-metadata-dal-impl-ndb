@@ -543,12 +543,7 @@ CREATE TABLE `yarn_updatedcontainerinfo` (
   `updatedcontainerinfoid` INT NOT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`, `containerid`, `updatedcontainerinfoid`),
-  INDEX `containerid` (`containerid` ASC),
-  CONSTRAINT `rmnodeid`
-  FOREIGN KEY (`rmnodeid`)
-  REFERENCES `yarn_rmnode` (`rmnodeid`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION
+  INDEX `containerid` (`containerid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`rmnodeid`)$$
 
 
@@ -563,12 +558,7 @@ CREATE TABLE `yarn_containerstatus` (
   `exitstatus` INT NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`containerid`, `rmnodeid`, `type`),
-  INDEX `rmnodeid_idx` (`rmnodeid` ASC),
-  CONSTRAINT `rmnodeid`
-  FOREIGN KEY (`rmnodeid`)
-  REFERENCES `yarn_rmnode` (`rmnodeid`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION
+  INDEX `rmnodeid_idx` (`rmnodeid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`rmnodeid`)$$
 
 
@@ -635,12 +625,7 @@ CREATE TABLE `yarn_containerid_toclean` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `containerid` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`rmnodeid`, `containerid`),
-  INDEX `rmnodeId` (`containerid` ASC),
-  CONSTRAINT `rmnodeid`
-    FOREIGN KEY (`rmnodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  INDEX `rmnodeId` (`containerid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(rmnodeid) $$
 
 
@@ -687,12 +672,7 @@ CREATE TABLE `yarn_rmnode_finishedapplications` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `applicationid` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`rmnodeid`, `applicationid`),
-  INDEX `index2` (`rmnodeid` ASC),
-  CONSTRAINT `rmnodeid`
-    FOREIGN KEY (`rmnodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  INDEX `index2` (`rmnodeid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(applicationid) $$
 
 
@@ -911,13 +891,7 @@ delimiter $$
 CREATE TABLE `yarn_nextheartbeat` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `nextheartbeat` INT NULL,
-  `pendingeventid` INT,
-  PRIMARY KEY (`rmnodeid`),
-  CONSTRAINT `rmnodeid`
-    FOREIGN KEY (`rmnodeid`)
-    REFERENCES `yarn_rmnode` (`rmnodeid`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION
+  PRIMARY KEY (`rmnodeid`)
 )ENGINE = ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(rmnodeid)$$
 
 delimiter $$
