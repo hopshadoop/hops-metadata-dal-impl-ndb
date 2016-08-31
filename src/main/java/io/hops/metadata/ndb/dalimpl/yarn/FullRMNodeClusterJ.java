@@ -91,7 +91,7 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
       
         for (UpdatedContainerInfo hop : hopUpdatedContainerInfo) {
           Object[] pk = new Object[]{hop.getContainerId(), hop.getRmnodeid(),
-          ContainerStatus.Type.UCI.name()};
+          hop.getUpdatedContainerInfoId()};
           ContainerStatusClusterJ.ContainerStatusDTO containerStatusDTO =
               session.
                   newInstance(ContainerStatusClusterJ.ContainerStatusDTO.class,

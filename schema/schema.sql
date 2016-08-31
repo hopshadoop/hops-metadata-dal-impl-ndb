@@ -556,8 +556,9 @@ CREATE TABLE `yarn_containerstatus` (
   `state` VARCHAR(45) NULL,
   `diagnostics` VARCHAR(2000) NULL,
   `exitstatus` INT NULL,
+  `uciid` INT NOT NULL,
   `pendingeventid` INT,
-  PRIMARY KEY (`containerid`, `rmnodeid`, `type`),
+  PRIMARY KEY (`containerid`, `rmnodeid`, uciid),
   INDEX `rmnodeid_idx` (`rmnodeid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`rmnodeid`)$$
 
