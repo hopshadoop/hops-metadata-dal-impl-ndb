@@ -84,119 +84,27 @@ import io.hops.metadata.ndb.dalimpl.hdfs.UnderReplicatedBlockClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.UserClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.UserGroupClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.VariableClusterj;
-import io.hops.metadata.ndb.dalimpl.yarn.AppSchedulingInfoBlacklistClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.AppSchedulingInfoClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.ContainerClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.ContainerIdToCleanClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.ContainerStatusClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.ContainersCheckPointsClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.ContainersLogsClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerNodeClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.FinishedApplicationsClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.FullRMNodeClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.JustLaunchedContainersClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.LaunchedContainersClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.NextHeartbeatClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.NodeClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.NodeHBResponseClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.PendingEventClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.QueueMetricsClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.RMContainerClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.RMContextActiveNodesClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.RMContextInactiveNodesClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.RMLoadClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.RMNodeClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.ResourceClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.ResourceRequestClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.SchedulerApplicationClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.UpdatedContainerInfoClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.YarnVariablesClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppLastScheduledContainerClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppReservationsClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.capacity.FiCaSchedulerAppReservedContainersClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.FiCaSchedulerAppSchedulingOpportunitiesClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.JustFinishedContainersClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.YarnHistoryPriceClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.YarnProjectsDailyCostClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.YarnProjectsQuotaClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.capacity.CSLeafQueuesPendingAppsClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.YarnRunningPriceClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.fair.FSSchedulerNodeClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.fair.LocalityLevelClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.fair.PreemptionMapClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.fair.RunnableAppsClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.AllocateRPCClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.AllocateResponseClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.AllocatedContainersClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.ApplicationAttemptStateClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.ApplicationStateClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.CompletedContainersStatusClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.DelegationKeyClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.DelegationTokenClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.HeartBeatRPCClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.RMStateVersionClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.RPCClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.RanNodeClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.SecretMamagerKeysClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.SequenceNumberClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.UpdatedNodeClusterJ;
 import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
-import io.hops.metadata.yarn.dal.AppSchedulingInfoBlacklistDataAccess;
-import io.hops.metadata.yarn.dal.AppSchedulingInfoDataAccess;
-import io.hops.metadata.yarn.dal.ContainerDataAccess;
 import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
 import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
-import io.hops.metadata.yarn.dal.ContainersCheckPointsDataAccess;
-import io.hops.metadata.yarn.dal.ContainersLogsDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerNodeDataAccess;
 import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
 import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
-import io.hops.metadata.yarn.dal.JustLaunchedContainersDataAccess;
-import io.hops.metadata.yarn.dal.LaunchedContainersDataAccess;
 import io.hops.metadata.yarn.dal.NextHeartbeatDataAccess;
-import io.hops.metadata.yarn.dal.NodeDataAccess;
-import io.hops.metadata.yarn.dal.NodeHBResponseDataAccess;
 import io.hops.metadata.yarn.dal.PendingEventDataAccess;
-import io.hops.metadata.yarn.dal.QueueMetricsDataAccess;
-import io.hops.metadata.yarn.dal.RMContainerDataAccess;
-import io.hops.metadata.yarn.dal.RMContextActiveNodesDataAccess;
-import io.hops.metadata.yarn.dal.RMContextInactiveNodesDataAccess;
 import io.hops.metadata.yarn.dal.RMLoadDataAccess;
 import io.hops.metadata.yarn.dal.RMNodeDataAccess;
 import io.hops.metadata.yarn.dal.ResourceDataAccess;
-import io.hops.metadata.yarn.dal.ResourceRequestDataAccess;
-import io.hops.metadata.yarn.dal.SchedulerApplicationDataAccess;
 import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
-import io.hops.metadata.yarn.dal.YarnVariablesDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerAppLastScheduledContainerDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerAppReservationsDataAccess;
-import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservedContainersDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerAppSchedulingOpportunitiesDataAccess;
-import io.hops.metadata.yarn.dal.JustFinishedContainersDataAccess;
-import io.hops.metadata.yarn.dal.YarnHistoryPriceDataAccess;
-import io.hops.metadata.yarn.dal.YarnProjectsDailyCostDataAccess;
-import io.hops.metadata.yarn.dal.YarnProjectsQuotaDataAccess;
-import io.hops.metadata.yarn.dal.capacity.CSLeafQueuesPendingAppsDataAccess;
-import io.hops.metadata.yarn.dal.YarnRunningPriceDataAccess;
-import io.hops.metadata.yarn.dal.fair.FSSchedulerNodeDataAccess;
-import io.hops.metadata.yarn.dal.fair.LocalityLevelDataAccess;
-import io.hops.metadata.yarn.dal.fair.PreemptionMapDataAccess;
-import io.hops.metadata.yarn.dal.fair.RunnableAppsDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.AllocateRPCDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.AllocateResponseDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.AllocatedContainersDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.ApplicationAttemptStateDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.ApplicationStateDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.CompletedContainersStatusDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.DelegationKeyDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.DelegationTokenDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.HeartBeatRPCDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.RMStateVersionDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.RPCDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.RanNodeDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.SecretMamagerKeysDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.SequenceNumberDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.UpdatedNodeDataAccess;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -222,70 +130,17 @@ public class NdbStorageFactory implements DalStorageFactory {
   }
 
   private void initDataAccessMap() {
-    dataAccessMap
-            .put(RMStateVersionDataAccess.class, new RMStateVersionClusterJ());
-    dataAccessMap
-            .put(ApplicationStateDataAccess.class, new ApplicationStateClusterJ());
-    dataAccessMap.put(UpdatedNodeDataAccess.class, new UpdatedNodeClusterJ());
-    dataAccessMap.put(ApplicationAttemptStateDataAccess.class,
-            new ApplicationAttemptStateClusterJ());
-    dataAccessMap.put(RanNodeDataAccess.class, new RanNodeClusterJ());
-    dataAccessMap
-            .put(DelegationTokenDataAccess.class, new DelegationTokenClusterJ());
-    dataAccessMap
-            .put(SequenceNumberDataAccess.class, new SequenceNumberClusterJ());
-    dataAccessMap
-            .put(DelegationKeyDataAccess.class, new DelegationKeyClusterJ());
-    dataAccessMap
-            .put(YarnVariablesDataAccess.class, new YarnVariablesClusterJ());
-    dataAccessMap.put(RPCDataAccess.class, new RPCClusterJ());
-    dataAccessMap.put(HeartBeatRPCDataAccess.class, new HeartBeatRPCClusterJ());
-    dataAccessMap.put(AllocateRPCDataAccess.class, new AllocateRPCClusterJ());
-    dataAccessMap.put(QueueMetricsDataAccess.class, new QueueMetricsClusterJ());
-    dataAccessMap.put(FiCaSchedulerNodeDataAccess.class,
-            new FiCaSchedulerNodeClusterJ());
     dataAccessMap.put(ResourceDataAccess.class, new ResourceClusterJ());
-    dataAccessMap.put(NodeDataAccess.class, new NodeClusterJ());
     dataAccessMap.put(ResourceDataAccess.class, new ResourceClusterJ());
     dataAccessMap.put(RMNodeDataAccess.class, new RMNodeClusterJ());
-    dataAccessMap.put(RMContextActiveNodesDataAccess.class,
-            new RMContextActiveNodesClusterJ());
-    dataAccessMap.put(RMContextInactiveNodesDataAccess.class,
-            new RMContextInactiveNodesClusterJ());
     dataAccessMap
             .put(ContainerStatusDataAccess.class, new ContainerStatusClusterJ());
-    dataAccessMap
-            .put(ContainersLogsDataAccess.class, new ContainersLogsClusterJ());
-    dataAccessMap
-            .put(NodeHBResponseDataAccess.class, new NodeHBResponseClusterJ());
     dataAccessMap.put(UpdatedContainerInfoDataAccess.class,
             new UpdatedContainerInfoClusterJ());
     dataAccessMap.put(ContainerIdToCleanDataAccess.class,
             new ContainerIdToCleanClusterJ());
-    dataAccessMap.put(JustLaunchedContainersDataAccess.class,
-            new JustLaunchedContainersClusterJ());
-    dataAccessMap.put(LaunchedContainersDataAccess.class,
-            new LaunchedContainersClusterJ());
     dataAccessMap.put(FinishedApplicationsDataAccess.class,
             new FinishedApplicationsClusterJ());
-    dataAccessMap.put(SchedulerApplicationDataAccess.class,
-            new SchedulerApplicationClusterJ());
-    dataAccessMap.put(FiCaSchedulerAppSchedulingOpportunitiesDataAccess.class,
-            new FiCaSchedulerAppSchedulingOpportunitiesClusterJ());
-    dataAccessMap.put(FiCaSchedulerAppLastScheduledContainerDataAccess.class,
-            new FiCaSchedulerAppLastScheduledContainerClusterJ());
-    dataAccessMap.put(FiCaSchedulerAppReservedContainersDataAccess.class,
-            new FiCaSchedulerAppReservedContainersClusterJ());
-    dataAccessMap.put(FiCaSchedulerAppReservationsDataAccess.class,
-            new FiCaSchedulerAppReservationsClusterJ());
-    dataAccessMap.put(RMContainerDataAccess.class, new RMContainerClusterJ());
-    dataAccessMap.put(ContainerDataAccess.class, new ContainerClusterJ());
-    dataAccessMap.put(AppSchedulingInfoDataAccess.class,
-            new AppSchedulingInfoClusterJ());
-    dataAccessMap.put(AppSchedulingInfoBlacklistDataAccess.class,
-            new AppSchedulingInfoBlacklistClusterJ());
-    dataAccessMap
-            .put(ResourceRequestDataAccess.class, new ResourceRequestClusterJ());
     dataAccessMap.put(BlockInfoDataAccess.class, new BlockInfoClusterj());
     dataAccessMap.put(PendingBlockDataAccess.class, new PendingBlockClusterj());
     dataAccessMap.put(ReplicaUnderConstructionDataAccess.class,
@@ -315,21 +170,10 @@ public class NdbStorageFactory implements DalStorageFactory {
             .put(EncodingStatusDataAccess.class, new EncodingStatusClusterj() {
             });
     dataAccessMap.put(BlockLookUpDataAccess.class, new BlockLookUpClusterj());
-    dataAccessMap
-            .put(FSSchedulerNodeDataAccess.class, new FSSchedulerNodeClusterJ());
     dataAccessMap.put(SafeBlocksDataAccess.class, new SafeBlocksClusterj());
     dataAccessMap.put(MisReplicatedRangeQueueDataAccess.class,
             new MisReplicatedRangeQueueClusterj());
     dataAccessMap.put(QuotaUpdateDataAccess.class, new QuotaUpdateClusterj());
-    dataAccessMap.put(SecretMamagerKeysDataAccess.class,
-            new SecretMamagerKeysClusterJ());
-    dataAccessMap
-            .put(AllocateResponseDataAccess.class, new AllocateResponseClusterJ());
-    dataAccessMap
-            .put(AllocatedContainersDataAccess.class, new AllocatedContainersClusterJ());
-    dataAccessMap.
-            put(CompletedContainersStatusDataAccess.class,
-                    new CompletedContainersStatusClusterJ());
     dataAccessMap.put(PendingEventDataAccess.class, new PendingEventClusterJ());
     dataAccessMap
             .put(BlockChecksumDataAccess.class, new BlockChecksumClusterj());
@@ -343,25 +187,9 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(SizeLogDataAccess.class, new SizeLogClusterj());
     dataAccessMap.put(EncodingJobsDataAccess.class, new EncodingJobsClusterj());
     dataAccessMap.put(RepairJobsDataAccess.class, new RepairJobsClusterj());
-    dataAccessMap.
-            put(LocalityLevelDataAccess.class, new LocalityLevelClusterJ());
-    dataAccessMap.put(RunnableAppsDataAccess.class, new RunnableAppsClusterJ());
-    dataAccessMap.
-            put(PreemptionMapDataAccess.class, new PreemptionMapClusterJ());
     dataAccessMap.put(UserDataAccess.class, new UserClusterj());
     dataAccessMap.put(GroupDataAccess.class, new GroupClusterj());
     dataAccessMap.put(UserGroupDataAccess.class, new UserGroupClusterj());
-    dataAccessMap.put(CSLeafQueuesPendingAppsDataAccess.class,
-            new CSLeafQueuesPendingAppsClusterJ());
-    dataAccessMap.put(JustFinishedContainersDataAccess.class,
-            new JustFinishedContainersClusterJ());
-    // Quota Scheduling
-    dataAccessMap.put(YarnProjectsQuotaDataAccess.class, new YarnProjectsQuotaClusterJ());
-    dataAccessMap.put(YarnProjectsDailyCostDataAccess.class, new YarnProjectsDailyCostClusterJ());
-    dataAccessMap.put(ContainersCheckPointsDataAccess.class, new ContainersCheckPointsClusterJ());
-    
-    dataAccessMap.put(YarnRunningPriceDataAccess.class, new YarnRunningPriceClusterJ());
-    dataAccessMap.put(YarnHistoryPriceDataAccess.class, new YarnHistoryPriceClusterJ());
   }
 
   @Override

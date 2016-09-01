@@ -26,9 +26,6 @@ import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
 import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
 import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
 import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
-import io.hops.metadata.yarn.dal.JustLaunchedContainersDataAccess;
-import io.hops.metadata.yarn.dal.NodeDataAccess;
-import io.hops.metadata.yarn.dal.NodeHBResponseDataAccess;
 import io.hops.metadata.yarn.dal.RMNodeDataAccess;
 import io.hops.metadata.yarn.dal.ResourceDataAccess;
 import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
@@ -36,9 +33,6 @@ import io.hops.metadata.yarn.dal.util.YARNOperationType;
 import io.hops.metadata.yarn.entity.ContainerId;
 import io.hops.metadata.yarn.entity.ContainerStatus;
 import io.hops.metadata.yarn.entity.FinishedApplications;
-import io.hops.metadata.yarn.entity.JustLaunchedContainers;
-import io.hops.metadata.yarn.entity.Node;
-import io.hops.metadata.yarn.entity.NodeHBResponse;
 import io.hops.metadata.yarn.entity.RMNode;
 import io.hops.metadata.yarn.entity.RMNodeComps;
 import io.hops.metadata.yarn.entity.Resource;
@@ -85,21 +79,10 @@ public class TestFullRMNodeClusterJ {
     final RMNode hopRMNodeOrigin
             = new RMNode("70", "rmnode70", 9999, 9876, 
                     "life is good ", -10L, "relax", "hayarn", 0);
-    final Node hopNodeOrigin
-            = new Node("70", "rmnode70", "ici", 1000, "papa", 0);
-    final List<NodeHBResponse> hopNHBROrigin = new ArrayList<NodeHBResponse>();
-    hopNHBROrigin.add(new NodeHBResponse("70", new byte[]{new Integer(1).
-      byteValue()}));
     final Resource hopResourceOrigin
             = new Resource("70", 1,
                     100, 0);
 
-    final List<JustLaunchedContainers> hopJustLaunchedContainers
-            = new ArrayList<JustLaunchedContainers>();
-    hopJustLaunchedContainers
-            .add(new JustLaunchedContainers("70", "container1"));
-    hopJustLaunchedContainers
-            .add(new JustLaunchedContainers("70", "container2"));
     final List<UpdatedContainerInfo> hopUpdatedContainers
             = new ArrayList<UpdatedContainerInfo>();
     hopUpdatedContainers.add(new UpdatedContainerInfo("70", "container3", 1,
@@ -163,25 +146,11 @@ public class TestFullRMNodeClusterJ {
                 getDataAccess(RMNodeDataAccess.class);
                 rmNodeDA.add(hopRMNodeOrigin);
 
-                NodeDataAccess nodeDA = (NodeDataAccess) storageFactory.
-                getDataAccess(NodeDataAccess.class);
-                nodeDA.createNode(hopNodeOrigin);
-
-                NodeHBResponseDataAccess nodeHBRDA
-                = (NodeHBResponseDataAccess) storageFactory
-                .getDataAccess(NodeHBResponseDataAccess.class);
-                nodeHBRDA.addAll(hopNHBROrigin);
-
                 ResourceDataAccess resourceDA
                 = (ResourceDataAccess) storageFactory
                 .getDataAccess(ResourceDataAccess.class);
 
                 resourceDA.add(hopResourceOrigin);
-
-                JustLaunchedContainersDataAccess justLaunchedContainerDA
-                = (JustLaunchedContainersDataAccess) storageFactory.
-                getDataAccess(JustLaunchedContainersDataAccess.class);
-                justLaunchedContainerDA.addAll(hopJustLaunchedContainers);
 
                 UpdatedContainerInfoDataAccess updatedContainerDA
                 = (UpdatedContainerInfoDataAccess) storageFactory
@@ -233,10 +202,6 @@ public class TestFullRMNodeClusterJ {
             getNodeId()));
     Assert.assertTrue(rmNodeFinal.getCurrentState().equals(hopRMNodeOrigin.
             getCurrentState()));
-
-    NodeHBResponse nodeHBRFinal = hopRMNodeFull.getHopNodeHBResponse();
-    Assert.assertTrue(nodeHBRFinal.getResponse()[0] == (hopNHBROrigin.get(0).
-            getResponse()[0]));
 
     Resource resourceFinal = hopRMNodeFull.getHopResource();
     Assert.assertTrue(resourceFinal.getId().equals(hopResourceOrigin.getId()));

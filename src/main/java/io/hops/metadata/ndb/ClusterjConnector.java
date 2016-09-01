@@ -75,63 +75,18 @@ import io.hops.metadata.ndb.dalimpl.hdfs.ReplicaClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.ReplicaUnderConstructionClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.UnderReplicatedBlockClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.VariableClusterj;
-import io.hops.metadata.ndb.dalimpl.yarn.YarnVariablesClusterJ;
 import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.ndb.wrapper.HopsTransaction;
-import io.hops.metadata.yarn.dal.AppSchedulingInfoBlacklistDataAccess;
-import io.hops.metadata.yarn.dal.AppSchedulingInfoDataAccess;
-import io.hops.metadata.yarn.dal.ContainerDataAccess;
 import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
 import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
-import io.hops.metadata.yarn.dal.ContainersCheckPointsDataAccess;
-import io.hops.metadata.yarn.dal.ContainersLogsDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerNodeDataAccess;
 import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
-import io.hops.metadata.yarn.dal.JustLaunchedContainersDataAccess;
-import io.hops.metadata.yarn.dal.LaunchedContainersDataAccess;
 import io.hops.metadata.yarn.dal.NextHeartbeatDataAccess;
-import io.hops.metadata.yarn.dal.NodeDataAccess;
 import io.hops.metadata.yarn.dal.PendingEventDataAccess;
-import io.hops.metadata.yarn.dal.QueueMetricsDataAccess;
-import io.hops.metadata.yarn.dal.RMContainerDataAccess;
-import io.hops.metadata.yarn.dal.RMContextActiveNodesDataAccess;
-import io.hops.metadata.yarn.dal.RMContextInactiveNodesDataAccess;
 import io.hops.metadata.yarn.dal.RMLoadDataAccess;
 import io.hops.metadata.yarn.dal.RMNodeDataAccess;
 import io.hops.metadata.yarn.dal.ResourceDataAccess;
-import io.hops.metadata.yarn.dal.ResourceRequestDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerAppLastScheduledContainerDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerAppReservationsDataAccess;
-import io.hops.metadata.yarn.dal.FiCaSchedulerAppSchedulingOpportunitiesDataAccess;
-import io.hops.metadata.yarn.dal.JustFinishedContainersDataAccess;
-import io.hops.metadata.yarn.dal.NodeHBResponseDataAccess;
-import io.hops.metadata.yarn.dal.SchedulerApplicationDataAccess;
 import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
-import io.hops.metadata.yarn.dal.YarnHistoryPriceDataAccess;
-import io.hops.metadata.yarn.dal.YarnProjectsDailyCostDataAccess;
-import io.hops.metadata.yarn.dal.YarnProjectsQuotaDataAccess;
-import io.hops.metadata.yarn.dal.YarnRunningPriceDataAccess;
-import io.hops.metadata.yarn.dal.YarnVariablesDataAccess;
-import io.hops.metadata.yarn.dal.capacity.CSLeafQueuesPendingAppsDataAccess;
-import io.hops.metadata.yarn.dal.capacity.FiCaSchedulerAppReservedContainersDataAccess;
-import io.hops.metadata.yarn.dal.fair.LocalityLevelDataAccess;
-import io.hops.metadata.yarn.dal.fair.RunnableAppsDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.AllocateRPCDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.AllocateResponseDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.AllocatedContainersDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.ApplicationAttemptStateDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.ApplicationStateDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.CompletedContainersStatusDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.DelegationKeyDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.DelegationTokenDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.HeartBeatRPCDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.RMStateVersionDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.RPCDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.RanNodeDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.SecretMamagerKeysDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.SequenceNumberDataAccess;
-import io.hops.metadata.yarn.dal.rmstatestore.UpdatedNodeDataAccess;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -372,43 +327,11 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   
   private boolean formatYarn(boolean transactional) throws StorageException{
     return format(transactional,
-    RPCDataAccess.class, HeartBeatRPCDataAccess.class,
-        AllocateRPCDataAccess.class,
-        ApplicationStateDataAccess.class,
-        UpdatedNodeDataAccess.class,
-        ApplicationAttemptStateDataAccess.class,
-        RanNodeDataAccess.class,
-        DelegationKeyDataAccess.class,
-        DelegationTokenDataAccess.class, SequenceNumberDataAccess.class,
-        RMStateVersionDataAccess.class, YarnVariablesDataAccess.class,
-        AppSchedulingInfoDataAccess.class,
-        AppSchedulingInfoBlacklistDataAccess.class, ContainerDataAccess.class,
         ContainerIdToCleanDataAccess.class, ContainerStatusDataAccess.class,
-        ContainersLogsDataAccess.class,
-        FiCaSchedulerAppLastScheduledContainerDataAccess.class,
-        FiCaSchedulerAppReservationsDataAccess.class,
-        FiCaSchedulerAppReservedContainersDataAccess.class,
-        FiCaSchedulerAppSchedulingOpportunitiesDataAccess.class,
-        FiCaSchedulerNodeDataAccess.class,
-        JustLaunchedContainersDataAccess.class,
-        LaunchedContainersDataAccess.class, NodeDataAccess.class,
-        QueueMetricsDataAccess.class, ResourceDataAccess.class,
-        ResourceRequestDataAccess.class, RMContainerDataAccess.class,
-        RMNodeDataAccess.class, SchedulerApplicationDataAccess.class,
-        SequenceNumberDataAccess.class, FinishedApplicationsDataAccess.class,
-        RMContextInactiveNodesDataAccess.class,
-        RMContextActiveNodesDataAccess.class,
+        RMNodeDataAccess.class, FinishedApplicationsDataAccess.class,
         UpdatedContainerInfoDataAccess.class, YarnLeDescriptorDataAccess.class,
-        SecretMamagerKeysDataAccess.class, AllocateResponseDataAccess.class,
-        AllocatedContainersDataAccess.class, CompletedContainersStatusDataAccess.class,
         RMLoadDataAccess.class, PendingEventDataAccess.class,
-        LocalityLevelDataAccess.class,
-        RunnableAppsDataAccess.class,
-        NextHeartbeatDataAccess.class,
-        NodeHBResponseDataAccess.class, 
-        ContainersCheckPointsDataAccess.class,
-        CSLeafQueuesPendingAppsDataAccess.class,
-        JustFinishedContainersDataAccess.class);
+        NextHeartbeatDataAccess.class);
   }
   
   private boolean formatHDFS(boolean transactional) throws StorageException{
@@ -442,11 +365,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
 
     // shared
     return format(transactional,
-            VariableDataAccess.class,
-            YarnProjectsQuotaDataAccess.class,
-            YarnProjectsDailyCostDataAccess.class,
-            YarnHistoryPriceDataAccess.class,
-            YarnRunningPriceDataAccess.class
+            VariableDataAccess.class
     );
   }
 
@@ -560,162 +479,31 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             MysqlServerConnector
                 .truncateTable(transactional,
                     TablesDef.YarnLeaderTableDef.TABLE_NAME);
-          } else if (e == AppSchedulingInfoDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.AppSchedulingInfoTableDef.TABLE_NAME);
-          } else if (e == AppSchedulingInfoBlacklistDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.AppSchedulingInfoBlacklistTableDef.TABLE_NAME);
-          } else if (e == ContainerDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.ContainerTableDef.TABLE_NAME);
           } else if (e == ContainerIdToCleanDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.ContainerIdToCleanTableDef.TABLE_NAME);
           } else if (e == ContainerStatusDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.ContainerStatusTableDef.TABLE_NAME);
-          } else if (e == ContainersLogsDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.ContainersLogsTableDef.TABLE_NAME);
-          }else if(e==YarnProjectsQuotaDataAccess.class) {
-            truncate(transactional,
-                    io.hops.metadata.yarn.TablesDef.YarnProjectsQuotaTableDef.TABLE_NAME);
-          } else if (e == YarnProjectsDailyCostDataAccess.class) {
-            truncate(transactional,
-                    io.hops.metadata.yarn.TablesDef.YarnProjectsDailyCostTableDef.TABLE_NAME);
-          } else if (e == ContainersCheckPointsDataAccess.class) {
-            truncate(transactional,
-                    io.hops.metadata.yarn.TablesDef.ContainersCheckPointsTableDef.TABLE_NAME);
-          } else if (e ==
-              FiCaSchedulerAppLastScheduledContainerDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.FiCaSchedulerAppLastScheduledContainerTableDef.TABLE_NAME);
-          } else if (e == FiCaSchedulerAppReservationsDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.FiCaSchedulerAppReservationsTableDef.TABLE_NAME);
-          } else if (e == FiCaSchedulerAppReservedContainersDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.FiCaSchedulerAppReservedContainersTableDef.TABLE_NAME);
-          } else if (e ==
-              FiCaSchedulerAppSchedulingOpportunitiesDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.FiCaSchedulerAppSchedulingOpportunitiesTableDef.TABLE_NAME);
-          } else if (e == FiCaSchedulerNodeDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.FiCaSchedulerNodeTableDef.TABLE_NAME);
-          } else if (e == JustLaunchedContainersDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.JustLaunchedContainersTableDef.TABLE_NAME);
-          } else if (e == LaunchedContainersDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.LaunchedContainersTableDef.TABLE_NAME);
-          } else if (e == NodeDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.NodeTableDef.TABLE_NAME);
-          } else if (e == QueueMetricsDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.QueueMetricsTableDef.TABLE_NAME);
           } else if (e == ResourceDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.ResourceTableDef.TABLE_NAME);
-          } else if (e == ResourceRequestDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.ResourceRequestTableDef.TABLE_NAME);
-          } else if (e == RMContainerDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.RMContainerTableDef.TABLE_NAME);
           } else if (e == RMNodeDataAccess.class) {
             // Truncate does not work with foreign keys
             truncate(true,
                 io.hops.metadata.yarn.TablesDef.RMNodeTableDef.TABLE_NAME);
-          } else if (e == SchedulerApplicationDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.SchedulerApplicationTableDef.TABLE_NAME);
-          } else if (e == SequenceNumberDataAccess.class) {
-            truncate(transactional,
-                io.hops.metadata.yarn.TablesDef.SequenceNumberTableDef.TABLE_NAME);
           } else if (e == FinishedApplicationsDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.FinishedApplicationsTableDef.TABLE_NAME);
-          } else if (e == RMContextInactiveNodesDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.RMContextInactiveNodesTableDef.TABLE_NAME);
-          } else if (e == RMContextActiveNodesDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.RMContextActiveNodesTableDef.TABLE_NAME);
           } else if (e == UpdatedContainerInfoDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.UpdatedContainerInfoTableDef.TABLE_NAME);
-          } else if (e == SecretMamagerKeysDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.SecretMamagerKeysTableDef.TABLE_NAME);
-          } else if (e == AllocateResponseDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateResponseTableDef.TABLE_NAME);
-          } else if (e == AllocatedContainersDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocatedContainersTableDef.TABLE_NAME);
-          } else if (e == CompletedContainersStatusDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.CompletedContainersStatusTableDef.TABLE_NAME);
-          } else if (e == DelegationKeyDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.DelegationKeyTableDef.TABLE_NAME);
-          } else if (e == DelegationTokenDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.DelegationTokenTableDef.TABLE_NAME);
-          } else if (e == RMStateVersionDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.RMStateVersionTableDef.TABLE_NAME);
-          } else if (e == ApplicationAttemptStateDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.ApplicationAttemptStateTableDef.TABLE_NAME);
-          } else if (e == ApplicationStateDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.ApplicationStateTableDef.TABLE_NAME);
-          } else if (e == RanNodeDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.RanNodeTableDef.TABLE_NAME);
-          }else if (e == UpdatedNodeDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.UpdatedNodeTableDef.TABLE_NAME);
-          }else if (e == RPCDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.RPCTableDef.TABLE_NAME);
-          } else if (e == HeartBeatRPCDataAccess.class) {
-            truncate(transactional,
-                    io.hops.metadata.yarn.TablesDef.HeartBeatContainerStatusesTableDef.TABLE_NAME);
-            truncate(transactional,
-                    io.hops.metadata.yarn.TablesDef.HeartBeatKeepAliveApplications.TABLE_NAME);
-            truncate(transactional,
-                    io.hops.metadata.yarn.TablesDef.HeartBeatRPCTableDef.TABLE_NAME);
-          } else if (e == HeartBeatRPCDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPC.TABLE_NAME);
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCAsk.TABLE_NAME);
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCBlackListAdd.TABLE_NAME);
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCBlackListRemove.TABLE_NAME);
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCRelease.TABLE_NAME);
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.AllocateRPCResourceIncrease.TABLE_NAME);
           } else if (e == RMLoadDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.RMLoadTableDef.TABLE_NAME);
-          } else if (e == NodeHBResponseDataAccess.class) {
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.NodeHBResponseTableDef.TABLE_NAME);
-          }else if (e == YarnVariablesDataAccess.class) {
-            HopsSession session = obtainSession();
-            session.currentTransaction().begin();
-            session.deletePersistentAll(
-                YarnVariablesClusterJ.YarnVariablesDTO.class);
-            for (int j = 0; j <= 19; j++) {
-              YarnVariablesClusterJ.YarnVariablesDTO vd = session
-                  .newInstance(YarnVariablesClusterJ.YarnVariablesDTO.class);
-              vd.setid(j);
-              vd.setvalue(0);
-              session.savePersistent(vd);
-            }
-            session.currentTransaction().commit();
           } else if (e == PendingEventDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.PendingEventTableDef.TABLE_NAME);
           } else if (e == NextHeartbeatDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.NextHeartbeatTableDef.TABLE_NAME);
-          } else if (e==LocalityLevelDataAccess.class){
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.LocalityLevelTableDef.TABLE_NAME);
-          } else if (e== RunnableAppsDataAccess.class){
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.RunnableAppsTableDef.TABLE_NAME);
-          } else if (e==CSLeafQueuesPendingAppsDataAccess.class){
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.CSLeafQueuesPendingAppsTableDef.TABLE_NAME);
-          } else if (e==JustFinishedContainersDataAccess.class){
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.JustFinishedContainersTableDef.TABLE_NAME);
-          } else if (e==YarnHistoryPriceDataAccess.class){
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.YarnHistoryPriceTableDef.TABLE_NAME);
-          } else if (e==YarnRunningPriceDataAccess.class){
-            truncate(transactional, io.hops.metadata.yarn.TablesDef.YarnRunningPriceTableDef.TABLE_NAME);
           }
         }
         MysqlServerConnector.truncateTable(transactional,

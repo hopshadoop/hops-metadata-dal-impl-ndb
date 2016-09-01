@@ -44,7 +44,7 @@ public class UpdatedContainerInfoClusterJ
         implements TablesDef.UpdatedContainerInfoTableDef,
         UpdatedContainerInfoDataAccess<UpdatedContainerInfo> {
 
-  private static final Log LOG = LogFactory.getLog(NodeClusterJ.class);
+  private static final Log LOG = LogFactory.getLog(UpdatedContainerInfoClusterJ.class);
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface UpdatedContainerInfoDTO {
