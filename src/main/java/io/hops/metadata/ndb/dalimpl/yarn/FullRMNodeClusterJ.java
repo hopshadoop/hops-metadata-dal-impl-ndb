@@ -122,11 +122,10 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
     }else if(hopRMNode !=null){
       rmNodeId = hopRMNode.getNodeId();
     }
-    RMNodeComps result = new RMNodeComps(hopRMNode, hopNextHeartbeat,
+    RMNodeComps result = new RMNodeComps(hopRMNode,
         hopResource, hopPendingEvent,
-        hopUpdatedContainerInfo, hopContainerIdsToClean,
-        hopFinishedApplications,
-        ContainerStatusClusterJ.createList(containerStatusDTOs), rmNodeId);
+        hopUpdatedContainerInfo, 
+        ContainerStatusClusterJ.createList(containerStatusDTOs));
     session.release(components);
     session.release(containerStatusDTOs);
     session.release(nextHBDTO);

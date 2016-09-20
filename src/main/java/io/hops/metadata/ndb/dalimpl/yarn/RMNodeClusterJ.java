@@ -140,7 +140,6 @@ public class RMNodeClusterJ
       toPersist.add(createPersistable(req, session));
     }
     session.savePersistentAll(toPersist);
-    session.flush();
     session.release(toPersist);
   }
 
@@ -161,7 +160,6 @@ public class RMNodeClusterJ
     HopsSession session = connector.obtainSession();
     RMNodeDTO dto = createPersistable(rmNode, session);
     session.savePersistent(dto);
-    session.flush();
     session.release(dto);
   }
 

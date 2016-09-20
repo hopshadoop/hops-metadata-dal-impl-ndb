@@ -484,5 +484,6 @@ CREATE TABLE `yarn_pendingevents` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `type`  VARCHAR(255) NULL,
   `status` VARCHAR(255) NULL,
+  `contains` INT NULL,
   PRIMARY KEY (`id`, `rmnodeid`))
 ENGINE = ndbcluster DEFAULT CHARSET=latin1$$

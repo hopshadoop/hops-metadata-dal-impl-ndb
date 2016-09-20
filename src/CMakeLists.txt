@@ -1,53 +1,32 @@
-cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
+project (hops_streaming)
 
-set(CMAKE_BUILD_TYPE, Release)
-
+cmake_minimum_required (VERSION 2.8)
 include(JNIFlags.cmake NO_POLICY_SCOPE)
-
 find_package(JNI REQUIRED)
 INCLUDE_DIRECTORIES(${JNI_INCLUDE_DIRS})
 
-if (DEFINED ENV{LIBNDBPATH})
-  message("LIBNDBPATH is defined as $ENV{LIBNDBPATH}")
-else()
-  message("LIBNDBPATH is NOT defined setting it to /usr/lib")
-  set(ENV{LIBNDBPATH} "/usr/lib")
-endif()
-if(EXISTS "$ENV{LIBNDBPATH}/libndbclient.so")
-  set ( PROJECT_LINK_LIBS libndbclient.so )
-  link_directories($ENV{LIBNDBPATH})
-else()
-  message(FATAL_ERROR "libndbclient.so should be in /usr/lib or its path should be set in the environment variable LIBNDBPATH")
+set(HOPS_STREAMING_VERSION_MAJOR 2)
+set(HOPS_STREAMING_VERSION_MINOR 7)
+set(HOPS_STREAMING_VERSION_BUILD 2)
+configure_file(${CMAKE_SOURCE_DIR}/main/native/streaming/Version.h.in ${CMAKE_SOURCE_DIR}/main/native/streaming/include/Version.h)
 
-endif()
+include_directories (${CMAKE_SOURCE_DIR}/main/native/streaming/include)
+include_directories (${CMAKE_SOURCE_DIR}/main/native/streaming/include_ndb)
+#if(NOT NDB_DIR)
+#  set(NDB_DIR "/usr/local/mysql")
+#  message(STATUS "NDB_DIR was not defined. Default: ${NDB_DIR} ")
+#endif()
 
+#include_directories(${NDB_DIR}/include ${NDB_DIR}/storage/ndb/include/ndbapi ${NDB_DIR}/storage/ndb/include)
+#link_directories(${NDB_DIR}/lib)
 
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wformat-security  -Woverloaded-virtual -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-strict-aliasing -Wno-switch -O3 -DDBUG_OFF" )
 
+file(GLOB SOURCE ${CMAKE_SOURCE_DIR}/main/native/streaming/src/*.cpp)
 
-MACRO(INCLUDE_HEADERS)
-    FILE(GLOB_RECURSE new_list main/native/streaming/*.h)
-    FOREACH(file_path ${new_list})
-      GET_FILENAME_COMPONENT(dir_path ${file_path} PATH)
-      INCLUDE_DIRECTORIES(${dir_path})
-    ENDFOREACH()
-ENDMACRO()
+add_library(hopsyarn SHARED ${SOURCE})
 
-INCLUDE_HEADERS()
-
-file(GLOB SOURCES "main/native/streaming/src/*.cpp")
-
-# Compile a library with both shared and static variants
-function(add_dual_library LIBNAME)
-    add_library(${LIBNAME} SHARED ${ARGN})
-    add_library(${LIBNAME}_static STATIC ${ARGN})
-    set_target_properties(${LIBNAME}_static PROPERTIES OUTPUT_NAME ${LIBNAME})
-endfunction(add_dual_library)
-
-# Link both a static and a dynamic target against some libraries
-function(target_link_dual_libraries LIBNAME)
-    target_link_libraries(${LIBNAME} ${ARGN})
-    target_link_libraries(${LIBNAME}_static ${ARGN})
-endfunction(target_link_dual_libraries)
+target_link_libraries(hopsyarn ndbclient pthread)
 
 function(output_directory TGT DIR)
     SET_TARGET_PROPERTIES(${TGT} PROPERTIES
@@ -58,12 +37,5 @@ function(output_directory TGT DIR)
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${DIR}")
 endfunction(output_directory TGT DIR)
 
-function(dual_output_directory TGT DIR)
-    output_directory(${TGT} "${DIR}")
-    output_directory(${TGT}_static "${DIR}")
-endfunction(dual_output_directory TGT DIR)
 
-
-add_dual_library (hopsyarn SHARED ${SOURCES})
-target_link_dual_libraries(hopsyarn ${PROJECT_LINK_LIBS} )
-dual_output_directory(hopsyarn ../classes)
+output_directory(hopsyarn ../classes)

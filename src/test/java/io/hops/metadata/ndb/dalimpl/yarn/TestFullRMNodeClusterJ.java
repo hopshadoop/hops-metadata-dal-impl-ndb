@@ -229,33 +229,7 @@ public class TestFullRMNodeClusterJ {
       Assert.assertTrue(flag);
     }
 
-    List<ContainerId> hopContainerIdsFinal = hopRMNodeFull.
-            getHopContainerIdsToClean();
-    for (ContainerId updated : hopContainerIdsFinal) {
-      boolean flag = false;
-      for (ContainerId containerIdOringine : hopContainerIds) {
-        if (updated.getContainerId().
-                equals(containerIdOringine.getContainerId())) {
-          flag = true;
-          break;
-        }
-      }
-      Assert.assertTrue(flag);
-    }
 
-    List<FinishedApplications> hopFinishedAppsFinal = hopRMNodeFull.
-            getHopFinishedApplications();
-    for (FinishedApplications finishedApp : hopFinishedAppsFinal) {
-      boolean flag = false;
-      for (FinishedApplications finishedAppOringine : hopFinishedApps) {
-        if (finishedApp.getApplicationId().equals(finishedAppOringine.
-                getApplicationId())) {
-          flag = true;
-          break;
-        }
-      }
-      Assert.assertTrue(flag);
-    }
 
     Collection<ContainerStatus> hopContainersStatusFinal = hopRMNodeFull.
             getHopContainersStatus();
