@@ -535,6 +535,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
           } else if (e == MetadataLogDataAccess.class) {
             MysqlServerConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.MetadataLogTableDef.TABLE_NAME);
+            MysqlServerConnector.truncateTable(transactional,
+                io.hops.metadata.hdfs.TablesDef.MetadataLogTableDef.LOOKUP_TABLE_NAME);
           } else if (e == AccessTimeLogDataAccess.class) {
             MysqlServerConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.AccessTimeLogTableDef.TABLE_NAME);
