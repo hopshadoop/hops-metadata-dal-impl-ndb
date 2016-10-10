@@ -75,7 +75,9 @@ public class BlockChecksumClusterj
 
   @Override
   public void add(BlockChecksum blockChecksum) throws StorageException {
-    LOG.info("ADD " + blockChecksum.toString());
+    if(LOG.isInfoEnabled()) {
+      LOG.info("ADD " + blockChecksum.toString());
+    }
     HopsSession session = clusterjConnector.obtainSession();
     BlockChecksumDto dto = session.newInstance(BlockChecksumDto.class);
     copyState(blockChecksum, dto);
@@ -85,7 +87,9 @@ public class BlockChecksumClusterj
 
   @Override
   public void update(BlockChecksum blockChecksum) throws StorageException {
-    LOG.info("UPDATE " + blockChecksum.toString());
+    if(LOG.isInfoEnabled()) {
+      LOG.info("UPDATE " + blockChecksum.toString());
+    }
     HopsSession session = clusterjConnector.obtainSession();
     BlockChecksumDto dto = session.newInstance(BlockChecksumDto.class);
     copyState(blockChecksum, dto);
@@ -95,7 +99,9 @@ public class BlockChecksumClusterj
 
   @Override
   public void delete(BlockChecksum blockChecksum) throws StorageException {
-    LOG.info("DELETE " + blockChecksum.toString());
+    if(LOG.isInfoEnabled()) {
+      LOG.info("DELETE " + blockChecksum.toString());
+    }
     HopsSession session = clusterjConnector.obtainSession();
     BlockChecksumDto dto = session.newInstance(BlockChecksumDto.class);
     copyState(blockChecksum, dto);
