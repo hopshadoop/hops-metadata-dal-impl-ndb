@@ -87,6 +87,10 @@ import io.hops.metadata.yarn.dal.RMLoadDataAccess;
 import io.hops.metadata.yarn.dal.RMNodeDataAccess;
 import io.hops.metadata.yarn.dal.ResourceDataAccess;
 import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
+import io.hops.metadata.yarn.dal.rmstatestore.ApplicationAttemptStateDataAccess;
+import io.hops.metadata.yarn.dal.rmstatestore.ApplicationStateDataAccess;
+import io.hops.metadata.yarn.dal.rmstatestore.DelegationKeyDataAccess;
+import io.hops.metadata.yarn.dal.rmstatestore.DelegationTokenDataAccess;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -331,7 +335,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         RMNodeDataAccess.class, FinishedApplicationsDataAccess.class,
         UpdatedContainerInfoDataAccess.class, YarnLeDescriptorDataAccess.class,
         RMLoadDataAccess.class, PendingEventDataAccess.class,
-        NextHeartbeatDataAccess.class);
+        NextHeartbeatDataAccess.class, ApplicationStateDataAccess.class,
+        ApplicationAttemptStateDataAccess.class, DelegationKeyDataAccess.class,
+        DelegationTokenDataAccess.class);
   }
   
   private boolean formatHDFS(boolean transactional) throws StorageException{
@@ -482,6 +488,18 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
           } else if (e == ContainerIdToCleanDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.ContainerIdToCleanTableDef.TABLE_NAME);
+          } else if (e == ApplicationAttemptStateDataAccess.class) {
+            truncate(transactional,
+                io.hops.metadata.yarn.TablesDef.ApplicationAttemptStateTableDef.TABLE_NAME);
+          } else if (e == ApplicationStateDataAccess.class) {
+            truncate(transactional,
+                io.hops.metadata.yarn.TablesDef.ApplicationStateTableDef.TABLE_NAME);
+          } else if (e == DelegationKeyDataAccess.class) {
+            truncate(transactional,
+                io.hops.metadata.yarn.TablesDef.DelegationKeyTableDef.TABLE_NAME);
+          } else if (e == DelegationTokenDataAccess.class) {
+            truncate(transactional,
+                io.hops.metadata.yarn.TablesDef.DelegationTokenTableDef.TABLE_NAME);
           } else if (e == ContainerStatusDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.ContainerStatusTableDef.TABLE_NAME);

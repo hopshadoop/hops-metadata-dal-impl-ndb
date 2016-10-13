@@ -487,3 +487,46 @@ CREATE TABLE `yarn_pendingevents` (
   `contains` INT NULL,
   PRIMARY KEY (`id`, `rmnodeid`))
 ENGINE = ndbcluster DEFAULT CHARSET=latin1$$
+
+delimiter $$
+
+CREATE TABLE `yarn_applicationstate` (
+  `applicationid` VARCHAR(45) NOT NULL,
+  `appstate` VARBINARY(13500) NULL,
+  `appuser` VARCHAR(45) NULL,
+  `appname` VARCHAR(200) NULL,
+  `appsmstate` VARCHAR(45) NULL,
+PRIMARY KEY (`applicationid`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`applicationid`)$$
+
+delimiter $$
+
+CREATE TABLE `yarn_delegation_token` (
+  `seq_number` INT NOT NULL,
+  `rmdt_identifier` VARBINARY(13500) NULL,
+PRIMARY KEY (`seq_number`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+
+delimiter $$
+
+CREATE TABLE `yarn_delegation_key` (
+  `key` INT NOT NULL,
+  `delegationkey` VARBINARY(13500) NULL,
+PRIMARY KEY (`key`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+
+delimiter $$
+
+CREATE TABLE `yarn_applicationattemptstate` (
+  `applicationid` VARCHAR(45) NOT NULL,
+  `applicationattemptid` VARCHAR(45) NOT NULL,
+  `applicationattemptstate` VARBINARY(13000) NULL,
+  PRIMARY KEY (`applicationid`, `applicationattemptid`),
+  INDEX `applicationid` (`applicationid` ASC),
+  CONSTRAINT `applicationid`
+  FOREIGN KEY (`applicationid`)
+  REFERENCES `yarn_applicationstate` (`applicationid`)
+  ON DELETE CASCADE
+  ON UPDATE NO ACTION
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`applicationid`)$$
+
