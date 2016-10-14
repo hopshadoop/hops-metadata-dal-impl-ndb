@@ -20,9 +20,11 @@ package io.hops.metadata.ndb.wrapper;
 
 import com.mysql.clusterj.ClusterJDatastoreException;
 import com.mysql.clusterj.ClusterJException;
+import io.hops.exception.ForeignKeyConstraintViolationException;
 import io.hops.exception.StorageException;
 import io.hops.exception.TransientStorageException;
 import io.hops.exception.TupleAlreadyExistedException;
+import io.hops.exception.UniqueKeyConstraintViolationException;
 
 public class HopsExceptionHelper {
   public static StorageException wrap(ClusterJException e) {
@@ -30,6 +32,10 @@ public class HopsExceptionHelper {
       return new TransientStorageException(e);
     } else if (isTupleAlreadyExisted(e)) {
       return new TupleAlreadyExistedException(e);
+    } else if(isForeignKeyConstraintViolation(e)){
+      return new ForeignKeyConstraintViolationException(e);
+    } else if(isUniqueKeyConstraintViolation(e)){
+      return new UniqueKeyConstraintViolationException(e);
     } else {
       return new StorageException(e);
     }
@@ -63,8 +69,21 @@ public class HopsExceptionHelper {
   }
 
   private static boolean isTupleAlreadyExisted(ClusterJException e) {
+    return isExceptionContains(e, "code 630");
+  }
+
+  private static boolean isForeignKeyConstraintViolation(ClusterJException e){
+    return isExceptionContains(e, "code 255");
+  }
+
+  private static boolean isUniqueKeyConstraintViolation(ClusterJException e){
+    return isExceptionContains(e, "code 893");
+  }
+
+  private static boolean isExceptionContains(ClusterJException e, String
+      checkString){
     if (e instanceof  ClusterJDatastoreException) {
-      if (e.getMessage().contains("code 630")) {
+      if (e.getMessage().contains(checkString)) {
         return true;
       }
     }
