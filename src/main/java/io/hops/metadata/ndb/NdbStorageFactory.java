@@ -94,6 +94,11 @@ import io.hops.metadata.ndb.dalimpl.yarn.RMLoadClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.RMNodeClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.ResourceClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.UpdatedContainerInfoClusterJ;
+import io.hops.metadata.ndb.dalimpl.yarn.quota.ContainersCheckPointsClusterJ;
+import io.hops.metadata.ndb.dalimpl.yarn.quota.ContainersLogsClusterJ;
+import io.hops.metadata.ndb.dalimpl.yarn.quota.PriceMultiplicatorClusterJ;
+import io.hops.metadata.ndb.dalimpl.yarn.quota.ProjectQuotaClusterJ;
+import io.hops.metadata.ndb.dalimpl.yarn.quota.ProjectsDailyCostClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.ApplicationAttemptStateClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.ApplicationStateClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.DelegationKeyClusterJ;
@@ -109,10 +114,16 @@ import io.hops.metadata.yarn.dal.RMLoadDataAccess;
 import io.hops.metadata.yarn.dal.RMNodeDataAccess;
 import io.hops.metadata.yarn.dal.ResourceDataAccess;
 import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
+import io.hops.metadata.yarn.dal.quota.ContainersCheckPointsDataAccess;
+import io.hops.metadata.yarn.dal.quota.ContainersLogsDataAccess;
+import io.hops.metadata.yarn.dal.quota.PriceMultiplicatorDataAccess;
+import io.hops.metadata.yarn.dal.quota.ProjectQuotaDataAccess;
+import io.hops.metadata.yarn.dal.quota.ProjectsDailyCostDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.ApplicationAttemptStateDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.ApplicationStateDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.DelegationKeyDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.DelegationTokenDataAccess;
+import io.hops.metadata.yarn.entity.quota.PriceMultiplicator;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -202,6 +213,11 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(ApplicationStateDataAccess.class, new ApplicationStateClusterJ());
     dataAccessMap.put(DelegationTokenDataAccess.class, new DelegationTokenClusterJ());
     dataAccessMap.put(DelegationKeyDataAccess.class, new DelegationKeyClusterJ());
+    dataAccessMap.put(ProjectQuotaDataAccess.class, new ProjectQuotaClusterJ());
+    dataAccessMap.put(ContainersLogsDataAccess.class, new ContainersLogsClusterJ());
+    dataAccessMap.put(ContainersCheckPointsDataAccess.class, new ContainersCheckPointsClusterJ());
+    dataAccessMap.put(ProjectsDailyCostDataAccess.class, new ProjectsDailyCostClusterJ());
+    dataAccessMap.put(PriceMultiplicatorDataAccess.class,new PriceMultiplicatorClusterJ());
   }
 
   @Override

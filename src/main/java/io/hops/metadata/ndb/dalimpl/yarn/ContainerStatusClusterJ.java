@@ -68,11 +68,6 @@ public class ContainerStatusClusterJ implements
 
     void setuciid(int uciid);
 
-    @Column(name = TYPE)
-    String getType();
-
-    void setType(String type);
-
     @Column(name = STATE)
     String getstate();
 
@@ -172,7 +167,6 @@ public class ContainerStatusClusterJ implements
     csDTO.setexitstatus(hopCS.getExitstatus());
     csDTO.setrmnodeid(hopCS.getRMNodeId());
     csDTO.setpendingeventid(hopCS.getPendingEventId());
-    csDTO.setType(hopCS.getType().name());
     csDTO.setuciid(hopCS.getUciId());
     return csDTO;
   }
@@ -182,9 +176,7 @@ public class ContainerStatusClusterJ implements
     ContainerStatus hop = new ContainerStatus(csDTO.getcontainerid(), csDTO.
             getstate(),
             csDTO.getdiagnostics(), csDTO.getexitstatus(), csDTO.getrmnodeid(),
-            csDTO.getpendingeventid(), 
-            ContainerStatus.Type.valueOf(csDTO.getType()),
-            csDTO.getuciid());
+            csDTO.getpendingeventid(), csDTO.getuciid());
     return hop;
   }
 

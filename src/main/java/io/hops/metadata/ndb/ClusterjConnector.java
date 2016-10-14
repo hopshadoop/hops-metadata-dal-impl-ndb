@@ -87,6 +87,11 @@ import io.hops.metadata.yarn.dal.RMLoadDataAccess;
 import io.hops.metadata.yarn.dal.RMNodeDataAccess;
 import io.hops.metadata.yarn.dal.ResourceDataAccess;
 import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
+import io.hops.metadata.yarn.dal.quota.ContainersCheckPointsDataAccess;
+import io.hops.metadata.yarn.dal.quota.ContainersLogsDataAccess;
+import io.hops.metadata.yarn.dal.quota.PriceMultiplicatorDataAccess;
+import io.hops.metadata.yarn.dal.quota.ProjectQuotaDataAccess;
+import io.hops.metadata.yarn.dal.quota.ProjectsDailyCostDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.ApplicationAttemptStateDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.ApplicationStateDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.DelegationKeyDataAccess;
@@ -337,7 +342,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         RMLoadDataAccess.class, PendingEventDataAccess.class,
         NextHeartbeatDataAccess.class, ApplicationStateDataAccess.class,
         ApplicationAttemptStateDataAccess.class, DelegationKeyDataAccess.class,
-        DelegationTokenDataAccess.class);
+        DelegationTokenDataAccess.class, ProjectQuotaDataAccess.class,
+        ContainersLogsDataAccess.class, ContainersCheckPointsDataAccess.class,
+        ProjectsDailyCostDataAccess.class, PriceMultiplicatorDataAccess.class);
   }
   
   private boolean formatHDFS(boolean transactional) throws StorageException{
@@ -522,6 +529,16 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
                 io.hops.metadata.yarn.TablesDef.PendingEventTableDef.TABLE_NAME);
           } else if (e == NextHeartbeatDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.NextHeartbeatTableDef.TABLE_NAME);
+          } else if (e == ProjectQuotaDataAccess.class) {
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.ProjectQuotaTableDef.TABLE_NAME);
+          } else if (e == ContainersLogsDataAccess.class) {
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.ContainersLogsTableDef.TABLE_NAME);
+          } else if (e == ContainersCheckPointsDataAccess.class) {
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.ContainersCheckPointsTableDef.TABLE_NAME);
+          } else if (e == ProjectsDailyCostDataAccess.class) {
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.ProjectsDailyCostTableDef.TABLE_NAME);
+          } else if (e == PriceMultiplicatorDataAccess.class) {
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.PriceMultiplicatorTableDef.TABLE_NAME);
           }
         }
         MysqlServerConnector.truncateTable(transactional,

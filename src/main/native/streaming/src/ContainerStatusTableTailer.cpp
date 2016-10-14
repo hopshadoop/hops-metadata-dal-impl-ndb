@@ -27,11 +27,10 @@
 using namespace Utils::NdbC;
 
 const string _containerStatus_table= "yarn_containerstatus";
-const int _containerStatus_noCols= 8;
+const int _containerStatus_noCols= 7;
 const string _containerStatus_cols[_containerStatus_noCols]=
     {"containerid",
      "rmnodeid",
-     "type",
      "state",
      "diagnostics",
      "exitstatus",
@@ -49,7 +48,6 @@ const WatchTable ContainerStatusTableTailer::TABLE = {_containerStatus_table, _c
 
 const int CONTAINER_ID = 0;
 const int RMNODE_ID = 1;
-const int TYPE = 2;
 const int STATE = 3;
 const int DIAGNOSTICS = 4;
 const int EXIT_STATUS = 5;
@@ -71,13 +69,12 @@ void ContainerStatusTableTailer::handleEvent(NdbDictionary::Event::TableEvent ev
     jmethodID midInit = env->GetMethodID( cls, "<init>", "()V");
     containerStatusEventReceiver = env->NewObject( cls, midInit);
   
-    midCreateAndAddToQueue = env->GetMethodID(cls, "createAndAddToQueue","(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;III)V");
+    midCreateAndAddToQueue = env->GetMethodID(cls, "createAndAddToQueue","(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;III)V");
     attached = true;
   }
   //get the values
   jstring containerId = env->NewStringUTF(get_string(value[CONTAINER_ID]).c_str());
   jstring rmnodeId = env->NewStringUTF(get_string(value[RMNODE_ID]).c_str());
-  jstring type = env->NewStringUTF(get_string(value[TYPE]).c_str());
   jstring state = env->NewStringUTF(get_string(value[STATE]).c_str());
   jstring diagnostics = env->NewStringUTF(get_string(value[DIAGNOSTICS]).c_str());
   int exitStatus = value[EXIT_STATUS]->int32_value();
@@ -85,10 +82,9 @@ void ContainerStatusTableTailer::handleEvent(NdbDictionary::Event::TableEvent ev
   int pendingEventId = value[PENDING_EVENT_ID]->int32_value();
   //create the rmnode object and put it in the event queue
     LOG_INFO("create event");
-    env->CallVoidMethod(containerStatusEventReceiver,midCreateAndAddToQueue,containerId, rmnodeId, type,state,diagnostics,exitStatus,uciId,pendingEventId);
+    env->CallVoidMethod(containerStatusEventReceiver,midCreateAndAddToQueue,containerId, rmnodeId, state,diagnostics,exitStatus,uciId,pendingEventId);
   env->DeleteLocalRef(rmnodeId);
   env->DeleteLocalRef(containerId);
-  env->DeleteLocalRef(type);
   env->DeleteLocalRef(state);
   env->DeleteLocalRef(diagnostics);
    

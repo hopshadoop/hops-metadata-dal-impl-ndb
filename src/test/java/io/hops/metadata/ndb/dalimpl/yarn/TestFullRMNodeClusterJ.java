@@ -105,34 +105,30 @@ public class TestFullRMNodeClusterJ {
             new ContainerStatus("container1",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
                     "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
-                    ContainerStatus.Type.JUST_LAUNCHED,
                     hopUpdatedContainers.get(0).getUpdatedContainerInfoId()));
     hopContainersStatus.add(
             new ContainerStatus("container2",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
                     "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
-                    ContainerStatus.Type.JUST_LAUNCHED,
                     hopUpdatedContainers.get(0).getUpdatedContainerInfoId()));
     hopContainersStatus.add(
             new ContainerStatus("container3",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
                     "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
-                    ContainerStatus.Type.UCI,
                     hopUpdatedContainers.get(0).getUpdatedContainerInfoId()));
     hopContainersStatus.add(
             new ContainerStatus("container4",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
                     "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
-                    ContainerStatus.Type.UCI,
                     hopUpdatedContainers.get(1).getUpdatedContainerInfoId()));
     hopContainersStatus.add(new ContainerStatus("container5",
             TablesDef.ContainerStatusTableDef.STATE_COMPLETED,
             "every thing is good", 0,
-            "70", DEFAULT_PENDIND_ID, ContainerStatus.Type.UCI,
+            "70", DEFAULT_PENDIND_ID, 
             hopUpdatedContainers.get(1).getUpdatedContainerInfoId()));
     hopContainersStatus.add(new ContainerStatus("container6",
             TablesDef.ContainerStatusTableDef.STATE_COMPLETED, "finish", 1, "70",
-            DEFAULT_PENDIND_ID, ContainerStatus.Type.UCI,
+            DEFAULT_PENDIND_ID, 
             hopUpdatedContainers.get(1).getUpdatedContainerInfoId()));
 
     LightWeightRequestHandler fillDB

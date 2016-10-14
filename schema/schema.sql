@@ -433,7 +433,6 @@ delimiter $$
 CREATE TABLE `yarn_containerstatus` (
   `containerid` VARCHAR(45) NOT NULL,
   `rmnodeid` VARCHAR(255) NOT NULL,
-  `type` VARCHAR(45) NOT NULL,
   `state` VARCHAR(45) NULL,
   `diagnostics` VARCHAR(2000) NULL,
   `exitstatus` INT NULL,
@@ -530,3 +529,51 @@ CREATE TABLE `yarn_applicationattemptstate` (
   ON UPDATE NO ACTION
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`applicationid`)$$
 
+delimiter $$
+
+CREATE TABLE `yarn_projects_quota` (
+  `projectname` VARCHAR(100) NOT NULL,
+  `total` FLOAT DEFAULT '0',
+  `quota_remaining` FLOAT  DEFAULT '0',
+  PRIMARY KEY (`projectname`))
+ENGINE = ndbcluster PARTITION BY KEY(projectname)$$
+
+delimiter $$
+
+CREATE TABLE `yarn_containers_logs` (
+  `container_id` VARCHAR(255) NOT NULL,
+  `start` BIGINT NOT NULL,
+  `stop` BIGINT  DEFAULT NULL,
+  `exit_status` INT DEFAULT NULL,
+  `price` FLOAT  DEFAULT NULL,
+  `vcores` INT DEFAULT NULL,
+  `mb` INT DEFAULT NULL,
+  PRIMARY KEY (`container_id`))
+ENGINE = ndbcluster $$
+
+delimiter $$
+
+CREATE TABLE `yarn_projects_daily_cost` (
+  `user` VARCHAR(255) NOT NULL,
+  `projectname` VARCHAR(100) NOT NULL,
+  `day` BIGINT NOT NULL,
+  `credits_used` FLOAT  DEFAULT NULL,
+  PRIMARY KEY (`projectname`, `day`, `user`))
+ENGINE = ndbcluster PARTITION BY KEY(user)$$
+
+delimiter $$
+
+CREATE TABLE `yarn_containers_checkpoint` (
+  `container_id` VARCHAR(255) NOT NULL,
+  `checkpoint` BIGINT NOT NULL,
+  `multiplicator` FLOAT NOT NULL,
+  PRIMARY KEY (`container_id`))
+ENGINE = ndbcluster PARTITION BY KEY(container_id)$$
+
+delimiter $$
+
+CREATE TABLE `yarn_price_multiplicator` (
+  `id` VARCHAR(255) NOT NULL,
+  `multiplicator` FLOAT NOT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = ndbcluster$$
