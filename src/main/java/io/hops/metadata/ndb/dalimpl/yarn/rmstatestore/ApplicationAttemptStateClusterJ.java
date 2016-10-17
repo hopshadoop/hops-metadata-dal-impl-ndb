@@ -63,6 +63,10 @@ public class ApplicationAttemptStateClusterJ
 
     void setapplicationattemptstate(byte[] applicationattemptstate);
 
+    @Column(name = TRAKINGURL)
+    String gettrakingurl();
+
+    void settrakingurl(String trakingurl);
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -118,7 +122,8 @@ public class ApplicationAttemptStateClusterJ
     try {
       return new ApplicationAttemptState(entry.getapplicationid(),
           entry.getapplicationattemptid(),
-          CompressionUtils.decompress(entry.getapplicationattemptstate()));
+          CompressionUtils.decompress(entry.getapplicationattemptstate()),
+          entry.gettrakingurl());
     } catch (IOException e) {
       throw new StorageException(e);
     } catch (DataFormatException e) {
@@ -136,6 +141,7 @@ public class ApplicationAttemptStateClusterJ
     applicationAttemptStateDTO.setapplicationid(hop.getApplicationId());
     applicationAttemptStateDTO.setapplicationattemptid(hop.
         getApplicationattemptid());
+    applicationAttemptStateDTO.settrakingurl(hop.getTrakingURL());
     try {
       applicationAttemptStateDTO.setapplicationattemptstate(CompressionUtils.
           compress(hop.

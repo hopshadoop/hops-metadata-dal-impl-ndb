@@ -520,6 +520,7 @@ CREATE TABLE `yarn_applicationattemptstate` (
   `applicationid` VARCHAR(45) NOT NULL,
   `applicationattemptid` VARCHAR(45) NOT NULL,
   `applicationattemptstate` VARBINARY(13000) NULL,
+  `applicationattempttrakingurl` VARCHAR(120) NULL,
   PRIMARY KEY (`applicationid`, `applicationattemptid`),
   INDEX `applicationid` (`applicationid` ASC),
   CONSTRAINT `applicationid`
