@@ -27,6 +27,7 @@ import io.hops.metadata.hdfs.dal.QuotaUpdateDataAccess;
 import io.hops.metadata.hdfs.entity.QuotaUpdate;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.mysqlserver.HopsSQLExceptionHelper;
+import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
 import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
 import io.hops.metadata.ndb.wrapper.HopsPredicate;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
@@ -164,5 +165,11 @@ public class QuotaUpdateClusterj
 
     List<QuotaUpdateDTO> results = query.getResultList();
     return convertAndRelease(session, results);
+  }
+
+  @Override
+  public int getCount() throws StorageException {
+    int count = MySQLQueryHelper.countAll(TablesDef.QuotaUpdateTableDef.TABLE_NAME);
+    return count;
   }
 }

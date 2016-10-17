@@ -191,7 +191,12 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
   public boolean formatYarnStorage() throws StorageException {
     throw new UnsupportedOperationException("Not supported yet.");
   }
-  
+
+  @Override
+  public boolean formatHDFSStorage() throws StorageException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
   public boolean formatStorage(Class<? extends EntityDataAccess>... das)
           throws StorageException {
     throw new UnsupportedOperationException("Not supported yet.");
@@ -234,6 +239,11 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
 
   @Override
   public boolean formatYarnStorageNonTransactional() throws StorageException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public boolean formatHDFSStorageNonTransactional() throws StorageException {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 

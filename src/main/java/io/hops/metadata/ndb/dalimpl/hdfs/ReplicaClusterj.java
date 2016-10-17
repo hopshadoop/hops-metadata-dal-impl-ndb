@@ -49,7 +49,6 @@ import java.util.Set;
 
 public class ReplicaClusterj
     implements TablesDef.ReplicaTableDef, ReplicaDataAccess<Replica> {
-  static final Logger LOG = Logger.getLogger(ReplicaClusterj.class);
 
   @PersistenceCapable(table = TABLE_NAME)
   @PartitionKey(column = INODE_ID)
@@ -127,26 +126,13 @@ public class ReplicaClusterj
   @Override
   public Map<Long,Integer> findBlockAndInodeIdsByStorageId(int storageId)
       throws StorageException {
-//    HopsSession session = connector.obtainSession();
-//    List<ReplicaDTO> res = getReplicas(session, storageId);
-//    //ClusterjConnector.LOG.error("xxxa: got replicas " + res.size() + " in " + (System.currentTimeMillis() - t));
-//    Map<Long,Integer> map = new HashMap<Long,Integer>();
-//    for(ReplicaDTO dto : res){
-//      map.put(dto.getBlockId(), dto.getINodeId() );
-//    }
-//    return map;
-    
-    return MySQLQueryHelper.execute(String.format("SELECT %s, %s "
-            + "FROM %s WHERE %s='%d'", BLOCK_ID, INODE_ID, TABLE_NAME, STORAGE_ID, storageId), new MySQLQueryHelper.ResultSetHandler<Map<Long,Integer>>() {
-      @Override
-      public Map<Long,Integer> handle(ResultSet result) throws SQLException {
-        Map<Long,Integer> blockInodeMap = new HashMap<Long,Integer>();
-        while (result.next()) {
-          blockInodeMap.put(result.getLong(BLOCK_ID),result.getInt(INODE_ID));
-        }
-        return blockInodeMap;
-      }
-    });
+    HopsSession session = connector.obtainSession();
+    List<ReplicaDTO> res = getReplicas(session, storageId);
+    Map<Long,Integer> map = new HashMap<Long,Integer>();
+    for(ReplicaDTO dto : res){
+      map.put(dto.getBlockId(), dto.getINodeId() );
+    }
+    return map;
   }
 
   @Override
