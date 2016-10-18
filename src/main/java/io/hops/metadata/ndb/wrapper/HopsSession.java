@@ -29,6 +29,7 @@ import java.util.Collection;
 
 public class HopsSession {
   private final Session session;
+  private LockMode lockMode = LockMode.READ_COMMITTED;
 
   public HopsSession(Session session) {
     this.session = session;
@@ -240,6 +241,7 @@ public class HopsSession {
   public void setLockMode(LockMode lockMode) throws StorageException {
     try {
       session.setLockMode(lockMode);
+      this.lockMode = lockMode;
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);
     }
@@ -281,5 +283,9 @@ public class HopsSession {
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);
     }
+  }
+
+  public LockMode getCurrentLockMode(){
+    return lockMode;
   }
 }

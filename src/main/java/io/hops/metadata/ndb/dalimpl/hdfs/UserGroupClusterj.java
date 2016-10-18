@@ -33,6 +33,7 @@ import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
@@ -64,12 +65,23 @@ public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
   @Override
   public void addUserToGroup(int userId, int groupId)
       throws StorageException {
+    addUserToGroups(userId, Arrays.asList(groupId));
+  }
+
+  @Override
+  public void addUserToGroups(int userId, List<Integer> groupIds)
+      throws StorageException {
     HopsSession session = connector.obtainSession();
-    UserGroupDTO dto = session.newInstance(UserGroupDTO.class);
-    dto.setUserId(userId);
-    dto.setGroupId(groupId);
-    session.savePersistent(dto);
-    session.release(dto);
+    List<UserGroupDTO> dtos = Lists.newArrayListWithExpectedSize(groupIds
+        .size());
+    for(int groupId : groupIds){
+      UserGroupDTO dto = session.newInstance(UserGroupDTO.class);
+      dto.setUserId(userId);
+      dto.setGroupId(groupId);
+      dtos.add(dto);
+    }
+    session.savePersistentAll(dtos);
+    session.release(dtos);
   }
 
   @Override

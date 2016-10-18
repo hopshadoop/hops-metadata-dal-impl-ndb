@@ -64,31 +64,35 @@ CREATE TABLE `hdfs_inode_attributes` (
 delimiter $$
 
 CREATE TABLE `hdfs_inodes` (
-  `id` int(11) NOT NULL,
+  `partition_id` int(11) NOT NULL,
   `parent_id` int(11) NOT NULL DEFAULT '0',
   `name` varchar(255) NOT NULL DEFAULT '',
-  `modification_time` bigint(20) DEFAULT NULL,
-  `access_time` bigint(20) DEFAULT NULL,
+  `id` int(11) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
   `group_id` int(11) DEFAULT NULL,
-  `permission` smallint DEFAULT NULL,
+  `modification_time` bigint(20) DEFAULT NULL,
+  `access_time` bigint(20) DEFAULT NULL,
+  `permission` smallint(6) DEFAULT NULL,
   `client_name` varchar(100) DEFAULT NULL,
   `client_machine` varchar(100) DEFAULT NULL,
   `client_node` varchar(100) DEFAULT NULL,
   `generation_stamp` int(11) DEFAULT NULL,
   `header` bigint(20) DEFAULT NULL,
   `symlink` varchar(255) DEFAULT NULL,
+  `subtree_lock_owner` bigint(20) DEFAULT NULL,
+  `size` bigint(20) NOT NULL DEFAULT '0',
   `quota_enabled` bit(8) NOT NULL,
+  `meta_enabled` bit(8) DEFAULT b'110000',
+  `is_dir` bit(8) NOT NULL,
   `under_construction` bit(8) NOT NULL,
   `subtree_locked` bit(8) DEFAULT NULL,
-  `subtree_lock_owner` bigint(20) DEFAULT NULL,
-  `meta_enabled` bit(8) DEFAULT b'110000',
-  `size` bigint(20) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`parent_id`,`name`),
+  PRIMARY KEY (`partition_id`,`parent_id`,`name`),
   KEY `pidex` (`parent_id`),
-  KEY `inode_idx` (`id`)
+  KEY `inode_idx` (`id`),
+  KEY `c1` (`parent_id`,`partition_id`),
+  KEY `c2` (`partition_id`,`parent_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1
-/*!50100 PARTITION BY KEY (parent_id) */ $$
+/*!50100 PARTITION BY KEY (partition_id) */  $$
 
 delimiter $$
 
@@ -322,12 +326,16 @@ CREATE TABLE `hdfs_block_checksum` (
 
 delimiter $$
 
-CREATE TABLE `hdfs_on_going_sub_tree_ops` (
-  `path` varchar(3000) NOT NULL,
-  `namenode_id` bigint(20) NOT NULL,
-  `op_name` int(11) NOT NULL,
-  PRIMARY KEY (`path`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+CREATE TABLE `hdfs_on_going_sub_tree_ops` ( 
+  `partition_id` int(11) NOT NULL DEFAULT '0',                             
+  `path` varchar(3000) NOT NULL,                                           
+  `namenode_id` bigint(20) NOT NULL,                                       
+  `op_name` int(11) NOT NULL,                                              
+  PRIMARY KEY (`partition_id`,`path`),                                     
+  KEY `partindex` (`partition_id`),                                        
+  KEY `nameidx` (`path`)                                                   
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1                                 
+/*!50100 PARTITION BY KEY (partition_id) */$$                              
 
 delimiter $$
 
@@ -613,7 +621,7 @@ delimiter $$
 
 CREATE TABLE `yarn_updated_node` (
   `applicationid` VARCHAR(45) NOT NULL,
-  `nodeid` VARCHAR(255) NULL,
+  `nodeid` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`applicationid`, `nodeid`),
   CONSTRAINT `nodeid`
     FOREIGN KEY (`nodeid`)
@@ -626,7 +634,7 @@ delimiter $$
 
 CREATE TABLE `yarn_ran_node` (
   `application_attempt_id` VARCHAR(45) NOT NULL,
-  `nodeid` VARCHAR(255) NULL,
+  `nodeid` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`application_attempt_id`, `nodeid`),
   CONSTRAINT `nodeid`
     FOREIGN KEY (`nodeid`)
@@ -657,7 +665,7 @@ delimiter $$
 
 CREATE TABLE `yarn_rmcontainer` (
   `containerid_id` VARCHAR(45) NOT NULL,
-  `appattemptid_id` VARCHAR(45) NULL,
+  `appattemptid_id` VARCHAR(45) NOT NULL,
   `nodeid_id` VARCHAR(255) NULL,
   `user` VARCHAR(45) NULL,
   `starttime` BIGINT NULL,
