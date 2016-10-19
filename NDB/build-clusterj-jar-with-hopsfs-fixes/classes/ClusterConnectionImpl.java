@@ -26,6 +26,7 @@ import java.util.Map;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.Collections;
 
 import com.mysql.ndbjtie.ndbapi.Ndb;
 import com.mysql.ndbjtie.ndbapi.Ndb_cluster_connection;
@@ -43,7 +44,6 @@ import com.mysql.clusterj.core.store.Table;
 import com.mysql.clusterj.core.util.I18NHelper;
 import com.mysql.clusterj.core.util.Logger;
 import com.mysql.clusterj.core.util.LoggerFactoryService;
-
 
 /**
  *
@@ -71,7 +71,7 @@ public class ClusterConnectionImpl
     final int connectTimeoutMgm;
 
     /** All regular dbs (not dbForNdbRecord) given out by this cluster connection */
-    private Map<DbImpl, Object> dbs = new IdentityHashMap<DbImpl, Object>();
+    private Map<DbImpl, Object> dbs = Collections.synchronizedMap(new IdentityHashMap<DbImpl, Object>());
 
     /** The DbImplForNdbRecord */
     DbImplForNdbRecord dbForNdbRecord;
@@ -112,6 +112,8 @@ public class ClusterConnectionImpl
 
     private static final boolean USE_SMART_VALUE_HANDLER =
             ClusterJHelper.getBooleanProperty(USE_SMART_VALUE_HANDLER_NAME, "true");
+
+    protected static boolean queryObjectsInitialized = false;
 
     /** Connect to the MySQL Cluster
      * 
@@ -159,6 +161,8 @@ public class ClusterConnectionImpl
                 Ndb ndbForNdbRecord = Ndb.create(clusterConnection, database, "def");
                 handleError(ndbForNdbRecord, clusterConnection, connectString, nodeId);
                 dbForNdbRecord = new DbImplForNdbRecord(this, ndbForNdbRecord);
+                // get an instance of stand-alone query objects to avoid synchronizing later
+                dbForNdbRecord.initializeQueryObjects();
                 dictionaryForNdbRecord = dbForNdbRecord.getNdbDictionary();
             }
         }
