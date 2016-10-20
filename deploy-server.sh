@@ -18,7 +18,7 @@ fi
 export LIBNDBPATH=/usr/local/mysql/lib
 
 
-server=glassfish@snurran.sics.se:/var/www/hops
+server=glassfish@snurran.sics.se:/var/www/hops/gautier/
 
 mvn clean install assembly:assembly -DskipTests
 
