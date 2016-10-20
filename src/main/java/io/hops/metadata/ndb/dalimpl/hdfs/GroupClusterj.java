@@ -72,8 +72,47 @@ public class GroupClusterj implements TablesDef.GroupsTableDef, GroupDataAccess<
 
   @Override
   public Group getGroup(final String groupName) throws StorageException {
-
     HopsSession session = connector.obtainSession();
+    return getGroup(session, groupName);
+  }
+
+
+  @Override
+  public Group addGroup(String groupName) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    Group group = getGroup(session, groupName);
+    if(group == null){
+      GroupDTO dto = session.newInstance(GroupDTO.class);
+      dto.setName(groupName);
+      session.makePersistent(dto);
+      session.release(dto);
+      session.flush();
+      group = getGroup(session, groupName);
+    }
+    return group;
+  }
+
+  @Override
+  public void removeGroup(int groupId) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    GroupDTO dto = session.newInstance(GroupDTO.class, groupId);
+    session.deletePersistent(dto);
+    session.release(dto);
+  }
+
+  static List<Group> convertAndRelease(HopsSession session, Collection<GroupDTO>
+      dtos)
+      throws StorageException {
+    List<Group> groups = Lists.newArrayListWithExpectedSize(dtos.size());
+    for(GroupDTO dto : dtos){
+      groups.add(new Group(dto.getId(), dto.getName()));
+      session.release(dto);
+    }
+    return groups;
+  }
+
+  private Group getGroup(HopsSession session, final String groupName) throws
+      StorageException {
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<GroupDTO> dobj =  qb.createQueryDefinition
         (GroupDTO.class);
@@ -87,25 +126,5 @@ public class GroupClusterj implements TablesDef.GroupsTableDef, GroupDataAccess<
     }
     session.release(results);
     return group;
-  }
-
-
-  @Override
-  public Group addGroup(String groupName) throws StorageException {
-    final String query = String.format("INSERT IGNORE INTO %s (%s) VALUES" +
-        "('%s')", TABLE_NAME, NAME, groupName);
-    MySQLQueryHelper.execute(query);
-    return getGroup(groupName);
-  }
-
-  static List<Group> convertAndRelease(HopsSession session, Collection<GroupDTO>
-      dtos)
-      throws StorageException {
-    List<Group> groups = Lists.newArrayListWithExpectedSize(dtos.size());
-    for(GroupDTO dto : dtos){
-      groups.add(new Group(dto.getId(), dto.getName()));
-      session.release(dto);
-    }
-    return groups;
   }
 }

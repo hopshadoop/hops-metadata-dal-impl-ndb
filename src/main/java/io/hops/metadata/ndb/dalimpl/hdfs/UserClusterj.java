@@ -26,14 +26,11 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.UserDataAccess;
 import io.hops.metadata.hdfs.entity.User;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 
 
@@ -71,6 +68,34 @@ public class UserClusterj implements TablesDef.UsersTableDef, UserDataAccess<Use
   @Override
   public User getUser(final String userName) throws StorageException {
     HopsSession session = connector.obtainSession();
+    return getUser(session, userName);
+  }
+
+  @Override
+  public User addUser(String userName) throws StorageException{
+    HopsSession session = connector.obtainSession();
+    User user = getUser(session, userName);
+    if(user == null){
+      UserDTO dto = session.newInstance(UserDTO.class);
+      dto.setName(userName);
+      session.makePersistent(dto);
+      session.release(dto);
+      session.flush();
+      user = getUser(session, userName);
+    }
+    return user;
+  }
+
+  @Override
+  public void removeUser(int userId) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    UserDTO dto = session.newInstance(UserDTO.class, userId);
+    session.deletePersistent(dto);
+    session.release(dto);
+  }
+
+  private User getUser(HopsSession session, final String userName) throws
+      StorageException {
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<UserDTO> dobj =  qb.createQueryDefinition
         (UserDTO.class);
@@ -85,21 +110,4 @@ public class UserClusterj implements TablesDef.UsersTableDef, UserDataAccess<Use
     session.release(results);
     return user;
   }
-
-  @Override
-  public User addUser(String userName) throws StorageException{
-    final String query = String.format("INSERT IGNORE INTO %s (%s) VALUES" +
-        "('%s')", TABLE_NAME, NAME, userName);
-    MySQLQueryHelper.execute(query);
-    return getUser(userName);
-  }
-
-  @Override
-  public void removeUser(int userId) throws StorageException {
-    HopsSession session = connector.obtainSession();
-    UserDTO dto = session.newInstance(UserDTO.class, userId);
-    session.deletePersistent(dto);
-    session.release(dto);
-  }
-
 }
