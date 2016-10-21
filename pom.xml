@@ -5,7 +5,7 @@
 
   <groupId>io.hops.metadata</groupId>
   <artifactId>hops-metadata-dal-impl-ndb</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <packaging>jar</packaging>
 
   <name>hops-metadata-dal-impl-ndb</name>
@@ -26,7 +26,7 @@
     <dependency>
       <groupId>com.mysql.ndb</groupId>
       <artifactId>clusterj-hops-fix</artifactId>
-      <version>7.5.3</version>
+      <version>7.5.4</version>
     </dependency>
 
     <dependency>
