@@ -17,13 +17,15 @@ fi
 
 export LIBNDBPATH=/usr/local/mysql/lib
 
+VERSION=`grep -o -a -m 1 -h -r "version>.*</version" pom.xml | head -1 | sed "s/version//g" | sed "s/>//" | sed "s/<\///g"`
+
 
 server=glassfish@snurran.sics.se:/var/www/hops/gautier/
 
 mvn clean install assembly:assembly -DskipTests
 
 echo "Deploying Hops - NDB connector...."
-scp target/hops-metadata-dal-impl-ndb-1.0-SNAPSHOT-jar-with-dependencies.jar $server/ndb-dal-$1-$2.jar
+scp target/hops-metadata-dal-impl-ndb-${VERSION}-jar-with-dependencies.jar $server/ndb-dal-$1-$2.jar
 
 echo "Deploying HopsYARN native libraries...."
 scp target/classes/libhopsyarn.so $server/libhopsyarn-$1-$2.so
