@@ -31,6 +31,7 @@ import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.NextHeartbeatDataAccess;
 import io.hops.metadata.yarn.entity.NextHeartbeat;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import java.util.HashMap;
 import java.util.List;
@@ -56,11 +57,6 @@ public class NextHeartbeatClusterJ
     int getNextheartbeat();
 
     void setNextheartbeat(int Nextheartbeat);
-
-    @Column(name = PENDING_EVENT_ID)
-    int getpendingeventid();
-
-    void setpendingeventid(int pendingeventid);
 
   }
 
@@ -94,7 +90,7 @@ public class NextHeartbeatClusterJ
   }
 
   @Override
-  public void updateAll(List<NextHeartbeat> toUpdate)
+  public void updateAll(Collection<NextHeartbeat> toUpdate)
           throws StorageException {
     HopsSession session = connector.obtainSession();
     List<NextHeartbeatDTO> toPersist = new ArrayList<NextHeartbeatDTO>();
@@ -111,51 +107,51 @@ public class NextHeartbeatClusterJ
       }
     }
     session.savePersistentAll(toPersist);
-    session.flush();
     session.deletePersistentAll(toRemove);
-    session.flush();
     session.release(toPersist);
     session.release(toRemove);
   }
 
+  @Override
+  public void update(NextHeartbeat toUpdate)
+          throws StorageException {
+    HopsSession session = connector.obtainSession();
+
+    NextHeartbeatDTO hbDTO = createPersistable(toUpdate,
+            session);
+
+    if (toUpdate.isNextheartbeat()) {
+      session.savePersistent(hbDTO);
+    } else {
+      session.deletePersistent(hbDTO);
+    }
+    session.release(hbDTO);
+  }
+  
   private NextHeartbeatDTO createPersistable(NextHeartbeat hopNextHeartbeat,
           HopsSession session) throws StorageException {
     NextHeartbeatDTO DTO = session.newInstance(NextHeartbeatDTO.class);
     //Set values to persist new persistedEvent
     DTO.setrmnodeid(hopNextHeartbeat.getRmnodeid());
-    DTO.setNextheartbeat(booleanToInt(hopNextHeartbeat.isNextheartbeat()));
-    DTO.setpendingeventid(hopNextHeartbeat.getPendingEventId());
+    DTO.setNextheartbeat(NextHeartbeat.booleanToInt(hopNextHeartbeat.isNextheartbeat()));
     return DTO;
   }
 
   public static NextHeartbeat createHopNextHeartbeat(
           NextHeartbeatDTO nextHBDTO) {
-    return new NextHeartbeat(nextHBDTO.getrmnodeid(), intToBoolean(nextHBDTO.
-            getNextheartbeat()), nextHBDTO.getpendingeventid());
+    return new NextHeartbeat(nextHBDTO.getrmnodeid(), NextHeartbeat.intToBoolean(nextHBDTO.
+            getNextheartbeat()));
   }
 
   private Map<String, Boolean> createMap(List<NextHeartbeatDTO> results) {
     Map<String, Boolean> map = new HashMap<String, Boolean>();
     for (NextHeartbeatDTO persistable : results) {
-      map.put(persistable.getrmnodeid(), intToBoolean(persistable.
+      map.put(persistable.getrmnodeid(), NextHeartbeat.intToBoolean(persistable.
               getNextheartbeat()));
     }
     return map;
   }
 
-  /**
-   * As ClusterJ boolean is buggy, we use Int to store the boolean field to NDB
-   * and we convert it here to integer.
-   * <p/>
-   *
-   * @return
-   */
-  private static boolean intToBoolean(int a) {
-    return a == NEXTHEARTBEAT_TRUE;
-  }
 
-  private int booleanToInt(boolean a) {
-    return a ? NEXTHEARTBEAT_TRUE : NEXTHEARTBEAT_FALSE;
-  }
 
 }

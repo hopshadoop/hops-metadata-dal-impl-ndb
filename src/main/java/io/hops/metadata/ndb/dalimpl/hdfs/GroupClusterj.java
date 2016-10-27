@@ -27,7 +27,11 @@ import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.GroupDataAccess;
 import io.hops.metadata.hdfs.entity.Group;
+import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
+import io.hops.metadata.ndb.wrapper.HopsQuery;
+import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
+import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 
 import java.sql.ResultSet;
@@ -52,51 +56,48 @@ public class GroupClusterj implements TablesDef.GroupsTableDef, GroupDataAccess<
     void setName(String name);
   }
 
+  private ClusterjConnector connector = ClusterjConnector.getInstance();
+
   @Override
   public Group getGroup(final int groupId) throws StorageException {
-    final String query = String.format("SELECT %s FROM %s WHERE %s=%d",
-        NAME, TABLE_NAME, ID, groupId);
-
-    return MySQLQueryHelper.execute(query,
-        new MySQLQueryHelper.ResultSetHandler<Group>() {
-
-          @Override
-          public Group handle(ResultSet result)
-              throws SQLException, StorageException {
-            if (!result.next()) {
-              return null;
-            }
-            return  new Group(groupId, result.getString(NAME));
-          }
-        });
+    HopsSession session = connector.obtainSession();
+    GroupDTO dto = session.find(GroupDTO.class, groupId);
+    Group group = null;
+    if(dto != null) {
+      group = new Group(dto.getId(), dto.getName());
+      session.release(dto);
+    }
+    return group;
   }
 
   @Override
   public Group getGroup(final String groupName) throws StorageException {
-    final String query = String.format("SELECT %s FROM %s WHERE %s='%s'",
-        ID, TABLE_NAME, NAME, groupName);
-
-    return MySQLQueryHelper.execute(query,
-        new MySQLQueryHelper.ResultSetHandler<Group>() {
-
-          @Override
-          public Group handle(ResultSet result)
-              throws SQLException, StorageException {
-            if (!result.next()) {
-              return null;
-            }
-            return  new Group(result.getInt(ID), groupName);
-          }
-        });
+    HopsSession session = connector.obtainSession();
+    return getGroup(session, groupName);
   }
 
 
   @Override
   public Group addGroup(String groupName) throws StorageException {
-    final String query = String.format("INSERT IGNORE INTO %s (%s) VALUES" +
-        "('%s')", TABLE_NAME, NAME, groupName);
-    MySQLQueryHelper.execute(query);
-    return getGroup(groupName);
+    HopsSession session = connector.obtainSession();
+    Group group = getGroup(session, groupName);
+    if(group == null){
+      GroupDTO dto = session.newInstance(GroupDTO.class);
+      dto.setName(groupName);
+      session.makePersistent(dto);
+      session.release(dto);
+      session.flush();
+      group = getGroup(session, groupName);
+    }
+    return group;
+  }
+
+  @Override
+  public void removeGroup(int groupId) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    GroupDTO dto = session.newInstance(GroupDTO.class, groupId);
+    session.deletePersistent(dto);
+    session.release(dto);
   }
 
   static List<Group> convertAndRelease(HopsSession session, Collection<GroupDTO>
@@ -108,5 +109,22 @@ public class GroupClusterj implements TablesDef.GroupsTableDef, GroupDataAccess<
       session.release(dto);
     }
     return groups;
+  }
+
+  private Group getGroup(HopsSession session, final String groupName) throws
+      StorageException {
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<GroupDTO> dobj =  qb.createQueryDefinition
+        (GroupDTO.class);
+    dobj.where(dobj.get("name").equal(dobj.param("param")));
+    HopsQuery<GroupDTO> query = session.createQuery(dobj);
+    query.setParameter("param", groupName);
+    List<GroupDTO> results = query.getResultList();
+    Group group = null;
+    if(results.size() == 1){
+      group = new Group(results.get(0).getId(), results.get(0).getName());
+    }
+    session.release(results);
+    return group;
   }
 }

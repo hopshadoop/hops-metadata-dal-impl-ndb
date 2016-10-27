@@ -59,7 +59,7 @@ public class DelegationTokenClusterJ implements
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
 
   @Override
-  public void createDelegationTokenEntry(DelegationToken hopDelegationToken)
+  public void add(DelegationToken hopDelegationToken)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     DelegationTokenDTO dto = createPersistable(hopDelegationToken, session);
@@ -88,6 +88,12 @@ public class DelegationTokenClusterJ implements
                 getSeqnumber());
     session.deletePersistent(dto);
     session.release(dto);
+  }
+
+  @Override
+  public void removeAll() throws StorageException {
+    HopsSession session = connector.obtainSession();
+    session.deletePersistentAll(DelegationTokenDTO.class);
   }
 
   private DelegationToken createHopDelegationToken(
