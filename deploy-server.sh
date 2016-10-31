@@ -20,7 +20,7 @@ export LIBNDBPATH=/usr/local/mysql/lib
 VERSION=`grep -o -a -m 1 -h -r "version>.*</version" pom.xml | head -1 | sed "s/version//g" | sed "s/>//" | sed "s/<\///g"`
 
 
-server=glassfish@snurran.sics.se:/var/www/hops
+server=glassfish@snurran.sics.se:/var/www/hops/
 
 mvn clean install assembly:assembly -DskipTests
 

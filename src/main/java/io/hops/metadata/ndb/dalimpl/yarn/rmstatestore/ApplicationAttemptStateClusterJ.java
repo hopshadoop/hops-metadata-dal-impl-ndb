@@ -33,7 +33,6 @@ import io.hops.metadata.yarn.entity.rmstatestore.ApplicationAttemptState;
 import io.hops.util.CompressionUtils;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -64,47 +63,13 @@ public class ApplicationAttemptStateClusterJ
 
     void setapplicationattemptstate(byte[] applicationattemptstate);
 
-    @Column(name = HOST)
-    String getapplicationattempthost();
-
-    void setapplicationattempthost(String host);
-
-    @Column(name = RPCPORT)
-    int getapplicationattemptrpcport();
-
-    void setapplicationattemptrpcport(int port);
-
-    @Column(name = TOKENS)
-    byte[] getapplicationattempttokens();
-
-    void setapplicationattempttokens(byte[] tokens);
-
     @Column(name = TRAKINGURL)
-    String getapplicationattempttrakingurl();
+    String gettrakingurl();
 
-    void setapplicationattempttrakingurl(String trakingUrl);
+    void settrakingurl(String trakingurl);
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
-
-  @Override
-  public ApplicationAttemptState findEntry(String applicationid,
-      String applicationattemptid) throws StorageException {
-    HopsSession session = connector.obtainSession();
-    Object[] objarr = new Object[2];
-    objarr[0] = applicationid;
-    objarr[1] = applicationattemptid;
-    ApplicationAttemptStateClusterJ.ApplicationAttemptStateDTO entry;
-    entry = session.find(
-        ApplicationAttemptStateClusterJ.ApplicationAttemptStateDTO.class,
-        objarr);
-    ApplicationAttemptState result = null;
-    if (entry != null) {
-      result = createHopApplicationAttemptState(entry);
-    }
-    session.release(entry);
-    return result;
-  }
 
   @Override
   public Map<String, List<ApplicationAttemptState>> getAll()
@@ -122,23 +87,10 @@ public class ApplicationAttemptStateClusterJ
   }
 
   @Override
-  public void createApplicationAttemptStateEntry(ApplicationAttemptState entry)
+  public void add(ApplicationAttemptState entry)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     session.savePersistent(createPersistable(entry, session));
-  }
-
-  @Override
-  public void addAll(Collection<ApplicationAttemptState> toAdd)
-      throws StorageException {
-    HopsSession session = connector.obtainSession();
-    List<ApplicationAttemptStateDTO> toPersist =
-        new ArrayList<ApplicationAttemptStateDTO>();
-    for (ApplicationAttemptState req : toAdd) {
-      toPersist.add(createPersistable(req, session));
-    }
-    session.savePersistentAll(toPersist);
-    session.release(toPersist);
   }
 
   @Override
@@ -158,22 +110,20 @@ public class ApplicationAttemptStateClusterJ
     session.deletePersistentAll(toRemove);
     session.release(toRemove);
   }
-
+  
+    @Override
+  public void removeAll() throws StorageException {
+    HopsSession session = connector.obtainSession();
+    session.deletePersistentAll(ApplicationAttemptStateDTO.class);
+  }
+  
   private ApplicationAttemptState createHopApplicationAttemptState(
       ApplicationAttemptStateDTO entry) throws StorageException {
-    ByteBuffer buffer;
-    if (entry.getapplicationattempttokens() != null) {
-      buffer = ByteBuffer.wrap(entry.getapplicationattempttokens());
-    } else {
-      buffer = null;
-    }
     try {
       return new ApplicationAttemptState(entry.getapplicationid(),
           entry.getapplicationattemptid(),
           CompressionUtils.decompress(entry.getapplicationattemptstate()),
-          entry.getapplicationattempthost(),
-          entry.getapplicationattemptrpcport(), buffer,
-          entry.getapplicationattempttrakingurl());
+          entry.gettrakingurl());
     } catch (IOException e) {
       throw new StorageException(e);
     } catch (DataFormatException e) {
@@ -191,6 +141,7 @@ public class ApplicationAttemptStateClusterJ
     applicationAttemptStateDTO.setapplicationid(hop.getApplicationId());
     applicationAttemptStateDTO.setapplicationattemptid(hop.
         getApplicationattemptid());
+    applicationAttemptStateDTO.settrakingurl(hop.getTrakingURL());
     try {
       applicationAttemptStateDTO.setapplicationattemptstate(CompressionUtils.
           compress(hop.
@@ -198,13 +149,6 @@ public class ApplicationAttemptStateClusterJ
     } catch (IOException e) {
       throw new StorageException(e);
     }
-    applicationAttemptStateDTO.setapplicationattempthost(hop.getHost());
-    applicationAttemptStateDTO.setapplicationattemptrpcport(hop.getRpcPort());
-    if (hop.getAppAttemptTokens() != null) {
-      applicationAttemptStateDTO.setapplicationattempttokens(hop.
-          getAppAttemptTokens().array());
-    }
-    applicationAttemptStateDTO.setapplicationattempttrakingurl(hop.getUrl());
     return applicationAttemptStateDTO;
   }
 

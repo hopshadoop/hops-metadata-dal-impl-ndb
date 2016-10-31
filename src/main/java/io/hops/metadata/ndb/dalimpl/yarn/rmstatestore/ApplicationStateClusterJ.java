@@ -34,7 +34,6 @@ import io.hops.util.CompressionUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.zip.DataFormatException;
 
@@ -85,7 +84,7 @@ public class ApplicationStateClusterJ implements
     session.release(appStateDTO);
     return result;
   }
-
+  
   @Override
   public List<ApplicationState> getAll() throws StorageException {
     HopsSession session = connector.obtainSession();
@@ -100,32 +99,6 @@ public class ApplicationStateClusterJ implements
     List<ApplicationState> result = createHopApplicationStateList(queryResults);
     session.release(queryResults);
     return result;
-  }
-
-  @Override
-  public void addAll(Collection<ApplicationState> toAdd)
-      throws StorageException {
-    HopsSession session = connector.obtainSession();
-    List<ApplicationStateDTO> toPersist = new ArrayList<ApplicationStateDTO>();
-    for (ApplicationState req : toAdd) {
-      toPersist.add(createPersistable(req, session));
-    }
-    session.savePersistentAll(toPersist);
-    session.flush();
-    session.release(toPersist);
-  }
-
-  @Override
-  public void removeAll(Collection<ApplicationState> toRemove)
-      throws StorageException {
-    HopsSession session = connector.obtainSession();
-    List<ApplicationStateDTO> toPersist = new ArrayList<ApplicationStateDTO>();
-    for (ApplicationState entry : toRemove) {
-      toPersist.add(session.newInstance(ApplicationStateDTO.class, entry.
-          getApplicationId()));
-    }
-    session.deletePersistentAll(toPersist);
-    session.release(toPersist);
   }
 
   @Override
@@ -144,6 +117,12 @@ public class ApplicationStateClusterJ implements
                 getApplicationId());
     session.deletePersistent(dto);
     session.release(dto);
+  }
+  
+  @Override
+  public void removeAll() throws StorageException {
+    HopsSession session = connector.obtainSession();
+    session.deletePersistentAll(ApplicationStateDTO.class);
   }
   
   private ApplicationState createHopApplicationState(

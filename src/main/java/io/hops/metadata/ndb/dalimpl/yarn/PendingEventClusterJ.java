@@ -64,15 +64,19 @@ public class PendingEventClusterJ
     void setrmnodeid(String rmnodeid);
 
     @Column(name = TYPE)
-    int getType();
+    String getType();
 
-    void setType(int type);
+    void setType(String type);
 
     @Column(name = STATUS)
-    int getStatus();
+    String getStatus();
 
-    void setStatus(int status);
+    void setStatus(String status);
 
+    @Column(name = CONTAINS)
+    int getContains();
+
+    void setContains(int contains);
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -104,14 +108,29 @@ public class PendingEventClusterJ
     for (PendingEvent pendEvent : toAddPendingEvent) {
       PendingEventClusterJ.PendingEventDTO pendingEventDTO = createPersistable(
               new PendingEvent(pendEvent.getId().getNodeId(), pendEvent.
-                      getType(), pendEvent.getStatus(), pendEvent.getId().getEventId()),
-              session);
+                      getType(), pendEvent.getStatus(), pendEvent.getId().
+                      getEventId(), pendEvent.getContains()), session);
       toPersist.add(pendingEventDTO);
     }
     session.savePersistentAll(toPersist);
     session.release(toPersist);
   }
 
+  @Override
+  public void add(PendingEvent toAdd)
+          throws StorageException {
+    HopsSession session = connector.obtainSession();
+    
+    
+      PendingEventClusterJ.PendingEventDTO pendingEventDTO = createPersistable(
+            new PendingEvent(toAdd.getId().getNodeId(), toAdd.
+                    getType(), toAdd.getStatus(), toAdd.getId().getEventId(),
+                    toAdd.getContains()), session);
+    
+    
+    session.savePersistent(pendingEventDTO);
+    session.release(pendingEventDTO);
+  }
 
   @Override
   public void removeAll(Collection<PendingEvent> toRemovePendingEvents)
@@ -174,8 +193,9 @@ public class PendingEventClusterJ
     pendingEventDTO = session.find(PendingEventDTO.class, pk);
     PendingEvent result = null;
     if (pendingEventDTO != null) {
-      result = new PendingEvent(pendingEventDTO.getrmnodeid(), pendingEventDTO.
-            getType(), pendingEventDTO.getStatus(), pendingEventDTO.getId());
+      result = new PendingEvent(pendingEventDTO.getrmnodeid(), PendingEvent.Type.valueOf(pendingEventDTO.
+            getType()), PendingEvent.Status.valueOf(pendingEventDTO.getStatus()), pendingEventDTO.getId(), 
+            pendingEventDTO.getContains());
     }
     session.release(pendingEventDTO);
     return result;
@@ -192,9 +212,10 @@ public class PendingEventClusterJ
     PendingEventDTO DTO = session.newInstance(PendingEventDTO.class);
     //Set values to persist new persistedEvent
     DTO.setrmnodeid(hopPersistedEvent.getId().getNodeId());
-    DTO.setType(hopPersistedEvent.getType());
-    DTO.setStatus(hopPersistedEvent.getStatus());
+    DTO.setType(hopPersistedEvent.getType().name());
+    DTO.setStatus(hopPersistedEvent.getStatus().name());
     DTO.setId(hopPersistedEvent.getId().getEventId());
+    DTO.setContains(hopPersistedEvent.getContains());
     return DTO;
   }
 
@@ -211,8 +232,9 @@ public class PendingEventClusterJ
     if (results != null && !results.isEmpty()) {
       hopList = new ArrayList<PendingEvent>(results.size());
       for (PendingEventDTO DTO : results) {
-        PendingEvent hop = new PendingEvent(DTO.getrmnodeid(), DTO.
-            getType(), DTO.getStatus(), DTO.getId());
+        PendingEvent hop = new PendingEvent(DTO.getrmnodeid(), PendingEvent.Type.valueOf(DTO.
+            getType()), PendingEvent.Status.valueOf(DTO.getStatus()), DTO.getId(),
+            DTO.getContains());
         hopList.add(hop);
       }
     }

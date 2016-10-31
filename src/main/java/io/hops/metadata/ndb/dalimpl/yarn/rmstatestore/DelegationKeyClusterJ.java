@@ -68,7 +68,13 @@ public class DelegationKeyClusterJ
   }
 
   @Override
-  public void createDTMasterKeyEntry(DelegationKey hopDelegationKey)
+  public void removeAll() throws StorageException {
+    HopsSession session = connector.obtainSession();
+    session.deletePersistentAll(DelegationKeyDTO.class);
+  }
+  
+  @Override
+  public void add(DelegationKey hopDelegationKey)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     DelegationKeyDTO dto = createPersistable(hopDelegationKey, session);

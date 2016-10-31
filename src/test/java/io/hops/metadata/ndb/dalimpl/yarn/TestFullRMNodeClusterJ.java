@@ -26,9 +26,6 @@ import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
 import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
 import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
 import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
-import io.hops.metadata.yarn.dal.JustLaunchedContainersDataAccess;
-import io.hops.metadata.yarn.dal.NodeDataAccess;
-import io.hops.metadata.yarn.dal.NodeHBResponseDataAccess;
 import io.hops.metadata.yarn.dal.RMNodeDataAccess;
 import io.hops.metadata.yarn.dal.ResourceDataAccess;
 import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
@@ -36,9 +33,6 @@ import io.hops.metadata.yarn.dal.util.YARNOperationType;
 import io.hops.metadata.yarn.entity.ContainerId;
 import io.hops.metadata.yarn.entity.ContainerStatus;
 import io.hops.metadata.yarn.entity.FinishedApplications;
-import io.hops.metadata.yarn.entity.JustLaunchedContainers;
-import io.hops.metadata.yarn.entity.Node;
-import io.hops.metadata.yarn.entity.NodeHBResponse;
 import io.hops.metadata.yarn.entity.RMNode;
 import io.hops.metadata.yarn.entity.RMNodeComps;
 import io.hops.metadata.yarn.entity.Resource;
@@ -83,24 +77,12 @@ public class TestFullRMNodeClusterJ {
     //TODO: Add test for nextheartbeat
     //fill the database with a RMNode
     final RMNode hopRMNodeOrigin
-            = new RMNode("70", "rmnode70", 9999, 9876, "127.0.0.1",
-                    "hop.sics.se",
-                    "life is good ", -10L, "relax", "hayarn", 10, 0);
-    final Node hopNodeOrigin
-            = new Node("70", "rmnode70", "ici", 1000, "papa", 0);
-    final List<NodeHBResponse> hopNHBROrigin = new ArrayList<NodeHBResponse>();
-    hopNHBROrigin.add(new NodeHBResponse("70", new byte[]{new Integer(1).
-      byteValue()}));
+            = new RMNode("70", "rmnode70", 9999, 9876, 
+                    "life is good ", -10L, "relax", "hayarn", 0);
     final Resource hopResourceOrigin
-            = new Resource("70", Resource.TOTAL_CAPABILITY, Resource.RMNODE, 1,
+            = new Resource("70", 1,
                     100, 0);
 
-    final List<JustLaunchedContainers> hopJustLaunchedContainers
-            = new ArrayList<JustLaunchedContainers>();
-    hopJustLaunchedContainers
-            .add(new JustLaunchedContainers("70", "container1"));
-    hopJustLaunchedContainers
-            .add(new JustLaunchedContainers("70", "container2"));
     final List<UpdatedContainerInfo> hopUpdatedContainers
             = new ArrayList<UpdatedContainerInfo>();
     hopUpdatedContainers.add(new UpdatedContainerInfo("70", "container3", 1,
@@ -109,13 +91,13 @@ public class TestFullRMNodeClusterJ {
             DEFAULT_PENDIND_ID));
 
     final List<ContainerId> hopContainerIds = new ArrayList<ContainerId>();
-    hopContainerIds.add(new ContainerId("70", "container5", 0));
-    hopContainerIds.add(new ContainerId("70", "container6", 0));
+    hopContainerIds.add(new ContainerId("70", "container5"));
+    hopContainerIds.add(new ContainerId("70", "container6"));
 
     final List<FinishedApplications> hopFinishedApps
             = new ArrayList<FinishedApplications>();
-    hopFinishedApps.add(new FinishedApplications("70", "app1", 0));
-    hopFinishedApps.add(new FinishedApplications("70", "app2", 0));
+    hopFinishedApps.add(new FinishedApplications("70", "app1"));
+    hopFinishedApps.add(new FinishedApplications("70", "app2"));
 
     final List<ContainerStatus> hopContainersStatus
             = new ArrayList<ContainerStatus>();
@@ -123,29 +105,31 @@ public class TestFullRMNodeClusterJ {
             new ContainerStatus("container1",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
                     "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
-                    ContainerStatus.Type.JUST_LAUNCHED));
+                    hopUpdatedContainers.get(0).getUpdatedContainerInfoId()));
     hopContainersStatus.add(
             new ContainerStatus("container2",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
                     "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
-                    ContainerStatus.Type.JUST_LAUNCHED));
+                    hopUpdatedContainers.get(0).getUpdatedContainerInfoId()));
     hopContainersStatus.add(
             new ContainerStatus("container3",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
                     "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
-                    ContainerStatus.Type.UCI));
+                    hopUpdatedContainers.get(0).getUpdatedContainerInfoId()));
     hopContainersStatus.add(
             new ContainerStatus("container4",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,
                     "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
-                    ContainerStatus.Type.UCI));
+                    hopUpdatedContainers.get(1).getUpdatedContainerInfoId()));
     hopContainersStatus.add(new ContainerStatus("container5",
             TablesDef.ContainerStatusTableDef.STATE_COMPLETED,
             "every thing is good", 0,
-            "70", DEFAULT_PENDIND_ID, ContainerStatus.Type.UCI));
+            "70", DEFAULT_PENDIND_ID, 
+            hopUpdatedContainers.get(1).getUpdatedContainerInfoId()));
     hopContainersStatus.add(new ContainerStatus("container6",
             TablesDef.ContainerStatusTableDef.STATE_COMPLETED, "finish", 1, "70",
-            DEFAULT_PENDIND_ID, ContainerStatus.Type.UCI));
+            DEFAULT_PENDIND_ID, 
+            hopUpdatedContainers.get(1).getUpdatedContainerInfoId()));
 
     LightWeightRequestHandler fillDB
             = new LightWeightRequestHandler(YARNOperationType.TEST) {
@@ -158,25 +142,11 @@ public class TestFullRMNodeClusterJ {
                 getDataAccess(RMNodeDataAccess.class);
                 rmNodeDA.add(hopRMNodeOrigin);
 
-                NodeDataAccess nodeDA = (NodeDataAccess) storageFactory.
-                getDataAccess(NodeDataAccess.class);
-                nodeDA.createNode(hopNodeOrigin);
-
-                NodeHBResponseDataAccess nodeHBRDA
-                = (NodeHBResponseDataAccess) storageFactory
-                .getDataAccess(NodeHBResponseDataAccess.class);
-                nodeHBRDA.addAll(hopNHBROrigin);
-
                 ResourceDataAccess resourceDA
                 = (ResourceDataAccess) storageFactory
                 .getDataAccess(ResourceDataAccess.class);
 
                 resourceDA.add(hopResourceOrigin);
-
-                JustLaunchedContainersDataAccess justLaunchedContainerDA
-                = (JustLaunchedContainersDataAccess) storageFactory.
-                getDataAccess(JustLaunchedContainersDataAccess.class);
-                justLaunchedContainerDA.addAll(hopJustLaunchedContainers);
 
                 UpdatedContainerInfoDataAccess updatedContainerDA
                 = (UpdatedContainerInfoDataAccess) storageFactory
@@ -229,16 +199,8 @@ public class TestFullRMNodeClusterJ {
     Assert.assertTrue(rmNodeFinal.getCurrentState().equals(hopRMNodeOrigin.
             getCurrentState()));
 
-    Node nodeFinal = hopRMNodeFull.getHopNode();
-    Assert.assertTrue(nodeFinal.getLevel() == hopNodeOrigin.getLevel());
-
-    NodeHBResponse nodeHBRFinal = hopRMNodeFull.getHopNodeHBResponse();
-    Assert.assertTrue(nodeHBRFinal.getResponse()[0] == (hopNHBROrigin.get(0).
-            getResponse()[0]));
-
     Resource resourceFinal = hopRMNodeFull.getHopResource();
-    Assert.assertTrue(resourceFinal.getParent() == hopResourceOrigin.
-            getParent());
+    Assert.assertTrue(resourceFinal.getId().equals(hopResourceOrigin.getId()));
 
 
     List<UpdatedContainerInfo> hopUpdatedContainersFinal
@@ -263,33 +225,7 @@ public class TestFullRMNodeClusterJ {
       Assert.assertTrue(flag);
     }
 
-    List<ContainerId> hopContainerIdsFinal = hopRMNodeFull.
-            getHopContainerIdsToClean();
-    for (ContainerId updated : hopContainerIdsFinal) {
-      boolean flag = false;
-      for (ContainerId containerIdOringine : hopContainerIds) {
-        if (updated.getContainerId().
-                equals(containerIdOringine.getContainerId())) {
-          flag = true;
-          break;
-        }
-      }
-      Assert.assertTrue(flag);
-    }
 
-    List<FinishedApplications> hopFinishedAppsFinal = hopRMNodeFull.
-            getHopFinishedApplications();
-    for (FinishedApplications finishedApp : hopFinishedAppsFinal) {
-      boolean flag = false;
-      for (FinishedApplications finishedAppOringine : hopFinishedApps) {
-        if (finishedApp.getApplicationId().equals(finishedAppOringine.
-                getApplicationId())) {
-          flag = true;
-          break;
-        }
-      }
-      Assert.assertTrue(flag);
-    }
 
     Collection<ContainerStatus> hopContainersStatusFinal = hopRMNodeFull.
             getHopContainersStatus();

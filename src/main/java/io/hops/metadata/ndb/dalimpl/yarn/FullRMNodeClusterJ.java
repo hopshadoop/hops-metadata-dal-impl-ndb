@@ -25,10 +25,7 @@ import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
 import io.hops.metadata.yarn.entity.ContainerId;
 import io.hops.metadata.yarn.entity.ContainerStatus;
 import io.hops.metadata.yarn.entity.FinishedApplications;
-import io.hops.metadata.yarn.entity.JustLaunchedContainers;
 import io.hops.metadata.yarn.entity.NextHeartbeat;
-import io.hops.metadata.yarn.entity.Node;
-import io.hops.metadata.yarn.entity.NodeHBResponse;
 import io.hops.metadata.yarn.entity.PendingEvent;
 import io.hops.metadata.yarn.entity.RMNode;
 import io.hops.metadata.yarn.entity.RMNodeComps;
@@ -41,8 +38,6 @@ import java.util.List;
 public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
-  private final JustLaunchedContainersClusterJ justLaunchedDA =
-      new JustLaunchedContainersClusterJ();
   private final ResourceClusterJ resourceDA = new ResourceClusterJ();
   private final PendingEventClusterJ pendingEventDA = new PendingEventClusterJ();
   
@@ -59,9 +54,7 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
     HopsSession session = connector.obtainSession();
     List<UpdatedContainerInfo> hopUpdatedContainerInfo
             = updatedContainerDA.findByRMNodeList(nodeId);
-    Resource hopResource = resourceDA.findEntry(nodeId,
-            Resource.TOTAL_CAPABILITY,
-            Resource.RMNODE);
+    Resource hopResource = resourceDA.findEntry(nodeId);
     List<ContainerId> hopContainerIdsToClean = containerToCleanDA.
             findByRMNode(nodeId);
 
@@ -78,19 +71,7 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
         .newInstance(NextHeartbeatClusterJ.NextHeartbeatDTO.class, nodeId);
     nextHBDTO = session.load(nextHBDTO);
     components.add(nextHBDTO);
-
-    NodeClusterJ.NodeDTO nodeDTO =
-        session.newInstance(NodeClusterJ.NodeDTO.class, nodeId);
-    nodeDTO = session.load(nodeDTO);
-    components.add(nodeDTO);
  
-    NodeHBResponseClusterJ.NodeHBResponseDTO nodeHBResponseDTO = session.
-            newInstance(NodeHBResponseClusterJ.NodeHBResponseDTO.class, nodeId);
-    if (nodeHBResponseDTO != null) {
-      nodeHBResponseDTO = session.load(nodeHBResponseDTO);
-      components.add(nodeHBResponseDTO);
-    }
-
     List<ContainerStatusClusterJ.ContainerStatusDTO> containerStatusDTOs =
         new ArrayList<ContainerStatusClusterJ.ContainerStatusDTO>();
 
@@ -98,7 +79,7 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
       
         for (UpdatedContainerInfo hop : hopUpdatedContainerInfo) {
           Object[] pk = new Object[]{hop.getContainerId(), hop.getRmnodeid(),
-          ContainerStatus.Type.UCI.name()};
+          hop.getUpdatedContainerInfoId()};
           ContainerStatusClusterJ.ContainerStatusDTO containerStatusDTO =
               session.
                   newInstance(ContainerStatusClusterJ.ContainerStatusDTO.class,
@@ -112,8 +93,6 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
     session.flush();
     
     RMNode hopRMNode = null;
-    Node hopNode = null;
-    NodeHBResponse hopNodeHBResponse = null;
     NextHeartbeat hopNextHeartbeat = null;
       
     for (RMNodeComponentDTO comp : components) {
@@ -127,18 +106,9 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
           session.release(components);
           session.release(containerStatusDTOs);
           session.release(nextHBDTO);
-          session.release(nodeDTO);
-          session.release(nodeHBResponseDTO);
           session.release(rmnodeDTO);
           return null;
         }
-      } else if (comp instanceof NodeClusterJ.NodeDTO) {
-        hopNode = NodeClusterJ.
-                createHopNode((NodeClusterJ.NodeDTO) comp);
-      } else if (comp instanceof NodeHBResponseClusterJ.NodeHBResponseDTO) {
-        hopNodeHBResponse = NodeHBResponseClusterJ.
-                createHopNodeHBResponse(
-                        (NodeHBResponseClusterJ.NodeHBResponseDTO) comp);
       } else if (comp instanceof NextHeartbeatClusterJ.NextHeartbeatDTO) {
         hopNextHeartbeat = NextHeartbeatClusterJ.createHopNextHeartbeat(
                 (NextHeartbeatClusterJ.NextHeartbeatDTO) comp);
@@ -152,16 +122,13 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
     }else if(hopRMNode !=null){
       rmNodeId = hopRMNode.getNodeId();
     }
-    RMNodeComps result = new RMNodeComps(hopRMNode, hopNextHeartbeat, hopNode,
-        hopNodeHBResponse, hopResource, hopPendingEvent,
-        hopUpdatedContainerInfo, hopContainerIdsToClean,
-        hopFinishedApplications,
-        ContainerStatusClusterJ.createList(containerStatusDTOs), rmNodeId);
+    RMNodeComps result = new RMNodeComps(hopRMNode,
+        hopResource, hopPendingEvent,
+        hopUpdatedContainerInfo, 
+        ContainerStatusClusterJ.createList(containerStatusDTOs));
     session.release(components);
     session.release(containerStatusDTOs);
     session.release(nextHBDTO);
-    session.release(nodeDTO);
-    session.release(nodeHBResponseDTO);
     session.release(rmnodeDTO);
     return result;
   }
