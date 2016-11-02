@@ -126,7 +126,6 @@
       </resource>
     </resources>
   </build>
-  
   <distributionManagement>
     <repository>
       <id>sics-release-repository</id>
