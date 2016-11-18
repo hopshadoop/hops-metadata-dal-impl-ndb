@@ -80,7 +80,7 @@ void TableTailer::createListenerEvent() {
 
     // Add event to database
     if (myDict->createEvent(myEvent) == 0)
-        myEvent.print();
+      myEvent.print();
     else if (myDict->getNdbError().classification ==
             NdbError::SchemaObjectExists) {
         LOG_ERROR("Event creation failed, event exists, dropping Event...");
@@ -96,7 +96,7 @@ void TableTailer::removeListenerEvent() {
     NdbDictionary::Dictionary *myDict = mNdbConnection->getDictionary();
     if (!myDict) LOG_NDB_API_ERROR(mNdbConnection->getNdbError());
     // remove event from database
-    if (myDict->dropEvent(mEventName.c_str())) LOG_NDB_API_ERROR(myDict->getNdbError());
+    if (myDict->dropEvent(mEventName.c_str(), 1)) LOG_NDB_API_ERROR(myDict->getNdbError());
 }
 
 void TableTailer::waitForEvents() {
@@ -188,6 +188,7 @@ void TableTailer::stop(){
   while(!stopped){
     usleep(mPollMaxTimeToWait);
   }
+  removeListenerEvent();
   delete this;
 }
 

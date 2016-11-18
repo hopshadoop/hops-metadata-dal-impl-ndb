@@ -48,11 +48,11 @@ const WatchTable ContainerStatusTableTailer::TABLE = {_containerStatus_table, _c
 
 const int CONTAINER_ID = 0;
 const int RMNODE_ID = 1;
-const int STATE = 3;
-const int DIAGNOSTICS = 4;
-const int EXIT_STATUS = 5;
-const int UCIID = 6;
-const int PENDING_EVENT_ID = 7;
+const int STATE = 2;
+const int DIAGNOSTICS = 3;
+const int EXIT_STATUS = 4;
+const int UCIID = 5;
+const int PENDING_EVENT_ID = 6;
 
 ContainerStatusTableTailer::ContainerStatusTableTailer(Ndb* ndb, const int poll_maxTimeToWait,JavaVM* jvm) 
   : TableTailer(ndb, TABLE, poll_maxTimeToWait, jvm){
