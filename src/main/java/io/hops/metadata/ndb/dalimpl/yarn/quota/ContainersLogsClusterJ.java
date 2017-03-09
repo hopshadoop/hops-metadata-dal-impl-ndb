@@ -23,24 +23,23 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.TablesDef;
-import static io.hops.metadata.yarn.TablesDef.ContainersLogsTableDef.EXITSTATUS;
 import io.hops.metadata.yarn.dal.quota.ContainersLogsDataAccess;
 import io.hops.metadata.yarn.entity.quota.ContainerLog;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class ContainersLogsClusterJ implements
-        TablesDef.ContainersLogsTableDef,
-        ContainersLogsDataAccess<ContainerLog> {
+public class ContainersLogsClusterJ extends ClusterjDataAccess
+    implements TablesDef.ContainersLogsTableDef, ContainersLogsDataAccess<ContainerLog> {
+
+  public ContainersLogsClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface ContainerLogDTO {
@@ -65,7 +64,7 @@ public class ContainersLogsClusterJ implements
     int getexitstatus();
 
     void setexitstatus(int exitstate);
-    
+
     @Column(name = PRICE)
     float getPrice();
 
@@ -75,21 +74,19 @@ public class ContainersLogsClusterJ implements
     int getVCores();
 
     void setVCores(int vcores);
-    
+
     @Column(name = MB)
     int getMB();
 
     void setMB(int mb);
 
-    
-  }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
+  }
 
   @Override
   public void addAll(Collection<ContainerLog> containersLogs) throws
-          StorageException {
-    HopsSession session = connector.obtainSession();
+      StorageException {
+    HopsSession session = getConnector().obtainSession();
     List<ContainerLogDTO> toAdd = new ArrayList<ContainerLogDTO>();
 
     for (ContainerLog entry : containersLogs) {
@@ -102,8 +99,8 @@ public class ContainersLogsClusterJ implements
 
   @Override
   public void removeAll(Collection<ContainerLog> containersLogs) throws
-          StorageException {
-    HopsSession session = connector.obtainSession();
+      StorageException {
+    HopsSession session = getConnector().obtainSession();
     List<ContainerLogDTO> toRemove = new ArrayList<ContainerLogDTO>();
 
     for (ContainerLog entry : containersLogs) {
@@ -114,14 +111,14 @@ public class ContainersLogsClusterJ implements
     session.flush();
     session.release(toRemove);
   }
-  
+
   @Override
   public Map<String, ContainerLog> getAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<ContainerLogDTO> dobj = qb.createQueryDefinition(
-            ContainerLogDTO.class);
+        ContainerLogDTO.class);
     HopsQuery<ContainerLogDTO> query = session.createQuery(dobj);
 
     List<ContainerLogDTO> queryResults = query.getResultList();
@@ -131,7 +128,7 @@ public class ContainersLogsClusterJ implements
   }
 
   private ContainerLogDTO createPersistable(ContainerLog hopCL,
-          HopsSession session) throws StorageException {
+                                            HopsSession session) throws StorageException {
     ContainerLogDTO clDTO = session.newInstance(ContainerLogDTO.class);
 
     //Set values to persist new ContainerLog
@@ -146,7 +143,7 @@ public class ContainersLogsClusterJ implements
   }
 
   private static Map<String, ContainerLog> createMap(
-          List<ContainerLogDTO> results) {
+      List<ContainerLogDTO> results) {
     Map<String, ContainerLog> map = new HashMap<String, ContainerLog>();
     for (ContainerLogDTO persistable : results) {
       ContainerLog hop = createHopContainerLog(persistable);
@@ -156,15 +153,15 @@ public class ContainersLogsClusterJ implements
   }
 
   private static ContainerLog createHopContainerLog(
-          ContainerLogDTO clDTO) {
+      ContainerLogDTO clDTO) {
     ContainerLog hop = new ContainerLog(
-            clDTO.getcontainerid(),
-            clDTO.getstart(),
-            clDTO.getstop(),
-            clDTO.getexitstatus(), 
-            clDTO.getPrice(),
-            clDTO.getVCores(),
-            clDTO.getMB()
+        clDTO.getcontainerid(),
+        clDTO.getstart(),
+        clDTO.getstop(),
+        clDTO.getexitstatus(),
+        clDTO.getPrice(),
+        clDTO.getVCores(),
+        clDTO.getMB()
     );
     return hop;
   }

@@ -20,41 +20,38 @@ package io.hops.metadata.ndb.dalimpl.hdfs;
 
 import com.google.common.primitives.Ints;
 import com.mysql.clusterj.Query;
-import com.mysql.clusterj.annotation.Column;
-import com.mysql.clusterj.annotation.Index;
-import com.mysql.clusterj.annotation.PartitionKey;
-import com.mysql.clusterj.annotation.PersistenceCapable;
-import com.mysql.clusterj.annotation.PrimaryKey;
+import com.mysql.clusterj.annotation.*;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.UnderReplicatedBlockDataAccess;
 import io.hops.metadata.hdfs.entity.UnderReplicatedBlock;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
-import io.hops.metadata.ndb.wrapper.HopsPredicate;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.wrapper.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class UnderReplicatedBlockClusterj
+public class UnderReplicatedBlockClusterj extends ClusterjDataAccess
     implements TablesDef.UnderReplicatedBlockTableDef,
     UnderReplicatedBlockDataAccess<UnderReplicatedBlock> {
+
+  public UnderReplicatedBlockClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @Override
   public int countByLevel(int level) throws StorageException {
     return MySQLQueryHelper
-        .countWithCriterion(TABLE_NAME, String.format("%s=%d", LEVEL, level));
+        .countWithCriterion(getMysqlConnector(), TABLE_NAME, String.format("%s=%d", LEVEL, level));
   }
 
   @Override
   public int countLessThanALevel(int level) throws StorageException {
     return MySQLQueryHelper
-        .countWithCriterion(TABLE_NAME, String.format("%s<%d", LEVEL, level));
+        .countWithCriterion(getMysqlConnector(), TABLE_NAME, String.format("%s<%d", LEVEL, level));
   }
 
   @PersistenceCapable(table = TABLE_NAME)
@@ -67,7 +64,7 @@ public class UnderReplicatedBlockClusterj
     int getINodeId();
 
     void setINodeId(int inodeId);
-    
+
     @PrimaryKey
     @Column(name = BLOCK_ID)
     long getBlockId();
@@ -78,19 +75,17 @@ public class UnderReplicatedBlockClusterj
     int getLevel();
 
     void setLevel(int level);
-    
+
     @Column(name = TIMESTAMP)
     long getTimestamp();
 
     void setTimestamp(long timestamp);
   }
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public UnderReplicatedBlock findByPk(long blockId, int inodeId)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     Object[] pk = new Object[2];
     pk[0] = inodeId;
     pk[1] = blockId;
@@ -105,13 +100,13 @@ public class UnderReplicatedBlockClusterj
 
   @Override
   public void prepare(Collection<UnderReplicatedBlock> removed,
-      Collection<UnderReplicatedBlock> newed,
-      Collection<UnderReplicatedBlock> modified) throws StorageException {
-    HopsSession session = connector.obtainSession();
+                      Collection<UnderReplicatedBlock> newed,
+                      Collection<UnderReplicatedBlock> modified) throws StorageException {
+    HopsSession session = getConnector().obtainSession();
     List<UnderReplicatedBlocksDTO> changes =
-        new ArrayList<UnderReplicatedBlocksDTO>();
+        new ArrayList<>();
     List<UnderReplicatedBlocksDTO> deletions =
-        new ArrayList<UnderReplicatedBlocksDTO>();
+        new ArrayList<>();
     for (UnderReplicatedBlock urBlock : removed) {
       UnderReplicatedBlocksDTO newInstance =
           session.newInstance(UnderReplicatedBlocksDTO.class);
@@ -140,7 +135,7 @@ public class UnderReplicatedBlockClusterj
   }
 
   private void createPersistable(UnderReplicatedBlock block,
-      UnderReplicatedBlocksDTO persistable) {
+                                 UnderReplicatedBlocksDTO persistable) {
     persistable.setBlockId(block.getBlockId());
     persistable.setLevel(block.getLevel());
     persistable.setINodeId(block.getInodeId());
@@ -148,7 +143,7 @@ public class UnderReplicatedBlockClusterj
   }
 
   private UnderReplicatedBlock convertAndRelease(HopsSession session,
-      UnderReplicatedBlocksDTO bit) throws StorageException {
+                                                 UnderReplicatedBlocksDTO bit) throws StorageException {
     UnderReplicatedBlock block =
         new UnderReplicatedBlock(bit.getLevel(), bit.getBlockId(),
             bit.getINodeId());
@@ -157,7 +152,7 @@ public class UnderReplicatedBlockClusterj
   }
 
   private List<UnderReplicatedBlock> convertAndRelease(HopsSession session,
-      List<UnderReplicatedBlocksDTO> bitList) throws StorageException {
+                                                       List<UnderReplicatedBlocksDTO> bitList) throws StorageException {
     List<UnderReplicatedBlock> blocks = new ArrayList<UnderReplicatedBlock>();
     for (UnderReplicatedBlocksDTO bit : bitList) {
       blocks.add(convertAndRelease(session, bit));
@@ -167,12 +162,12 @@ public class UnderReplicatedBlockClusterj
 
   @Override
   public int countAll() throws StorageException {
-    return MySQLQueryHelper.countAll(TABLE_NAME);
+    return MySQLQueryHelper.countAll(getMysqlConnector(), TABLE_NAME);
   }
 
   @Override
   public List<UnderReplicatedBlock> findAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<UnderReplicatedBlocksDTO> dobj =
         qb.createQueryDefinition(UnderReplicatedBlocksDTO.class);
@@ -184,7 +179,7 @@ public class UnderReplicatedBlockClusterj
   @Override
   public List<UnderReplicatedBlock> findByLevel(int level)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<UnderReplicatedBlocksDTO> dobj =
         qb.createQueryDefinition(UnderReplicatedBlocksDTO.class);
@@ -198,8 +193,8 @@ public class UnderReplicatedBlockClusterj
 
   @Override
   public List<UnderReplicatedBlock> findByLevel(int level, int offset,
-      int count) throws StorageException {
-    HopsSession session = connector.obtainSession();
+                                                int count) throws StorageException {
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<UnderReplicatedBlocksDTO> dobj =
         qb.createQueryDefinition(UnderReplicatedBlocksDTO.class);
@@ -215,7 +210,7 @@ public class UnderReplicatedBlockClusterj
   @Override
   public List<UnderReplicatedBlock> findByINodeId(int inodeId)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<UnderReplicatedBlocksDTO> qdt =
         qb.createQueryDefinition(UnderReplicatedBlocksDTO.class);
@@ -232,7 +227,7 @@ public class UnderReplicatedBlockClusterj
   @Override
   public List<UnderReplicatedBlock> findByINodeIds(int[] inodeIds)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<UnderReplicatedBlocksDTO> qdt =
         qb.createQueryDefinition(UnderReplicatedBlocksDTO.class);
@@ -242,10 +237,10 @@ public class UnderReplicatedBlockClusterj
     query.setParameter("idParam", Ints.asList(inodeIds));
     return convertAndRelease(session, query.getResultList());
   }
-  
+
   @Override
   public void removeAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     session.deletePersistentAll(UnderReplicatedBlocksDTO.class);
   }
 }

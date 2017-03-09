@@ -27,14 +27,18 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.BlockLookUpDataAccess;
 import io.hops.metadata.hdfs.entity.BlockLookUp;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class BlockLookUpClusterj
+public class BlockLookUpClusterj extends ClusterjDataAccess
     implements TablesDef.BlockLookUpTableDef, BlockLookUpDataAccess<BlockLookUp> {
+  public BlockLookUpClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface BlockLookUpDTO {
@@ -52,13 +56,12 @@ public class BlockLookUpClusterj
 
   }
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
   private final static int NOT_FOUND_ROW = -1000;
 
   @Override
   public void prepare(Collection<BlockLookUp> modified,
-      Collection<BlockLookUp> removed) throws StorageException {
-    HopsSession session = connector.obtainSession();
+                      Collection<BlockLookUp> removed) throws StorageException {
+    HopsSession session = getConnector().obtainSession();
     for (BlockLookUp block_lookup : removed) {
       BlockLookUpClusterj.BlockLookUpDTO bTable = session
           .newInstance(BlockLookUpClusterj.BlockLookUpDTO.class,
@@ -78,7 +81,7 @@ public class BlockLookUpClusterj
 
   @Override
   public BlockLookUp findByBlockId(long blockId) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     BlockLookUpClusterj.BlockLookUpDTO lookup =
         session.find(BlockLookUpClusterj.BlockLookUpDTO.class, blockId);
     if (lookup == null) {
@@ -92,12 +95,12 @@ public class BlockLookUpClusterj
   @Override
   public int[] findINodeIdsByBlockIds(final long[] blockIds)
       throws StorageException {
-    final HopsSession session = connector.obtainSession();
+    final HopsSession session = getConnector().obtainSession();
     return readINodeIdsByBlockIds(session, blockIds);
   }
 
   protected static int[] readINodeIdsByBlockIds(final HopsSession session,
-      final long[] blockIds) throws StorageException {
+                                                final long[] blockIds) throws StorageException {
     final List<BlockLookUpDTO> bldtos = new ArrayList<BlockLookUpDTO>();
     final List<Integer> inodeIds = new ArrayList<Integer>();
     for (int blk = 0; blk < blockIds.length; blk++) {
@@ -129,7 +132,7 @@ public class BlockLookUpClusterj
     bldtos.clear();
     return Ints.toArray(inodeIds);
   }
-  
+
   protected static BlockLookUp createBlockInfo(
       BlockLookUpClusterj.BlockLookUpDTO dto) {
     BlockLookUp lookup = new BlockLookUp(dto.getBlockId(), dto.getINodeId());
@@ -137,7 +140,7 @@ public class BlockLookUpClusterj
   }
 
   protected static void createPersistable(BlockLookUp lookup,
-      BlockLookUpClusterj.BlockLookUpDTO persistable) {
+                                          BlockLookUpClusterj.BlockLookUpDTO persistable) {
     persistable.setBlockId(lookup.getBlockId());
     persistable.setINodeId(lookup.getInodeId());
   }

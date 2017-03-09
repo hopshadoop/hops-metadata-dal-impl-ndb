@@ -22,22 +22,19 @@ import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.AccessTimeLogDataAccess;
 import io.hops.metadata.hdfs.entity.AccessTimeLogEntry;
-import io.hops.metadata.hdfs.entity.MetadataLogEntry;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.wrapper.HopsPredicate;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
+import io.hops.metadata.ndb.wrapper.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
-public class AccessTimeLogClusterj implements TablesDef.AccessTimeLogTableDef,
-    AccessTimeLogDataAccess<AccessTimeLogEntry> {
+public class AccessTimeLogClusterj extends ClusterjDataAccess implements
+    TablesDef.AccessTimeLogTableDef, AccessTimeLogDataAccess<AccessTimeLogEntry> {
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
+  public AccessTimeLogClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface AccessTimeLogEntryDto {
@@ -62,7 +59,7 @@ public class AccessTimeLogClusterj implements TablesDef.AccessTimeLogTableDef,
 
   @Override
   public void add(AccessTimeLogEntry logEntry) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     AccessTimeLogEntryDto dto =
         session.newInstance(AccessTimeLogEntryDto.class);
     dto.setInodeId(logEntry.getInodeId());
@@ -74,7 +71,7 @@ public class AccessTimeLogClusterj implements TablesDef.AccessTimeLogTableDef,
 
   @Override
   public Collection<AccessTimeLogEntry> find(int fileId) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<AccessTimeLogEntryDto> dobj =
         qb.createQueryDefinition(AccessTimeLogEntryDto.class);

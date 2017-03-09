@@ -3,6 +3,10 @@ Hops Metadata DAL NDB Implementation
 
 Hops Database abstraction layer for storing the hops metadata in MySQL Cluster
 
+# How to configure
+Refer to the `docs/` directory for information on how to configure this.
+
+
 How to build
 ===
 

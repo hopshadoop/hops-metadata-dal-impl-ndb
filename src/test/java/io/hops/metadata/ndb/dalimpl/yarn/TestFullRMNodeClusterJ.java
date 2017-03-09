@@ -18,25 +18,15 @@
  */
 package io.hops.metadata.ndb.dalimpl.yarn;
 
+import io.hops.MultiZoneStorageConnector;
 import io.hops.StorageConnector;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.NdbStorageFactory;
 import io.hops.metadata.yarn.TablesDef;
-import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
-import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
-import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
-import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
-import io.hops.metadata.yarn.dal.RMNodeDataAccess;
-import io.hops.metadata.yarn.dal.ResourceDataAccess;
-import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
+import io.hops.metadata.yarn.dal.*;
 import io.hops.metadata.yarn.dal.util.YARNOperationType;
-import io.hops.metadata.yarn.entity.ContainerId;
-import io.hops.metadata.yarn.entity.ContainerStatus;
-import io.hops.metadata.yarn.entity.FinishedApplications;
-import io.hops.metadata.yarn.entity.RMNode;
-import io.hops.metadata.yarn.entity.RMNodeComps;
-import io.hops.metadata.yarn.entity.Resource;
-import io.hops.metadata.yarn.entity.UpdatedContainerInfo;
+import io.hops.metadata.yarn.entity.*;
+
 import io.hops.transaction.handler.LightWeightRequestHandler;
 import io.hops.transaction.handler.RequestHandler;
 import junit.framework.Assert;
@@ -52,23 +42,23 @@ import java.util.Properties;
 
 public class TestFullRMNodeClusterJ {
 
-  NdbStorageFactory storageFactory = new NdbStorageFactory();
-  StorageConnector connector = storageFactory.getConnector();
   private final int DEFAULT_PENDIND_ID = 0;
+  NdbStorageFactory storageFactory = new NdbStorageFactory();
+  MultiZoneStorageConnector connector = storageFactory.getMultiZoneConnector();
 
   @Before
   public void setup() throws IOException {
     storageFactory.setConfiguration(getMetadataClusterConfiguration());
+
     RequestHandler.setStorageConnector(connector);
     LightWeightRequestHandler setRMDTMasterKeyHandler
-            = new LightWeightRequestHandler(YARNOperationType.TEST) {
-              @Override
-              public Object performTask() throws IOException {
-                connector.formatStorage();
-
-                return null;
-              }
-            };
+        = new LightWeightRequestHandler(YARNOperationType.TEST) {
+      @Override
+      public Object performTask(StorageConnector connector) throws IOException {
+        connector.formatStorage();
+        return null;
+      }
+    };
     setRMDTMasterKeyHandler.handle();
   }
 
@@ -76,140 +66,131 @@ public class TestFullRMNodeClusterJ {
   public void testFindByNodeId() throws StorageException, IOException {
     //TODO: Add test for nextheartbeat
     //fill the database with a RMNode
-    final RMNode hopRMNodeOrigin
-            = new RMNode("70", "rmnode70", 9999, 9876, 
-                    "life is good ", -10L, "relax", "hayarn", 0);
-    final Resource hopResourceOrigin
-            = new Resource("70", 1,
-                    100, 0);
+    final RMNode hopRMNodeOrigin = new RMNode("70", "rmnode70", 9999, 9876,
+        "life is good ", -10L,
+        "relax", "hayarn", 0);
+    final Resource hopResourceOrigin = new Resource("70", 1, 100, 0);
 
-    final List<UpdatedContainerInfo> hopUpdatedContainers
-            = new ArrayList<UpdatedContainerInfo>();
-    hopUpdatedContainers.add(new UpdatedContainerInfo("70", "container3", 1,
-            DEFAULT_PENDIND_ID));
-    hopUpdatedContainers.add(new UpdatedContainerInfo("70", "container4", 2,
-            DEFAULT_PENDIND_ID));
+    final List<UpdatedContainerInfo> hopUpdatedContainers = new ArrayList<>();
+    hopUpdatedContainers.add(
+        new UpdatedContainerInfo("70", "container3", 1, DEFAULT_PENDIND_ID));
+    hopUpdatedContainers.add(
+        new UpdatedContainerInfo("70", "container4", 2, DEFAULT_PENDIND_ID));
 
-    final List<ContainerId> hopContainerIds = new ArrayList<ContainerId>();
+    final List<ContainerId> hopContainerIds = new ArrayList<>();
     hopContainerIds.add(new ContainerId("70", "container5"));
     hopContainerIds.add(new ContainerId("70", "container6"));
 
-    final List<FinishedApplications> hopFinishedApps
-            = new ArrayList<FinishedApplications>();
+    final List<FinishedApplications> hopFinishedApps = new ArrayList<>();
     hopFinishedApps.add(new FinishedApplications("70", "app1"));
     hopFinishedApps.add(new FinishedApplications("70", "app2"));
 
-    final List<ContainerStatus> hopContainersStatus
-            = new ArrayList<ContainerStatus>();
+    final List<ContainerStatus> hopContainersStatus = new ArrayList<>();
     hopContainersStatus.add(
-            new ContainerStatus("container1",
-                    TablesDef.ContainerStatusTableDef.STATE_RUNNING,
-                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
-                    hopUpdatedContainers.get(0).getUpdatedContainerInfoId()));
+        new ContainerStatus("container1",
+            TablesDef.ContainerStatusTableDef.STATE_RUNNING,
+            "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
+            hopUpdatedContainers.get(0).getUpdatedContainerInfoId()));
     hopContainersStatus.add(
-            new ContainerStatus("container2",
-                    TablesDef.ContainerStatusTableDef.STATE_RUNNING,
-                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
-                    hopUpdatedContainers.get(0).getUpdatedContainerInfoId()));
+        new ContainerStatus("container2",
+            TablesDef.ContainerStatusTableDef.STATE_RUNNING,
+            "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
+            hopUpdatedContainers.get(0).getUpdatedContainerInfoId()));
     hopContainersStatus.add(
-            new ContainerStatus("container3",
-                    TablesDef.ContainerStatusTableDef.STATE_RUNNING,
-                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
-                    hopUpdatedContainers.get(0).getUpdatedContainerInfoId()));
+        new ContainerStatus("container3",
+            TablesDef.ContainerStatusTableDef.STATE_RUNNING,
+            "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
+            hopUpdatedContainers.get(0).getUpdatedContainerInfoId()));
     hopContainersStatus.add(
-            new ContainerStatus("container4",
-                    TablesDef.ContainerStatusTableDef.STATE_RUNNING,
-                    "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
-                    hopUpdatedContainers.get(1).getUpdatedContainerInfoId()));
+        new ContainerStatus("container4",
+            TablesDef.ContainerStatusTableDef.STATE_RUNNING,
+            "every thing is good", 0, "70", DEFAULT_PENDIND_ID,
+            hopUpdatedContainers.get(1).getUpdatedContainerInfoId()));
     hopContainersStatus.add(new ContainerStatus("container5",
-            TablesDef.ContainerStatusTableDef.STATE_COMPLETED,
-            "every thing is good", 0,
-            "70", DEFAULT_PENDIND_ID, 
-            hopUpdatedContainers.get(1).getUpdatedContainerInfoId()));
+        TablesDef.ContainerStatusTableDef.STATE_COMPLETED,
+        "every thing is good", 0,
+        "70", DEFAULT_PENDIND_ID,
+        hopUpdatedContainers.get(1).getUpdatedContainerInfoId()));
     hopContainersStatus.add(new ContainerStatus("container6",
-            TablesDef.ContainerStatusTableDef.STATE_COMPLETED, "finish", 1, "70",
-            DEFAULT_PENDIND_ID, 
-            hopUpdatedContainers.get(1).getUpdatedContainerInfoId()));
+        TablesDef.ContainerStatusTableDef.STATE_COMPLETED, "finish", 1, "70",
+        DEFAULT_PENDIND_ID,
+        hopUpdatedContainers.get(1).getUpdatedContainerInfoId()));
 
-    LightWeightRequestHandler fillDB
-            = new LightWeightRequestHandler(YARNOperationType.TEST) {
-              @Override
-              public Object performTask() throws StorageException {
-                connector.beginTransaction();
-                connector.writeLock();
+    LightWeightRequestHandler fillDB = new LightWeightRequestHandler(YARNOperationType.TEST) {
+      @Override
+      public Object performTask(StorageConnector connector) throws StorageException {
+        connector.beginTransaction();
+        connector.writeLock();
 
-                RMNodeDataAccess rmNodeDA = (RMNodeDataAccess) storageFactory.
-                getDataAccess(RMNodeDataAccess.class);
-                rmNodeDA.add(hopRMNodeOrigin);
+        RMNodeDataAccess rmNodeDA = (RMNodeDataAccess) storageFactory.
+            getDataAccess(connector, RMNodeDataAccess.class);
+        rmNodeDA.add(hopRMNodeOrigin);
 
-                ResourceDataAccess resourceDA
-                = (ResourceDataAccess) storageFactory
-                .getDataAccess(ResourceDataAccess.class);
+        ResourceDataAccess resourceDA
+            = (ResourceDataAccess) storageFactory
+            .getDataAccess(connector, ResourceDataAccess.class);
 
-                resourceDA.add(hopResourceOrigin);
+        resourceDA.add(hopResourceOrigin);
 
-                UpdatedContainerInfoDataAccess updatedContainerDA
-                = (UpdatedContainerInfoDataAccess) storageFactory
-                .getDataAccess(UpdatedContainerInfoDataAccess.class);
-                updatedContainerDA.addAll(hopUpdatedContainers);
+        UpdatedContainerInfoDataAccess updatedContainerDA
+            = (UpdatedContainerInfoDataAccess) storageFactory
+            .getDataAccess(connector, UpdatedContainerInfoDataAccess.class);
+        updatedContainerDA.addAll(hopUpdatedContainers);
 
-                ContainerIdToCleanDataAccess containersIdDA
-                = (ContainerIdToCleanDataAccess) storageFactory
-                .getDataAccess(ContainerIdToCleanDataAccess.class);
-                containersIdDA.addAll(hopContainerIds);
+        ContainerIdToCleanDataAccess containersIdDA
+            = (ContainerIdToCleanDataAccess) storageFactory
+            .getDataAccess(connector, ContainerIdToCleanDataAccess.class);
+        containersIdDA.addAll(hopContainerIds);
 
-                FinishedApplicationsDataAccess finishedAppDA
-                = (FinishedApplicationsDataAccess) storageFactory
-                .getDataAccess(FinishedApplicationsDataAccess.class);
-                finishedAppDA.addAll(hopFinishedApps);
+        FinishedApplicationsDataAccess finishedAppDA
+            = (FinishedApplicationsDataAccess) storageFactory
+            .getDataAccess(connector, FinishedApplicationsDataAccess.class);
+        finishedAppDA.addAll(hopFinishedApps);
 
-                ContainerStatusDataAccess containerStatusDA
-                = (ContainerStatusDataAccess) storageFactory
-                .getDataAccess(ContainerStatusDataAccess.class);
-                containerStatusDA.addAll(hopContainersStatus);
-                connector.commit();
-                return null;
-              }
-            };
+        ContainerStatusDataAccess containerStatusDA
+            = (ContainerStatusDataAccess) storageFactory
+            .getDataAccess(connector, ContainerStatusDataAccess.class);
+        containerStatusDA.addAll(hopContainersStatus);
+        connector.commit();
+        return null;
+      }
+    };
     fillDB.handle();
 
     //get the RMNode
-    LightWeightRequestHandler getHopRMNode
-            = new LightWeightRequestHandler(YARNOperationType.TEST) {
-              @Override
-              public Object performTask() throws StorageException {
-                connector.beginTransaction();
-                connector.writeLock();
-                FullRMNodeDataAccess fullRMNodeDA
-                = (FullRMNodeDataAccess) storageFactory.
-                getDataAccess(FullRMNodeDataAccess.class);
-                RMNodeComps hopRMNodeFull = (RMNodeComps) fullRMNodeDA.
-                findByNodeId("70");
-                connector.commit();
-                return hopRMNodeFull;
-              }
-            };
+    LightWeightRequestHandler getHopRMNode = new LightWeightRequestHandler(YARNOperationType.TEST) {
+      @Override
+      public Object performTask(StorageConnector connector) throws StorageException {
+        connector.beginTransaction();
+        connector.writeLock();
+        FullRMNodeDataAccess fullRMNodeDA =
+            (FullRMNodeDataAccess) storageFactory.getDataAccess(connector, FullRMNodeDataAccess.class);
+        RMNodeComps hopRMNodeFull = (RMNodeComps) fullRMNodeDA.findByNodeId("70");
+        connector.commit();
+        return hopRMNodeFull;
+      }
+    };
 
     RMNodeComps hopRMNodeFull = (RMNodeComps) getHopRMNode.handle();
 
     //check if the fetched RMNode is correct
     RMNode rmNodeFinal = hopRMNodeFull.getHopRMNode();
     Assert.assertTrue(rmNodeFinal.getNodeId().equals(hopRMNodeOrigin.
-            getNodeId()));
+        getNodeId()));
     Assert.assertTrue(rmNodeFinal.getCurrentState().equals(hopRMNodeOrigin.
-            getCurrentState()));
+        getCurrentState()));
 
     Resource resourceFinal = hopRMNodeFull.getHopResource();
     Assert.assertTrue(resourceFinal.getId().equals(hopResourceOrigin.getId()));
 
 
     List<UpdatedContainerInfo> hopUpdatedContainersFinal
-            = hopRMNodeFull.getHopUpdatedContainerInfo();
+        = hopRMNodeFull.getHopUpdatedContainerInfo();
 
     for (UpdatedContainerInfo updated : hopUpdatedContainersFinal) {
       boolean flag = false;
       for (ContainerStatus containerStatus : hopRMNodeFull.
-              getHopContainersStatus()) {
+          getHopContainersStatus()) {
         if (containerStatus.getContainerid().equals(updated.getContainerId())) {
           flag = true;
         }
@@ -226,15 +207,14 @@ public class TestFullRMNodeClusterJ {
     }
 
 
-
     Collection<ContainerStatus> hopContainersStatusFinal = hopRMNodeFull.
-            getHopContainersStatus();
+        getHopContainersStatus();
     for (ContainerStatus containerStatus : hopContainersStatusFinal) {
       boolean flag = false;
       for (ContainerStatus containerStatusOringine : hopContainersStatus) {
         if (containerStatus.getContainerid().equals(containerStatusOringine.
-                getContainerid()) && containerStatus.getExitstatus()
-                == containerStatusOringine.getExitstatus()) {
+            getContainerid()) && containerStatus.getExitstatus()
+            == containerStatusOringine.getExitstatus()) {
           flag = true;
           break;
         }
@@ -244,11 +224,11 @@ public class TestFullRMNodeClusterJ {
   }
 
   private Properties getMetadataClusterConfiguration()
-          throws IOException {
+      throws IOException {
     String configFile = "ndb-config.properties";
     Properties clusterConf = new Properties();
     InputStream inStream = StorageConnector.class.getClassLoader().
-            getResourceAsStream(configFile);
+        getResourceAsStream(configFile);
     clusterConf.load(inStream);
     return clusterConf;
   }

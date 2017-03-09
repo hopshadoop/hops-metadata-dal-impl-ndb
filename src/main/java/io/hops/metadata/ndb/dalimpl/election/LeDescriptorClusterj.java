@@ -19,11 +19,13 @@
 package io.hops.metadata.ndb.dalimpl.election;
 
 import com.mysql.clusterj.annotation.PartitionKey;
+import io.hops.StorageConnector;
 import io.hops.exception.StorageException;
 import io.hops.metadata.election.TablesDef;
 import io.hops.metadata.election.dal.LeDescriptorDataAccess;
 import io.hops.metadata.election.entity.LeDescriptor;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -33,10 +35,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public abstract class LeDescriptorClusterj
+public abstract class LeDescriptorClusterj extends ClusterjDataAccess
     implements TablesDef.LeDescriptorTableDef, LeDescriptorDataAccess<LeDescriptor> {
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
   @PartitionKey(column = PARTITION_VAL)
   Class dto;
 
@@ -63,14 +64,15 @@ public abstract class LeDescriptorClusterj
     void setHttpAddress(String httpAddress);
   }
 
-  public LeDescriptorClusterj(Class dto) {
+  public LeDescriptorClusterj(ClusterjConnector connector, Class dto) {
+    super(connector);
     this.dto = dto;
   }
 
   @Override
   public LeDescriptor findByPkey(long id, int partitionKey)
       throws StorageException {
-    HopsSession dbSession = connector.obtainSession();
+    HopsSession dbSession = getConnector().obtainSession();
     Object[] keys = new Object[]{partitionKey, id};
     LeaderDTO lTable = (LeaderDTO) dbSession.find(dto, keys);
     if (lTable != null) {
@@ -82,16 +84,7 @@ public abstract class LeDescriptorClusterj
 
   @Override
   public Collection<LeDescriptor> findAll() throws StorageException {
-    //    HopsSession dbSession = connector.obtainSession();
-    //    HopsQueryBuilder qb = dbSession.getQueryBuilder();
-    //    HopsQueryDomainType<LeaderDTO> dobj = qb.createQueryDefinition(LeaderDTO.class);
-    //    HopsPredicate pred1 = dobj.get("partitionVal").equal(dobj.param("partitionValParam"));
-    //    dobj.where(pred1);
-    //    HopsQuery<LeaderDTO> query = dbSession.createQuery(dobj);
-    //    query.setParameter("partitionValParam", 0);
-    //    return createList(query.getResultList());
-
-    HopsSession dbSession = connector.obtainSession();
+    HopsSession dbSession = getConnector().obtainSession();
     HopsQueryBuilder qb = dbSession.getQueryBuilder();
     HopsQueryDomainType<LeaderDTO> dobj = qb.createQueryDefinition(dto);
     HopsQuery<LeaderDTO> query = dbSession.createQuery(dobj);
@@ -101,9 +94,9 @@ public abstract class LeDescriptorClusterj
 
   @Override
   public void prepare(Collection<LeDescriptor> removed,
-      Collection<LeDescriptor> newed, Collection<LeDescriptor> modified)
+                      Collection<LeDescriptor> newed, Collection<LeDescriptor> modified)
       throws StorageException {
-    HopsSession dbSession = connector.obtainSession();
+    HopsSession dbSession = getConnector().obtainSession();
     List<LeaderDTO> changes = new ArrayList<LeaderDTO>();
     List<LeaderDTO> deletions = new ArrayList<LeaderDTO>();
     for (LeDescriptor l : newed) {
@@ -140,7 +133,7 @@ public abstract class LeDescriptorClusterj
   protected abstract LeDescriptor createDescriptor(LeaderDTO lTable);
 
   private void createPersistableLeaderInstance(LeDescriptor leader,
-      LeaderDTO lTable) {
+                                               LeaderDTO lTable) {
     lTable.setId(leader.getId());
     lTable.setCounter(leader.getCounter());
     lTable.setHostname(leader.getHostName());

@@ -34,15 +34,19 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+// TODO[rob]: get rid of this
 public class DBSessionProvider implements Runnable {
 
   static final Log LOG = LogFactory.getLog(DBSessionProvider.class);
-  static HopsSessionFactory sessionFactory;
+
+
+  // this cannot be static, it is no longer shared between different instances
+  private HopsSessionFactory sessionFactory;
+
   private ConcurrentLinkedQueue<DBSession> sessionPool =
-      new ConcurrentLinkedQueue<DBSession>();
+      new ConcurrentLinkedQueue<>();
   private ConcurrentLinkedQueue<DBSession> toGC =
-      new ConcurrentLinkedQueue<DBSession>();
-  private final int MAX_REUSE_COUNT;
+      new ConcurrentLinkedQueue<>();
   private Properties conf;
   private final Random rand;
   private AtomicInteger sessionsCreated = new AtomicInteger(0);
@@ -51,26 +55,21 @@ public class DBSessionProvider implements Runnable {
   private boolean automaticRefresh = false;
   private Thread thread;
 
+  private final int maxReuseCount;
+
   public DBSessionProvider(Properties conf, int reuseCount, int initialPoolSize)
       throws StorageException {
     this.conf = conf;
     if (reuseCount <= 0) {
-      System.err.println("Invalid value for session reuse count");
-      System.exit(-1);
+      throw new StorageException("Invalid value for session reuse count");
     }
-    this.MAX_REUSE_COUNT = reuseCount;
+    this.maxReuseCount = reuseCount;
     rand = new Random(System.currentTimeMillis());
     rollingAvg = new long[initialPoolSize];
     start(initialPoolSize);
   }
 
   private void start(int initialPoolSize) throws StorageException {
-    System.out.println("Database connect string: " +
-        conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING));
-    System.out.println(
-        "Database name: " + conf.get(Constants.PROPERTY_CLUSTER_DATABASE));
-    System.out.println("Max Transactions: " +
-        conf.get(Constants.PROPERTY_CLUSTER_MAX_TRANSACTIONS));
     try {
       sessionFactory =
           new HopsSessionFactory(ClusterJHelper.getSessionFactory(conf));
@@ -95,7 +94,7 @@ public class DBSessionProvider implements Runnable {
     rollingAvg[rollingAvgIndex.incrementAndGet() % rollingAvg.length] =
         sessionCreationTime;
 
-    int reuseCount = rand.nextInt(MAX_REUSE_COUNT) + 1;
+    int reuseCount = rand.nextInt(maxReuseCount) + 1;
     DBSession dbSession = new DBSession(session, reuseCount);
     sessionsCreated.incrementAndGet();
     return dbSession;
@@ -123,7 +122,7 @@ public class DBSessionProvider implements Runnable {
       return session;
     } catch (NoSuchElementException e) {
       LOG.warn(
-          "DB Sessino provider cant keep up with the demand for new sessions");
+          "DB Session provider cant keep up with the demand for new sessions");
       return initSession();
     }
   }
@@ -135,7 +134,7 @@ public class DBSessionProvider implements Runnable {
 
     if ((returnedSession.getSessionUseCount() >=
         returnedSession.getMaxReuseCount()) ||
-        forceClose) { // session can be closed even before the reuse count has expired. Close the session incase of database errors.
+        forceClose) { // session can be closed even before the reuse count has expired. Close the session in case of database errors.
       toGC.add(returnedSession);
     } else { // increment the count and return it to the pool
       sessionPool.add(returnedSession);

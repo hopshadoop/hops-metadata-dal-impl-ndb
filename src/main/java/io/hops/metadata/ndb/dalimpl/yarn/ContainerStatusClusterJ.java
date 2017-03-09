@@ -23,26 +23,25 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.TablesDef;
-import static io.hops.metadata.yarn.TablesDef.ContainerStatusTableDef.RMNODEID;
 import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
 import io.hops.metadata.yarn.entity.ContainerStatus;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class ContainerStatusClusterJ implements
-    TablesDef.ContainerStatusTableDef,
-    ContainerStatusDataAccess<ContainerStatus> {
+public class ContainerStatusClusterJ extends ClusterjDataAccess
+    implements TablesDef.ContainerStatusTableDef, ContainerStatusDataAccess<ContainerStatus> {
+
+  public ContainerStatusClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   private static final Log LOG = LogFactory.
       getLog(ContainerStatusClusterJ.class);
@@ -82,34 +81,32 @@ public class ContainerStatusClusterJ implements
     int getexitstatus();
 
     void setexitstatus(int exitstatus);
-    
+
     @Column(name = PENDING_EVENT_ID)
     int getpendingeventid();
 
     void setpendingeventid(int pedingeventid);
-    
+
 
   }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
-  public ContainerStatus findEntry(String containerId, String rmNodeId, 
-          String type)
+  public ContainerStatus findEntry(String containerId, String rmNodeId,
+                                   String type)
       throws StorageException {
     LOG.debug("HOP :: ClusterJ ContainerStatus.findById - START");
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
 
     ContainerStatusDTO uciDTO;
     if (session != null) {
       uciDTO = session
-          .find(ContainerStatusDTO.class, new Object[]{containerId, rmNodeId, 
+          .find(ContainerStatusDTO.class, new Object[]{containerId, rmNodeId,
               type});
       LOG.debug("HOP :: ClusterJ ContainerStatus.findById - FINISH");
       if (uciDTO != null) {
-          ContainerStatus result = createHopContainerStatus(uciDTO);
-          session.release(uciDTO);
-          return result;
+        ContainerStatus result = createHopContainerStatus(uciDTO);
+        session.release(uciDTO);
+        return result;
       }
     }
     return null;
@@ -118,7 +115,7 @@ public class ContainerStatusClusterJ implements
   @Override
   public Map<String, ContainerStatus> getAll() throws StorageException {
     LOG.debug("HOP :: ClusterJ ContainerStatus.getAll - START");
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<ContainerStatusDTO> dobj =
@@ -135,7 +132,7 @@ public class ContainerStatusClusterJ implements
   @Override
   public void addAll(Collection<ContainerStatus> containersStatus)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     List<ContainerStatusDTO> toAdd = new ArrayList<ContainerStatusDTO>();
     for (ContainerStatus containerStatus : containersStatus) {
       toAdd.add(createPersistable(containerStatus, session));
@@ -148,7 +145,7 @@ public class ContainerStatusClusterJ implements
   @Override
   public void removeAll(Collection<ContainerStatus> containersStatus)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     List<ContainerStatusDTO> toRemove = new ArrayList<ContainerStatusDTO>();
     for (ContainerStatus containerStatus : containersStatus) {
       toRemove.add(createPersistable(containerStatus, session));
@@ -156,9 +153,9 @@ public class ContainerStatusClusterJ implements
     session.deletePersistentAll(toRemove);
     session.release(toRemove);
   }
-  
+
   private ContainerStatusDTO createPersistable(ContainerStatus hopCS,
-      HopsSession session) throws StorageException {
+                                               HopsSession session) throws StorageException {
     ContainerStatusDTO csDTO = session.newInstance(ContainerStatusDTO.class);
     //Set values to persist new ContainerStatus
     csDTO.setcontainerid(hopCS.getContainerid());
@@ -172,11 +169,11 @@ public class ContainerStatusClusterJ implements
   }
 
   private static ContainerStatus createHopContainerStatus(
-          ContainerStatusDTO csDTO) {
+      ContainerStatusDTO csDTO) {
     ContainerStatus hop = new ContainerStatus(csDTO.getcontainerid(), csDTO.
-            getstate(),
-            csDTO.getdiagnostics(), csDTO.getexitstatus(), csDTO.getrmnodeid(),
-            csDTO.getpendingeventid(), csDTO.getuciid());
+        getstate(),
+        csDTO.getdiagnostics(), csDTO.getexitstatus(), csDTO.getrmnodeid(),
+        csDTO.getpendingeventid(), csDTO.getuciid());
     return hop;
   }
 
@@ -191,9 +188,9 @@ public class ContainerStatusClusterJ implements
   }
 
   public static List<ContainerStatus> createList(
-          List<ContainerStatusDTO> results) {
+      List<ContainerStatusDTO> results) {
     List<ContainerStatus> list
-            = new ArrayList<ContainerStatus>();
+        = new ArrayList<ContainerStatus>();
     for (ContainerStatusDTO persistable : results) {
       ContainerStatus hop = createHopContainerStatus(persistable);
       list.add(hop);

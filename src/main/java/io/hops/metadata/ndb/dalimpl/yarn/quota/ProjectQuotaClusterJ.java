@@ -23,6 +23,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -30,18 +31,18 @@ import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.quota.ProjectQuotaDataAccess;
 import io.hops.metadata.yarn.entity.quota.ProjectQuota;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-public class ProjectQuotaClusterJ implements TablesDef.ProjectQuotaTableDef,
-        ProjectQuotaDataAccess<ProjectQuota> {
+import java.util.*;
+
+public class ProjectQuotaClusterJ extends ClusterjDataAccess
+    implements TablesDef.ProjectQuotaTableDef, ProjectQuotaDataAccess<ProjectQuota> {
+
+  public ProjectQuotaClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface ProjectQuotaDTO {
-
     @PrimaryKey
     @Column(name = PROJECTID)
     String getProjectid();
@@ -60,15 +61,13 @@ public class ProjectQuotaClusterJ implements TablesDef.ProjectQuotaTableDef,
 
   }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public Map<String, ProjectQuota> getAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<ProjectQuotaDTO> dobj = qb.createQueryDefinition(
-            ProjectQuotaDTO.class);
+        ProjectQuotaDTO.class);
     HopsQuery<ProjectQuotaDTO> query = session.createQuery(dobj);
 
     List<ProjectQuotaDTO> queryResults = query.getResultList();
@@ -78,8 +77,8 @@ public class ProjectQuotaClusterJ implements TablesDef.ProjectQuotaTableDef,
   }
 
   public static Map<String, ProjectQuota> createMap(
-          List<ProjectQuotaDTO> results) {
-    Map<String, ProjectQuota> map = new HashMap<String, ProjectQuota>();
+      List<ProjectQuotaDTO> results) {
+    Map<String, ProjectQuota> map = new HashMap<>();
     for (ProjectQuotaDTO persistable : results) {
       ProjectQuota hop = createProjectQuota(persistable);
       map.put(hop.getProjectid(), hop);
@@ -89,15 +88,15 @@ public class ProjectQuotaClusterJ implements TablesDef.ProjectQuotaTableDef,
 
   private static ProjectQuota createProjectQuota(ProjectQuotaDTO csDTO) {
     ProjectQuota hop = new ProjectQuota(csDTO.getProjectid(), csDTO.
-            getRemainingQuota(), csDTO.getTotalUsedQuota());
+        getRemainingQuota(), csDTO.getTotalUsedQuota());
     return hop;
   }
 
   @Override
   public void addAll(Collection<ProjectQuota> projectsQuota) throws
-          StorageException {
-    HopsSession session = connector.obtainSession();
-    List<ProjectQuotaDTO> toAdd = new ArrayList<ProjectQuotaDTO>();
+      StorageException {
+    HopsSession session = getConnector().obtainSession();
+    List<ProjectQuotaDTO> toAdd = new ArrayList<>();
     for (ProjectQuota projectQuota : projectsQuota) {
       toAdd.add(createPersistable(projectQuota, session));
     }
@@ -107,7 +106,7 @@ public class ProjectQuotaClusterJ implements TablesDef.ProjectQuotaTableDef,
   }
 
   private ProjectQuotaDTO createPersistable(ProjectQuota hopPQ,
-          HopsSession session) throws StorageException {
+                                            HopsSession session) throws StorageException {
     ProjectQuotaDTO pqDTO = session.newInstance(ProjectQuotaDTO.class);
     //Set values to persist new ContainerStatus
     pqDTO.setProjectid(hopPQ.getProjectid());

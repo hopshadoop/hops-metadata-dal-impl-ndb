@@ -20,35 +20,27 @@ package io.hops.metadata.ndb.dalimpl.hdfs;
 
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
-import com.mysql.clusterj.annotation.Column;
-import com.mysql.clusterj.annotation.Index;
-import com.mysql.clusterj.annotation.PartitionKey;
-import com.mysql.clusterj.annotation.PersistenceCapable;
-import com.mysql.clusterj.annotation.PrimaryKey;
+import com.mysql.clusterj.annotation.*;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.ReplicaDataAccess;
 import io.hops.metadata.hdfs.entity.Replica;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
-import io.hops.metadata.ndb.wrapper.HopsPredicate;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
-import org.apache.log4j.Logger;
+import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
+import io.hops.metadata.ndb.wrapper.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-public class ReplicaClusterj
+public class ReplicaClusterj extends ClusterjDataAccess
     implements TablesDef.ReplicaTableDef, ReplicaDataAccess<Replica> {
+
+  public ReplicaClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   @PartitionKey(column = INODE_ID)
@@ -60,7 +52,7 @@ public class ReplicaClusterj
     int getINodeId();
 
     void setINodeId(int inodeID);
-    
+
     @PrimaryKey
     @Column(name = BLOCK_ID)
     long getBlockId();
@@ -74,13 +66,12 @@ public class ReplicaClusterj
     void setStorageId(int id);
   }
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
   private final static int NOT_FOUND_ROW = -1000;
 
   @Override
   public List<Replica> findReplicasById(long blockId, int inodeId)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<ReplicaDTO> dobj =
         qb.createQueryDefinition(ReplicaDTO.class);
@@ -92,12 +83,12 @@ public class ReplicaClusterj
     query.setParameter("iNodeIdParam", inodeId);
     return convertAndRelease(session, query.getResultList());
   }
-  
-  
+
+
   @Override
   public List<Replica> findReplicasByINodeId(int inodeId)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<ReplicaDTO> dobj =
         qb.createQueryDefinition(ReplicaDTO.class);
@@ -107,12 +98,12 @@ public class ReplicaClusterj
     query.setParameter("iNodeIdParam", inodeId);
     return convertAndRelease(session, query.getResultList());
   }
-  
+
 
   @Override
   public List<Replica> findReplicasByINodeIds(int[] inodeIds)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<ReplicaDTO> dobj =
         qb.createQueryDefinition(ReplicaDTO.class);
@@ -122,26 +113,26 @@ public class ReplicaClusterj
     query.setParameter("iNodeIdParam", Ints.asList(inodeIds));
     return convertAndRelease(session, query.getResultList());
   }
-  
+
   @Override
-  public Map<Long,Integer> findBlockAndInodeIdsByStorageId(int storageId)
+  public Map<Long, Integer> findBlockAndInodeIdsByStorageId(int storageId)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     List<ReplicaDTO> res = getReplicas(session, storageId);
-    Map<Long,Integer> map = new HashMap<Long,Integer>();
-    for(ReplicaDTO dto : res){
-      map.put(dto.getBlockId(), dto.getINodeId() );
+    Map<Long, Integer> map = new HashMap<Long, Integer>();
+    for (ReplicaDTO dto : res) {
+      map.put(dto.getBlockId(), dto.getINodeId());
     }
     return map;
   }
 
   @Override
   public void prepare(Collection<Replica> removed,
-      Collection<Replica> newed, Collection<Replica> modified)
+                      Collection<Replica> newed, Collection<Replica> modified)
       throws StorageException {
     List<ReplicaDTO> changes = new ArrayList<ReplicaDTO>();
     List<ReplicaDTO> deletions = new ArrayList<ReplicaDTO>();
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     for (Replica replica : removed) {
       ReplicaDTO newInstance = session.newInstance(ReplicaDTO.class);
       createPersistable(replica, newInstance);
@@ -168,24 +159,27 @@ public class ReplicaClusterj
 
   @Override
   public int countAllReplicasForStorageId(int sid) throws StorageException {
-    return MySQLQueryHelper.countWithCriterion(TABLE_NAME,
+    return MySQLQueryHelper.countWithCriterion(
+        getMysqlConnector(),
+        TABLE_NAME,
         String.format("%s=%d", STORAGE_ID, sid));
   }
 
-  protected static Set<Long> getReplicas(int storageId) throws
+  protected static Set<Long> getReplicas(MysqlServerConnector connector, int storageId) throws
       StorageException {
-    return MySQLQueryHelper.execute(String.format("SELECT %s " +
-        "FROM %s WHERE %s='%d'", BLOCK_ID, TABLE_NAME, STORAGE_ID, storageId)
-        , new MySQLQueryHelper.ResultSetHandler<Set<Long>>() {
-      @Override
-      public Set<Long> handle(ResultSet result) throws SQLException {
-        Set<Long> blocks = Sets.newHashSet();
-        while (result.next()){
-          blocks.add(result.getLong(BLOCK_ID));
-        }
-        return blocks;
-      }
-    });
+    return MySQLQueryHelper.execute(
+        connector,
+        String.format("SELECT %s FROM %s WHERE %s='%d'", BLOCK_ID, TABLE_NAME, STORAGE_ID, storageId),
+        new MySQLQueryHelper.ResultSetHandler<Set<Long>>() {
+          @Override
+          public Set<Long> handle(ResultSet result) throws SQLException {
+            Set<Long> blocks = Sets.newHashSet();
+            while (result.next()) {
+              blocks.add(result.getLong(BLOCK_ID));
+            }
+            return blocks;
+          }
+        });
   }
 
   protected static List<ReplicaClusterj.ReplicaDTO> getReplicas(
@@ -201,19 +195,19 @@ public class ReplicaClusterj
 
 
   private List<Replica> convertAndRelease(HopsSession session,
-      List<ReplicaDTO> triplets) throws StorageException {
+                                          List<ReplicaDTO> triplets) throws StorageException {
     List<Replica> replicas =
         new ArrayList<Replica>(triplets.size());
     for (ReplicaDTO t : triplets) {
-        replicas.add(
-            new Replica(t.getStorageId(), t.getBlockId(), t.getINodeId()));
+      replicas.add(
+          new Replica(t.getStorageId(), t.getBlockId(), t.getINodeId()));
       session.release(t);
     }
     return replicas;
   }
 
   private void createPersistable(Replica replica,
-      ReplicaDTO newInstance) {
+                                 ReplicaDTO newInstance) {
     newInstance.setBlockId(replica.getBlockId());
     newInstance.setStorageId(replica.getStorageId());
     newInstance.setINodeId(replica.getInodeId());

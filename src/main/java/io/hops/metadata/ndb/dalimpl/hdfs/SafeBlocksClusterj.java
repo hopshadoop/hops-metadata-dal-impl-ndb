@@ -25,9 +25,9 @@ import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.SafeBlocksDataAccess;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.mysqlserver.HopsSQLExceptionHelper;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
-import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 
 import java.sql.SQLException;
@@ -35,26 +35,28 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class SafeBlocksClusterj
+public class SafeBlocksClusterj extends ClusterjDataAccess
     implements TablesDef.SafeBlocksTableDef, SafeBlocksDataAccess {
-  
+
+  public SafeBlocksClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
+
   @PersistenceCapable(table = TABLE_NAME)
   public interface SafeBlockDTO {
-    
+
     @PrimaryKey
     @Column(name = ID)
     long getId();
-    
+
     void setId(long id);
   }
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
-  
   @Override
   public void insert(Collection<Long> safeBlocks) throws StorageException {
     final List<SafeBlockDTO> dtos =
         new ArrayList<SafeBlockDTO>(safeBlocks.size());
-    final HopsSession session = connector.obtainSession();
+    final HopsSession session = getConnector().obtainSession();
     for (Long blk : safeBlocks) {
       SafeBlockDTO dto = create(session, blk);
       dtos.add(dto);
@@ -62,10 +64,10 @@ public class SafeBlocksClusterj
     session.savePersistentAll(dtos);
     session.release(dtos);
   }
-  
+
   @Override
   public void remove(Long safeBlock) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     SafeBlockDTO dto = create(session, safeBlock);
     session.deletePersistent(dto);
     session.release(dto);
@@ -74,14 +76,14 @@ public class SafeBlocksClusterj
 
   @Override
   public int countAll() throws StorageException {
-    return MySQLQueryHelper.countAll(TABLE_NAME);
+    return MySQLQueryHelper.countAll(getMysqlConnector(), TABLE_NAME);
   }
 
   @Override
   public void removeAll() throws StorageException {
     try {
       while (countAll() != 0) {
-        MysqlServerConnector.truncateTable(TABLE_NAME, 10000);
+        getMysqlConnector().truncateTable(TABLE_NAME, 10000);
       }
     } catch (SQLException ex) {
       throw HopsSQLExceptionHelper.wrap(ex);

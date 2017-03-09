@@ -23,6 +23,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -35,7 +36,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RMLoadClusterJ implements TablesDef.RMLoadTableDef, RMLoadDataAccess<Load> {
+public class RMLoadClusterJ extends ClusterjDataAccess
+    implements TablesDef.RMLoadTableDef, RMLoadDataAccess<Load> {
+
+  public RMLoadClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface RMLoadDTO {
@@ -52,11 +58,9 @@ public class RMLoadClusterJ implements TablesDef.RMLoadTableDef, RMLoadDataAcces
     void setload(long load);
   }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public void update(Load entry) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     RMLoadDTO dto = createPersistable(entry, session);
     session.savePersistent(dto);
     session.release(dto);
@@ -64,7 +68,7 @@ public class RMLoadClusterJ implements TablesDef.RMLoadTableDef, RMLoadDataAcces
 
   @Override
   public Map<String, Load> getAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<RMLoadDTO> dobj =
         qb.createQueryDefinition(RMLoadDTO.class);

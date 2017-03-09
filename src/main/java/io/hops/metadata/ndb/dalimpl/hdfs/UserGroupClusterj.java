@@ -28,6 +28,7 @@ import io.hops.metadata.hdfs.dal.UserGroupDataAccess;
 import io.hops.metadata.hdfs.entity.Group;
 import io.hops.metadata.hdfs.entity.User;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -36,8 +37,12 @@ import io.hops.metadata.ndb.wrapper.HopsSession;
 import java.util.Arrays;
 import java.util.List;
 
-public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
-    UserGroupDataAccess<User, Group>{
+public class UserGroupClusterj extends ClusterjDataAccess
+    implements TablesDef.UsersGroupsTableDef, UserGroupDataAccess<User, Group> {
+
+  public UserGroupClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface UserGroupDTO {
@@ -55,8 +60,6 @@ public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
     void setGroupId(int id);
   }
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public void addUserToGroup(User user, Group group) throws StorageException {
     addUserToGroup(user.getId(), group.getId());
@@ -71,10 +74,10 @@ public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
   @Override
   public void addUserToGroups(int userId, List<Integer> groupIds)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     List<UserGroupDTO> dtos = Lists.newArrayListWithExpectedSize(groupIds
         .size());
-    for(int groupId : groupIds){
+    for (int groupId : groupIds) {
       UserGroupDTO dto = session.newInstance(UserGroupDTO.class);
       dto.setUserId(userId);
       dto.setGroupId(groupId);
@@ -92,18 +95,18 @@ public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
   @Override
   public List<Group> getGroupsForUser(int userId)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
 
     HopsQueryBuilder qb = session.getQueryBuilder();
-    HopsQueryDomainType<UserGroupDTO> dobj =  qb.createQueryDefinition
+    HopsQueryDomainType<UserGroupDTO> dobj = qb.createQueryDefinition
         (UserGroupDTO.class);
     dobj.where(dobj.get("userId").equal(dobj.param("param")));
     HopsQuery<UserGroupDTO> query = session.createQuery(dobj);
     query.setParameter("param", userId);
-    List<UserGroupDTO> res =  query.getResultList();
+    List<UserGroupDTO> res = query.getResultList();
 
     List<GroupClusterj.GroupDTO> groupDTOs = Lists.newArrayList();
-    for(UserGroupDTO ug : res){
+    for (UserGroupDTO ug : res) {
       GroupClusterj.GroupDTO groupDTO = session.newInstance(GroupClusterj
           .GroupDTO.class, ug.getGroupId());
       session.load(groupDTO);
@@ -111,7 +114,7 @@ public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
     }
     session.flush();
 
-   return GroupClusterj.convertAndRelease(session, groupDTOs);
+    return GroupClusterj.convertAndRelease(session, groupDTOs);
   }
 
 }

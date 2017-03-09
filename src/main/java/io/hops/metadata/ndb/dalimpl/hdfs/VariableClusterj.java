@@ -26,14 +26,19 @@ import io.hops.metadata.common.entity.Variable;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.VariableDataAccess;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class VariableClusterj
+public class VariableClusterj extends ClusterjDataAccess
     implements TablesDef.VariableTableDef, VariableDataAccess<Variable, Variable.Finder> {
+
+  public VariableClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface VariableDTO {
@@ -50,11 +55,9 @@ public class VariableClusterj
     void setValue(byte[] value);
   }
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public Variable getVariable(Variable.Finder varType) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     VariableDTO var = session.find(VariableDTO.class, varType.getId());
     if (var == null) {
       throw new StorageException(
@@ -65,7 +68,7 @@ public class VariableClusterj
 
   @Override
   public void setVariable(Variable var) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     VariableDTO vd = createVariableDTO(session, var);
     session.savePersistent(vd);
     session.release(vd);
@@ -73,9 +76,9 @@ public class VariableClusterj
 
   @Override
   public void prepare(Collection<Variable> newVariables,
-      Collection<Variable> updatedVariables,
-      Collection<Variable> removedVariables) throws StorageException {
-    HopsSession session = connector.obtainSession();
+                      Collection<Variable> updatedVariables,
+                      Collection<Variable> removedVariables) throws StorageException {
+    HopsSession session = getConnector().obtainSession();
     removeVariables(session, removedVariables);
     updateVariables(session, newVariables);
     updateVariables(session, updatedVariables);

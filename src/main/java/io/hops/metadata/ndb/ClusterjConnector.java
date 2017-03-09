@@ -100,32 +100,80 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Properties;
 
-public class ClusterjConnector implements StorageConnector<DBSession> {
+/**
+ * A clusterj zoneConnector allows the DAL to connect to the backend NDB and MySQL databases.
+ * The ClusterjConnector instance embeds a {@link MysqlServerConnector}
+ */
+public class ClusterjConnector implements StorageConnector {
 
-  private final static ClusterjConnector instance = new ClusterjConnector();
-  private static boolean isInitialized = false;
-  private DBSessionProvider dbSessionProvider = null;
-  static ThreadLocal<DBSession> sessions = new ThreadLocal<DBSession>();
-  static final Log LOG = LogFactory.getLog(ClusterjConnector.class);
+  // logger
+  private static final Log LOG = LogFactory.getLog(ClusterjConnector.class);
+
+  // initialization data
   private String clusterConnectString;
   private String databaseName;
-  
-  private ClusterjConnector() {
+  private boolean initialized = false;
+
+  //
+  private DBSessionProvider dbSessionProvider = null;
+  private ThreadLocal<DBSession> sessions = new ThreadLocal<>();
+
+  // configuration prefix (used to convert io.hops.metadata.{local, primary}.clusterj to com.mysql.clusterj)
+  private final String configPrefix;
+
+  private MysqlServerConnector mysqlConnector;
+
+  /**
+   * builds a new instance of ClusterjConnector with a given config prefix.
+   * @param configPrefix the prefix to use, either io.hops.metadata.local or io.hops.metadata.primary
+   */
+  public ClusterjConnector(final String configPrefix) {
+    this.configPrefix = configPrefix;
+    this.mysqlConnector = new MysqlServerConnector(configPrefix);
   }
 
-  public static ClusterjConnector getInstance() {
-    return instance;
+  public MysqlServerConnector getMysqlConnector() {
+    return this.mysqlConnector;
+  }
+
+
+  private Properties clusterjProperties(Properties conf) {
+    String clusterjPrefix = this.configPrefix + ".clusterj";
+    Properties res = new Properties();
+    for(Map.Entry<Object, Object> e: conf.entrySet()) {
+      String key = (String) e.getKey();
+      if(key.startsWith(clusterjPrefix)) {
+        String newKey = "com.mysql.clusterj" + key.substring(clusterjPrefix.length());
+        res.put(newKey, e.getValue());
+      }
+    }
+    return res;
+  }
+
+  private int confGetInt(Properties conf, String key) throws StorageException {
+    try {
+      return Integer.parseInt(conf.getProperty(key));
+    } catch (NumberFormatException exc) {
+      throw new StorageException("illegal value for " + key, exc);
+    }
   }
 
   @Override
   public void setConfiguration(Properties conf) throws StorageException {
-    if (isInitialized) {
-      LOG.warn("SessionFactory is already initialized");
-      return;
+    if (initialized) {
+      throw new StorageException("instance was already initialized");
     }
-    
+
+    // initialize inner mysql zoneConnector
+    mysqlConnector.setConfiguration(conf);
+
+    int initialPoolSize = confGetInt(conf, "io.hops.session.pool.size");
+    int reuseCount = confGetInt(conf, "io.hops.session.reuse.count");
+    conf = clusterjProperties(conf);
+
     clusterConnectString = (String) conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING);
     LOG.info("Database connect string: " +
         conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING));
@@ -134,14 +182,10 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     LOG.info("Max Transactions: " +
         conf.get(Constants.PROPERTY_CLUSTER_MAX_TRANSACTIONS));
 
-    int initialPoolSize =
-        Integer.parseInt((String) conf.get("io.hops.session.pool.size"));
-    int reuseCount =
-        Integer.parseInt((String) conf.get("io.hops.session.reuse.count"));
-    dbSessionProvider =
+    this.dbSessionProvider =
         new DBSessionProvider(conf, reuseCount, initialPoolSize);
     
-    isInitialized = true;
+    initialized = true;
   }
 
   /*
@@ -151,18 +195,18 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
    */
   @Override
   public HopsSession obtainSession() throws StorageException {
-    DBSession dbSession = sessions.get();
+    DBSession dbSession = this.sessions.get();
     if (dbSession == null) {
-      dbSession = dbSessionProvider.getSession();
-      sessions.set(dbSession);
+      dbSession = this.dbSessionProvider.getSession();
+      this.sessions.set(dbSession);
     }
     return dbSession.getSession();
   }
 
   private void returnSession(boolean error) throws StorageException {
-    DBSession dbSession = sessions.get();
-    sessions.remove(); // remove, and return to the pool
-    dbSessionProvider.returnSession(dbSession,
+    DBSession dbSession = this.sessions.get();
+    this.sessions.remove(); // remove, and return to the pool
+    this.dbSessionProvider.returnSession(dbSession,
         error); // if there was an error then close the session
   }
 
@@ -175,8 +219,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   public void beginTransaction() throws StorageException {
     HopsSession session = obtainSession();
     if (session.currentTransaction().isActive()) {
-      LOG.fatal("Prevented starting transaction within a transaction.");
-      throw new Error("Can not start Tx inside another Tx");
+//      LOG.fatal("Prevented starting transaction within a transaction.");
+      throw new StorageException("Can not start Tx inside another Tx");
     }
     session.currentTransaction().begin();
   }
@@ -258,7 +302,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
 
   @Override
   public void stopStorage() throws StorageException {
-    dbSessionProvider.stop();
+    this.dbSessionProvider.stop();
   }
 
   @Override
@@ -399,46 +443,46 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       try {
         for (Class e : das) {
           if (e == INodeDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.INodeTableDef.TABLE_NAME);
           } else if (e == BlockInfoDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.BlockInfoTableDef.TABLE_NAME);
           } else if (e == LeaseDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.LeaseTableDef.TABLE_NAME);
           } else if (e == LeasePathDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.LeasePathTableDef.TABLE_NAME);
           } else if (e == OngoingSubTreeOpsDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.OnGoingSubTreeOpsDef.TABLE_NAME);
           } else if (e == ReplicaDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.ReplicaTableDef.TABLE_NAME);
           } else if (e == ReplicaUnderConstructionDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.ReplicaUnderConstructionTableDef.TABLE_NAME);
           } else if (e == InvalidateBlockDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.InvalidatedBlockTableDef.TABLE_NAME);
           } else if (e == ExcessReplicaDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.ExcessReplicaTableDef.TABLE_NAME);
           } else if (e == PendingBlockDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.PendingBlockTableDef.TABLE_NAME);
           } else if (e == CorruptReplicaDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.CorruptReplicaTableDef.TABLE_NAME);
           } else if (e == UnderReplicatedBlockDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.UnderReplicatedBlockTableDef.TABLE_NAME);
           } else if (e == HdfsLeDescriptorDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, TablesDef.HdfsLeaderTableDef.TABLE_NAME);
           } else if (e == INodeAttributesDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.INodeAttributesTableDef.TABLE_NAME);
           } else if (e == VariableDataAccess.class) {
             HopsSession session = obtainSession();
@@ -453,54 +497,54 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             }
             session.currentTransaction().commit();
           } else if (e == StorageIdMapDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.StorageIdMapTableDef.TABLE_NAME);
           } else if (e == BlockLookUpDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.BlockLookUpTableDef.TABLE_NAME);
           } else if (e == SafeBlocksDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.SafeBlocksTableDef.TABLE_NAME);
           } else if (e == MisReplicatedRangeQueueDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.MisReplicatedRangeQueueTableDef.TABLE_NAME);
           } else if (e == QuotaUpdateDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.QuotaUpdateTableDef.TABLE_NAME);
           } else if (e == EncodingStatusDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.EncodingStatusTableDef.TABLE_NAME);
           } else if (e == BlockChecksumDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.BlockChecksumTableDef.TABLE_NAME);
           } else if (e == MetadataLogDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.MetadataLogTableDef.TABLE_NAME);
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.MetadataLogTableDef.LOOKUP_TABLE_NAME);
           } else if (e == AccessTimeLogDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.AccessTimeLogTableDef.TABLE_NAME);
           } else if (e == SizeLogDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.SizeLogTableDef.TABLE_NAME);
           } else if (e == EncodingJobsDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.EncodingJobsTableDef.TABLE_NAME);
           } else if (e == RepairJobsDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.RepairJobsTableDef.TABLE_NAME);
           } else if (e == UserDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.UsersTableDef.TABLE_NAME);
           }else if (e == GroupDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.GroupsTableDef.TABLE_NAME);
           }else if (e == UserGroupDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.UsersGroupsTableDef.TABLE_NAME);
           } else if (e == YarnLeDescriptorDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional,
                     TablesDef.YarnLeaderTableDef.TABLE_NAME);
           } else if (e == ContainerIdToCleanDataAccess.class) {
@@ -552,7 +596,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.PriceMultiplicatorTableDef.TABLE_NAME);
           }
         }
-        MysqlServerConnector.truncateTable(transactional,
+        this.mysqlConnector.truncateTable(transactional,
             "hdfs_path_memcached");
         return true;
 
@@ -565,20 +609,20 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   
   private void truncate(boolean transactional, String tableName)
       throws StorageException, SQLException {
-    MysqlServerConnector.truncateTable(transactional, tableName);
+    this.mysqlConnector.truncateTable(transactional, tableName);
   }
 
   @Override
   public void dropAndRecreateDB() throws StorageException {
-    MysqlServerConnector.getInstance().dropAndRecreateDB();
+    this.mysqlConnector.dropAndRecreateDB();
   }
   
   @Override
   public void flush() throws StorageException {
-    DBSession dbSession = sessions.get();
+    DBSession dbSession = this.sessions.get();
     if (dbSession == null) {
-      dbSession = dbSessionProvider.getSession();
-      sessions.set(dbSession);
+      dbSession = this.dbSessionProvider.getSession();
+      this.sessions.set(dbSession);
     }
     dbSession.getSession().flush();
   }

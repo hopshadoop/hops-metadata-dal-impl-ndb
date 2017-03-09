@@ -28,18 +28,21 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.GroupDataAccess;
 import io.hops.metadata.hdfs.entity.Group;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 
-public class GroupClusterj implements TablesDef.GroupsTableDef, GroupDataAccess<Group>{
+public class GroupClusterj extends ClusterjDataAccess
+    implements TablesDef.GroupsTableDef, GroupDataAccess<Group> {
+
+  public GroupClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface GroupDTO {
@@ -56,14 +59,12 @@ public class GroupClusterj implements TablesDef.GroupsTableDef, GroupDataAccess<
     void setName(String name);
   }
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public Group getGroup(final int groupId) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     GroupDTO dto = session.find(GroupDTO.class, groupId);
     Group group = null;
-    if(dto != null) {
+    if (dto != null) {
       group = new Group(dto.getId(), dto.getName());
       session.release(dto);
     }
@@ -72,16 +73,16 @@ public class GroupClusterj implements TablesDef.GroupsTableDef, GroupDataAccess<
 
   @Override
   public Group getGroup(final String groupName) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     return getGroup(session, groupName);
   }
 
 
   @Override
   public Group addGroup(String groupName) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     Group group = getGroup(session, groupName);
-    if(group == null){
+    if (group == null) {
       GroupDTO dto = session.newInstance(GroupDTO.class);
       dto.setName(groupName);
       session.makePersistent(dto);
@@ -94,7 +95,7 @@ public class GroupClusterj implements TablesDef.GroupsTableDef, GroupDataAccess<
 
   @Override
   public void removeGroup(int groupId) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     GroupDTO dto = session.newInstance(GroupDTO.class, groupId);
     session.deletePersistent(dto);
     session.release(dto);
@@ -104,7 +105,7 @@ public class GroupClusterj implements TablesDef.GroupsTableDef, GroupDataAccess<
       dtos)
       throws StorageException {
     List<Group> groups = Lists.newArrayListWithExpectedSize(dtos.size());
-    for(GroupDTO dto : dtos){
+    for (GroupDTO dto : dtos) {
       groups.add(new Group(dto.getId(), dto.getName()));
       session.release(dto);
     }
@@ -114,14 +115,14 @@ public class GroupClusterj implements TablesDef.GroupsTableDef, GroupDataAccess<
   private Group getGroup(HopsSession session, final String groupName) throws
       StorageException {
     HopsQueryBuilder qb = session.getQueryBuilder();
-    HopsQueryDomainType<GroupDTO> dobj =  qb.createQueryDefinition
+    HopsQueryDomainType<GroupDTO> dobj = qb.createQueryDefinition
         (GroupDTO.class);
     dobj.where(dobj.get("name").equal(dobj.param("param")));
     HopsQuery<GroupDTO> query = session.createQuery(dobj);
     query.setParameter("param", groupName);
     List<GroupDTO> results = query.getResultList();
     Group group = null;
-    if(results.size() == 1){
+    if (results.size() == 1) {
       group = new Group(results.get(0).getId(), results.get(0).getName());
     }
     session.release(results);

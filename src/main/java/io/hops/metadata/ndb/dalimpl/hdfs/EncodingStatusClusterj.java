@@ -29,6 +29,7 @@ import io.hops.metadata.hdfs.entity.EncodingPolicy;
 import io.hops.metadata.hdfs.entity.EncodingStatus;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.NdbBoolean;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.mysqlserver.CountHelper;
 import io.hops.metadata.ndb.mysqlserver.HopsSQLExceptionHelper;
 import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
@@ -43,20 +44,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
-public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
-    EncodingStatusDataAccess<EncodingStatus> {
+public class EncodingStatusClusterj extends ClusterjDataAccess
+    implements TablesDef.EncodingStatusTableDef, EncodingStatusDataAccess<EncodingStatus> {
 
   static final Log LOG = LogFactory.getLog(EncodingStatusClusterj.class);
-
-  private ClusterjConnector clusterjConnector = ClusterjConnector.getInstance();
-  private MysqlServerConnector mysqlConnector =
-      MysqlServerConnector.getInstance();
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface EncodingStatusDto {
@@ -128,7 +121,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   @Override
   public void add(EncodingStatus status) throws StorageException {
     LOG.info("ADD " + status.toString());
-    HopsSession session = clusterjConnector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     EncodingStatusDto dto = session.newInstance(EncodingStatusDto.class);
     copyState(status, dto);
     session.savePersistent(dto);
@@ -138,7 +131,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   @Override
   public void update(EncodingStatus status) throws StorageException {
     LOG.info("UPDATE " + status.toString());
-    HopsSession session = clusterjConnector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     EncodingStatusDto dto = session.newInstance(EncodingStatusDto.class);
     copyState(status, dto);
     session.savePersistent(dto);
@@ -147,7 +140,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
   @Override
   public void delete(EncodingStatus status) throws StorageException {
-    HopsSession session = clusterjConnector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     EncodingStatusDto dto = session.newInstance(EncodingStatusDto.class);
     copyState(status, dto);
     LOG.info("Delte " + status);
@@ -209,7 +202,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
   @Override
   public EncodingStatus findByInodeId(int inodeId) throws StorageException {
-    HopsSession session = clusterjConnector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     EncodingStatusDto dto = session.find(EncodingStatusDto.class, inodeId);
     if (dto == null) {
       return null;
@@ -222,7 +215,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   @Override
   public EncodingStatus findByParityInodeId(int inodeId)
       throws StorageException {
-    HopsSession session = clusterjConnector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder builder = session.getQueryBuilder();
     HopsQueryDomainType<EncodingStatusDto> domain =
         builder.createQueryDefinition(EncodingStatusDto.class);
@@ -264,9 +257,15 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
         requests.size() : limit);
   }
 
+  public EncodingStatusClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
+
   @Override
   public int countRequestedEncodings() throws StorageException {
-    return CountHelper.countWhere(TABLE_NAME,
+    return CountHelper.countWhere(
+        getMysqlConnector(),
+        TABLE_NAME,
         STATUS + "=" + EncodingStatus.Status.ENCODING_REQUESTED.ordinal());
   }
 
@@ -293,7 +292,9 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
   @Override
   public int countRequestedRepairs() throws StorageException {
-    return CountHelper.countWhere(TABLE_NAME,
+    return CountHelper.countWhere(
+        getMysqlConnector(),
+        TABLE_NAME,
         STATUS + "=" + EncodingStatus.Status.REPAIR_REQUESTED.ordinal());
   }
 
@@ -305,7 +306,9 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
   @Override
   public int countActiveEncodings() throws StorageException {
-    return CountHelper.countWhere(TABLE_NAME,
+    return CountHelper.countWhere(
+        getMysqlConnector(),
+        TABLE_NAME,
         STATUS + "=" + EncodingStatus.Status.ENCODING_ACTIVE.ordinal());
   }
 
@@ -317,7 +320,9 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
   @Override
   public int countEncoded() throws StorageException {
-    return CountHelper.countWhere(TABLE_NAME,
+    return CountHelper.countWhere(
+        getMysqlConnector(),
+        TABLE_NAME,
         STATUS + "=" + EncodingStatus.Status.ENCODED.ordinal());
   }
 
@@ -329,7 +334,9 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
   @Override
   public int countActiveRepairs() throws StorageException {
-    return CountHelper.countWhere(TABLE_NAME,
+    return CountHelper.countWhere(
+        getMysqlConnector(),
+        TABLE_NAME,
         STATUS + "=" + EncodingStatus.Status.REPAIR_ACTIVE.ordinal());
   }
 
@@ -348,8 +355,10 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
   @Override
   public int countRequestedParityRepairs() throws StorageException {
-    return CountHelper.countWhere(TABLE_NAME, PARITY_STATUS + "=" +
-        EncodingStatus.ParityStatus.REPAIR_REQUESTED.ordinal());
+    return CountHelper.countWhere(
+        getMysqlConnector(),
+        TABLE_NAME, PARITY_STATUS + "=" +
+            EncodingStatus.ParityStatus.REPAIR_REQUESTED.ordinal());
   }
 
   @Override
@@ -361,8 +370,10 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
   @Override
   public int countActiveParityRepairs() throws StorageException {
-    return CountHelper.countWhere(TABLE_NAME, PARITY_STATUS + "=" +
-        EncodingStatus.ParityStatus.REPAIR_ACTIVE.ordinal());
+    return CountHelper.countWhere(
+        getMysqlConnector(),
+        TABLE_NAME, PARITY_STATUS + "=" +
+            EncodingStatus.ParityStatus.REPAIR_ACTIVE.ordinal());
   }
 
   @Override
@@ -393,7 +404,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
   @Override
   public Collection<EncodingStatus> findRevoked() throws StorageException {
-    HopsSession session = clusterjConnector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder builder = session.getQueryBuilder();
     HopsQueryDomainType<EncodingStatusDto> domain =
         builder.createQueryDefinition(EncodingStatusDto.class);
@@ -472,6 +483,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
   private List<EncodingStatus> find(String query) throws StorageException {
     ArrayList<EncodingStatus> resultList;
+    MysqlServerConnector mysqlConnector = getMysqlConnector();
     try {
       Connection conn = mysqlConnector.obtainSession();
       PreparedStatement s = conn.prepareStatement(query);

@@ -18,14 +18,11 @@
  */
 package io.hops.metadata.ndb.mysqlserver;
 
-import com.mysql.clusterj.Constants;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.hops.StorageConnector;
 import io.hops.exception.StorageException;
-import io.hops.metadata.common.EntityDataAccess;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -38,53 +35,61 @@ import java.sql.Statement;
 import java.util.Properties;
 
 /**
- * This class presents a singleton connector to Mysql Server. It creates
- * connections to Mysql Server and loads the driver.
+ * This class presents a connector to Mysql Server.
+ * It creates connections to Mysql Server and loads the driver.
  */
-public class MysqlServerConnector implements StorageConnector<Connection> {
-
+public class MysqlServerConnector {
   static final Log LOG = LogFactory.getLog(MysqlServerConnector.class);
-  private final static MysqlServerConnector instance =
-          new MysqlServerConnector();
+
   private Properties conf;
   /**
    * Never access this variable directly. Use getConnectionPool
    *
    * @see MysqlServerConnector#getConnectionPool()
    */
-  private static volatile HikariDataSource connectionPool;
+  private volatile HikariDataSource connectionPool;
   private ThreadLocal<Connection> connection = new ThreadLocal<Connection>();
 
-  public static MysqlServerConnector getInstance() {
-    return instance;
+  private String configPrefix;
+
+  public MysqlServerConnector(String configPrefix) {
+    this.configPrefix = configPrefix;
   }
 
-  @Override
   public void setConfiguration(Properties conf) throws StorageException {
     this.conf = conf;
   }
 
+  /**
+   * getProperty returns a property from this.conf by appending propertyName to the configured prefix
+   * @param propertyName
+   * @return
+   */
+  private String getProperty(String propertyName) {
+    String propName = this.configPrefix + "." + propertyName;
+    return conf.getProperty(propName);
+  }
+
   private void initializeConnectionPool(Properties conf) {
     HikariConfig config = new HikariConfig();
+    // global properties
     config.setMaximumPoolSize(Integer.valueOf(conf.getProperty(
-            io.hops.metadata.ndb.mysqlserver.Constants.PROPERTY_MYSQL_CONNECTION_POOL_SIZE)));
+        "io.hops.metadata.ndb.mysqlserver.connection_pool_size")));
     config.setDataSourceClassName(conf.getProperty(
-            io.hops.metadata.ndb.mysqlserver.Constants.PROPERTY_MYSQL_DATA_SOURCE_CLASS_NAME));
-    config.addDataSourceProperty("serverName", conf.getProperty(
-            io.hops.metadata.ndb.mysqlserver.Constants.PROPERTY_MYSQL_HOST));
-    config.addDataSourceProperty("port", conf.getProperty(
-            io.hops.metadata.ndb.mysqlserver.Constants.PROPERTY_MYSQL_PORT));
-    config.addDataSourceProperty("databaseName",
-            conf.getProperty(Constants.PROPERTY_CLUSTER_DATABASE));
-    config.addDataSourceProperty("user", conf.getProperty(
-            io.hops.metadata.ndb.mysqlserver.Constants.PROPERTY_MYSQL_USERNAME));
-    config.addDataSourceProperty("password", conf.getProperty(
-            io.hops.metadata.ndb.mysqlserver.Constants.PROPERTY_MYSQL_PASSWORD));
+        "io.hops.metadata.ndb.mysqlserver.data_source_class_name"));
+
+
+    // we take this from the clusterj configuration
+    config.addDataSourceProperty("databaseName", this.getProperty("clusterj.database"));
+
+    config.addDataSourceProperty("serverName", this.getProperty("mysqlserver.host"));
+    config.addDataSourceProperty("port", this.getProperty("mysqlserver.port"));
+    config.addDataSourceProperty("user", this.getProperty("mysqlserver.username"));
+    config.addDataSourceProperty("password", this.getProperty("mysqlserver.password"));
 
     connectionPool = new HikariDataSource(config);
   }
 
-  @Override
   public Connection obtainSession() throws StorageException {
     Connection conn = connection.get();
     if (conn == null) {
@@ -129,21 +134,20 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
     }
   }
 
-  public static void truncateTable(boolean transactional, String tableName)
+  public void truncateTable(boolean transactional, String tableName)
           throws StorageException, SQLException {
-    truncateTable(transactional, tableName, -1);
+    this.truncateTable(transactional, tableName, -1);
   }
 
-  public static void truncateTable(String tableName, int limit)
+  public void truncateTable(String tableName, int limit)
           throws StorageException, SQLException {
-    truncateTable(true, tableName, -1);
+    this.truncateTable(true, tableName, -1);
   }
 
-  public static void truncateTable(boolean transactional, String tableName,
+  public void truncateTable(boolean transactional, String tableName,
           int limit) throws StorageException, SQLException {
-    MysqlServerConnector connector = MysqlServerConnector.getInstance();
     try {
-      Connection conn = connector.obtainSession();
+      Connection conn = this.obtainSession();
       if (transactional) {
         if (limit > 0) {
           PreparedStatement s = conn.prepareStatement(
@@ -163,101 +167,18 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
         s.executeUpdate();
       }
     } finally {
-      connector.closeSession();
+      this.closeSession();
     }
   }
 
-  @Override
-  public void beginTransaction() throws StorageException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void commit() throws StorageException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void rollback() throws StorageException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public boolean formatStorage() throws StorageException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public boolean formatYarnStorage() throws StorageException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public boolean formatHDFSStorage() throws StorageException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  public boolean formatStorage(Class<? extends EntityDataAccess>... das)
-          throws StorageException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public boolean isTransactionActive() {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void stopStorage() {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void readLock() {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void writeLock() {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void readCommitted() {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public void setPartitionKey(Class className, Object key) {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public boolean formatAllStorageNonTransactional() throws StorageException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public boolean formatYarnStorageNonTransactional() throws StorageException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public boolean formatHDFSStorageNonTransactional() throws StorageException {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
   public void dropAndRecreateDB() throws StorageException {
-    MysqlServerConnector connector = MysqlServerConnector.getInstance();
-
     try {
       Connection conn = null;
       Statement stmt = null;
-      String sql = "";
+      String sql;
       String database = conf.getProperty("com.mysql.clusterj.database");
       try {
-        conn = connector.obtainSession();
+        conn = this.obtainSession();
         stmt = conn.createStatement();
 
         sql = "DROP DATABASE IF EXISTS " + database;
@@ -269,7 +190,7 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
       }
 
       try {
-        sql = "CREATE DATABASE  " + database;
+        sql = "CREATE DATABASE " + database;
         LOG.warn("Creating database " + database);
         stmt.executeUpdate(sql);
         LOG.warn("Database created");
@@ -278,7 +199,7 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
       }
 
       try {
-        sql = "use  " + database;
+        sql = "use " + database;
         LOG.warn("Selectign database " + database);
         stmt.executeUpdate(sql);
         LOG.warn("Database selected");
@@ -295,7 +216,7 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
         LOG.warn(e);
       }
     } finally {
-      connector.closeSession();
+      this.closeSession();
       //System.exit(0); //The namenode can not continue after that. Format the database afterwards
     }
 
@@ -308,21 +229,4 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
             StorageConnector.class.getClassLoader().getResourceAsStream(configFile);
     return inStream;
   }
-  
-  @Override
-  public void flush() {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
-  @Override
-  public String getClusterConnectString() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public String getDatabaseName() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-  
-  
 }

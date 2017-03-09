@@ -23,11 +23,8 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.wrapper.HopsPredicate;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
+import io.hops.metadata.ndb.wrapper.*;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.PendingEventDataAccess;
 import io.hops.metadata.yarn.entity.PendingEvent;
@@ -43,13 +40,17 @@ import java.util.List;
  * by the scheduler.
  * <p/>
  */
-public class PendingEventClusterJ
+public class PendingEventClusterJ extends ClusterjDataAccess
     implements TablesDef.PendingEventTableDef, PendingEventDataAccess<PendingEvent> {
+
+  public PendingEventClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   private static final Log LOG = LogFactory.getLog(PendingEventClusterJ.class);
 
   @PersistenceCapable(table = TABLE_NAME)
-  public interface PendingEventDTO extends RMNodeComponentDTO  {
+  public interface PendingEventDTO extends RMNodeComponentDTO {
 
     @PrimaryKey
     @Column(name = ID)
@@ -79,12 +80,10 @@ public class PendingEventClusterJ
     void setContains(int contains);
   }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public void createPendingEvent(PendingEvent persistedEvent)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     PendingEventDTO dto = createPersistable(persistedEvent, session);
     session.makePersistent(dto);
     session.release(dto);
@@ -93,7 +92,7 @@ public class PendingEventClusterJ
   @Override
   public void removePendingEvent(PendingEvent persistedEvent)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     PendingEventDTO dto = createPersistable(persistedEvent, session);
     session.deletePersistent(dto);
     session.release(dto);
@@ -101,15 +100,15 @@ public class PendingEventClusterJ
 
   @Override
   public void addAll(Collection<PendingEvent> toAddPendingEvent)
-          throws StorageException {
-    HopsSession session = connector.obtainSession();
+      throws StorageException {
+    HopsSession session = getConnector().obtainSession();
     List<PendingEventClusterJ.PendingEventDTO> toPersist
-            = new ArrayList<PendingEventClusterJ.PendingEventDTO>();
+        = new ArrayList<>();
     for (PendingEvent pendEvent : toAddPendingEvent) {
       PendingEventClusterJ.PendingEventDTO pendingEventDTO = createPersistable(
-              new PendingEvent(pendEvent.getId().getNodeId(), pendEvent.
-                      getType(), pendEvent.getStatus(), pendEvent.getId().
-                      getEventId(), pendEvent.getContains()), session);
+          new PendingEvent(pendEvent.getId().getNodeId(), pendEvent.
+              getType(), pendEvent.getStatus(), pendEvent.getId().
+              getEventId(), pendEvent.getContains()), session);
       toPersist.add(pendingEventDTO);
     }
     session.savePersistentAll(toPersist);
@@ -118,26 +117,26 @@ public class PendingEventClusterJ
 
   @Override
   public void add(PendingEvent toAdd)
-          throws StorageException {
-    HopsSession session = connector.obtainSession();
-    
-    
-      PendingEventClusterJ.PendingEventDTO pendingEventDTO = createPersistable(
-            new PendingEvent(toAdd.getId().getNodeId(), toAdd.
-                    getType(), toAdd.getStatus(), toAdd.getId().getEventId(),
-                    toAdd.getContains()), session);
-    
-    
+      throws StorageException {
+    HopsSession session = getConnector().obtainSession();
+
+
+    PendingEventClusterJ.PendingEventDTO pendingEventDTO = createPersistable(
+        new PendingEvent(toAdd.getId().getNodeId(), toAdd.
+            getType(), toAdd.getStatus(), toAdd.getId().getEventId(),
+            toAdd.getContains()), session);
+
+
     session.savePersistent(pendingEventDTO);
     session.release(pendingEventDTO);
   }
 
   @Override
   public void removeAll(Collection<PendingEvent> toRemovePendingEvents)
-          throws StorageException {
-    HopsSession session = connector.obtainSession();
+      throws StorageException {
+    HopsSession session = getConnector().obtainSession();
     List<PendingEventClusterJ.PendingEventDTO> toRemove
-            = new ArrayList<PendingEventClusterJ.PendingEventDTO>();
+        = new ArrayList<PendingEventClusterJ.PendingEventDTO>();
     for (PendingEvent pendEvent : toRemovePendingEvents) {
       toRemove.add(createPersistable(pendEvent, session));
     }
@@ -149,7 +148,7 @@ public class PendingEventClusterJ
   @Override
   public List<PendingEvent> getAll() throws StorageException {
     LOG.debug("HOP :: ClusterJ PendingEvent.getAll - START");
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<PendingEventDTO> dobj =
@@ -166,7 +165,7 @@ public class PendingEventClusterJ
   @Override
   public List<PendingEvent> getAll(int status) throws StorageException {
     // LOG.debug("HOP :: ClusterJ PendingEvent.getAll(" + status + ") - START");
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<PendingEventDTO> dobj =
@@ -182,10 +181,10 @@ public class PendingEventClusterJ
     return result;
   }
 
-  
+
   public PendingEvent findEntry(int pendingEventId, String nodeId)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     PendingEventDTO pendingEventDTO;
     Object[] pk = new Object[3];
     pk[0] = pendingEventId;
@@ -194,12 +193,13 @@ public class PendingEventClusterJ
     PendingEvent result = null;
     if (pendingEventDTO != null) {
       result = new PendingEvent(pendingEventDTO.getrmnodeid(), PendingEvent.Type.valueOf(pendingEventDTO.
-            getType()), PendingEvent.Status.valueOf(pendingEventDTO.getStatus()), pendingEventDTO.getId(), 
-            pendingEventDTO.getContains());
+          getType()), PendingEvent.Status.valueOf(pendingEventDTO.getStatus()), pendingEventDTO.getId(),
+          pendingEventDTO.getContains());
     }
     session.release(pendingEventDTO);
     return result;
   }
+
   /**
    * <p/>
    *
@@ -208,7 +208,7 @@ public class PendingEventClusterJ
    * @return
    */
   private PendingEventDTO createPersistable(PendingEvent hopPersistedEvent,
-      HopsSession session) throws StorageException {
+                                            HopsSession session) throws StorageException {
     PendingEventDTO DTO = session.newInstance(PendingEventDTO.class);
     //Set values to persist new persistedEvent
     DTO.setrmnodeid(hopPersistedEvent.getId().getNodeId());

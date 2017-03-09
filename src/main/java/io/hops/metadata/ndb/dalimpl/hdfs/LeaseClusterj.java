@@ -18,23 +18,15 @@
  */
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
-import com.mysql.clusterj.annotation.Column;
-import com.mysql.clusterj.annotation.Index;
-import com.mysql.clusterj.annotation.PartitionKey;
-import com.mysql.clusterj.annotation.PersistenceCapable;
-import com.mysql.clusterj.annotation.PrimaryKey;
+import com.mysql.clusterj.annotation.*;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.LeaseDataAccess;
 import io.hops.metadata.hdfs.entity.Lease;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
-import io.hops.metadata.ndb.wrapper.HopsPredicate;
-import io.hops.metadata.ndb.wrapper.HopsPredicateOperand;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.wrapper.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -42,7 +34,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<Lease> {
+public class LeaseClusterj extends ClusterjDataAccess
+    implements TablesDef.LeaseTableDef, LeaseDataAccess<Lease> {
+
+  public LeaseClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   @PartitionKey(column = HOLDER_ID)
@@ -50,30 +47,32 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
     @PrimaryKey
     @Column(name = HOLDER_ID)
     int getHolderId();
+
     void setHolderId(int holder_id);
-    
+
     @PrimaryKey
     @Column(name = HOLDER)
     String getHolder();
+
     void setHolder(String holder);
 
     @Column(name = LAST_UPDATE)
     @Index(name = "update_idx")
     long getLastUpdate();
+
     void setLastUpdate(long last_upd);
   }
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
   private static Log log = LogFactory.getLog(LeaseDataAccess.class);
 
   @Override
   public int countAll() throws StorageException {
-    return MySQLQueryHelper.countAll(TABLE_NAME);
+    return MySQLQueryHelper.countAll(getMysqlConnector(), TABLE_NAME);
   }
 
   @Override
   public Lease findByPKey(String holder, int holderId) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     Object[] key = new Object[2];
     key[0] = holderId;
     key[1] = holder;
@@ -88,7 +87,7 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
 
   @Override
   public Lease findByHolderId(int holderId) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<LeaseDTO> dobj =
         qb.createQueryDefinition(LeaseDTO.class);
@@ -98,7 +97,7 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
     dobj.where(pred1);
 
     HopsQuery<LeaseDTO> query = session.createQuery(dobj);
-    query.setParameter("param1", holderId); 
+    query.setParameter("param1", holderId);
     List<LeaseDTO> leaseTables = query.getResultList();
 
     if (leaseTables.size() > 1) {
@@ -118,10 +117,10 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
 
   @Override
   public Collection<Lease> findAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQuery<LeaseDTO> query = session.createQuery(
-            qb.createQueryDefinition(LeaseDTO.class));    
+        qb.createQueryDefinition(LeaseDTO.class));
     List<LeaseDTO> dtos = query.getResultList();
     Collection<Lease> ll = createList(dtos);
     session.release(dtos);
@@ -131,7 +130,7 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
   @Override
   public Collection<Lease> findByTimeLimit(long timeLimit)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType dobj = qb.createQueryDefinition(LeaseDTO.class);
     HopsPredicateOperand propertyPredicate = dobj.get("lastUpdate");
@@ -141,7 +140,7 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
     dobj.where(lessThan);
     HopsQuery query = session.createQuery(dobj);
     query.setParameter(param, new Long(timeLimit));
-    
+
     List<LeaseDTO> dtos = query.getResultList();
     Collection<Lease> ll = createList(dtos);
     session.release(dtos);
@@ -150,8 +149,8 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
 
   @Override
   public void prepare(Collection<Lease> removed, Collection<Lease> newed,
-      Collection<Lease> modified) throws StorageException {
-    HopsSession session = connector.obtainSession();
+                      Collection<Lease> modified) throws StorageException {
+    HopsSession session = getConnector().obtainSession();
     List<LeaseDTO> changes = new ArrayList<LeaseDTO>();
     List<LeaseDTO> deletions = new ArrayList<LeaseDTO>();
     for (Lease l : newed) {
@@ -190,7 +189,7 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
 
   @Override
   public void removeAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     session.deletePersistentAll(LeaseDTO.class);
   }
 

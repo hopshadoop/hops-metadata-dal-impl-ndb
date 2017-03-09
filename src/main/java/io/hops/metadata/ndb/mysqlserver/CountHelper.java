@@ -35,13 +35,10 @@ public class CountHelper {
       "select count(distinct %s) from %s";
   public static final String COUNT_WHERE = "select count(*) from %s where %s";
   
-  private static MysqlServerConnector connector =
-      MysqlServerConnector.getInstance();
-
-  public static int countWhere(String tableName, String condition)
+  public static int countWhere(MysqlServerConnector connector, String tableName, String condition)
       throws StorageException {
     String query = String.format(COUNT_WHERE, tableName, condition);
-    return count(query);
+    return count(connector, query);
   }
 
   /**
@@ -53,19 +50,19 @@ public class CountHelper {
    * @return Total number of rows a given table.
    * @throws StorageException
    */
-  public static int countAll(String tableName) throws StorageException {
+  public static int countAll(MysqlServerConnector connector, String tableName) throws StorageException {
     // TODO[H]: Is it good to create and close connections in every call?
     String query = String.format(COUNT_QUERY, tableName);
-    return count(query);
+    return count(connector, query);
   }
   
-  public static int countAllUnique(String tableName, String columnName)
+  public static int countAllUnique(MysqlServerConnector connector, String tableName, String columnName)
       throws StorageException {
     String query = String.format(COUNT_QUERY_UNIQUE, columnName, tableName);
-    return count(query);
+    return count(connector, query);
   }
   
-  private static int count(String query) throws StorageException {
+  private static int count(MysqlServerConnector connector, String query) throws StorageException {
     try {
       Connection conn = connector.obtainSession();
       PreparedStatement s = conn.prepareStatement(query);
@@ -93,12 +90,12 @@ public class CountHelper {
    *     E.g. criterion="id > 100".
    * @return
    */
-  public static int countWithCriterion(String tableName, String criterion)
+  public static int countWithCriterion(MysqlServerConnector connector, String tableName, String criterion)
       throws StorageException {
     StringBuilder queryBuilder =
         new StringBuilder(String.format(COUNT_QUERY, tableName)).
             append(" where ").
             append(criterion);
-    return count(queryBuilder.toString());
+    return count(connector, queryBuilder.toString());
   }
 }

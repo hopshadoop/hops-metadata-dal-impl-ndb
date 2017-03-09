@@ -23,6 +23,7 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.EncodingJobsDataAccess;
 import io.hops.metadata.hdfs.entity.EncodingJob;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -32,9 +33,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class EncodingJobsClusterj implements TablesDef.EncodingJobsTableDef,
-    EncodingJobsDataAccess<EncodingJob> {
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
+public class EncodingJobsClusterj extends ClusterjDataAccess
+    implements TablesDef.EncodingJobsTableDef, EncodingJobsDataAccess<EncodingJob> {
+
+  public EncodingJobsClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface EncodingJobDto {
@@ -64,7 +68,7 @@ public class EncodingJobsClusterj implements TablesDef.EncodingJobsTableDef,
 
   @Override
   public void add(EncodingJob encodingJob) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     EncodingJobDto dto = createPersistable(encodingJob);
     session.makePersistent(dto);
     session.release(dto);
@@ -72,7 +76,7 @@ public class EncodingJobsClusterj implements TablesDef.EncodingJobsTableDef,
 
   @Override
   public void delete(EncodingJob encodingJob) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     EncodingJobDto dto = createPersistable(encodingJob);
     session.deletePersistent(dto);
     session.release(dto);
@@ -80,12 +84,12 @@ public class EncodingJobsClusterj implements TablesDef.EncodingJobsTableDef,
 
   @Override
   public Collection<EncodingJob> findAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<EncodingJobDto> dobj =
         qb.createQueryDefinition(EncodingJobDto.class);
     HopsQuery<EncodingJobDto> query = session.createQuery(dobj);
-    
+
     List<EncodingJobDto> dtos = query.getResultList();
     Collection<EncodingJob> ivl = createList(dtos);
     session.release(dtos);
@@ -94,7 +98,7 @@ public class EncodingJobsClusterj implements TablesDef.EncodingJobsTableDef,
 
   private EncodingJobDto createPersistable(EncodingJob encodingJob)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     EncodingJobDto dto = session.newInstance(EncodingJobDto.class);
     dto.setJtidentifier(encodingJob.getJtIdentifier());
     dto.setJobId(encodingJob.getJobId());

@@ -23,6 +23,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -33,14 +34,14 @@ import io.hops.metadata.yarn.entity.Resource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class ResourceClusterJ
+public class ResourceClusterJ extends ClusterjDataAccess
     implements TablesDef.ResourceTableDef, ResourceDataAccess<Resource> {
+
+  public ResourceClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   private static final Log LOG = LogFactory.getLog(ResourceClusterJ.class);
 
@@ -62,27 +63,25 @@ public class ResourceClusterJ
     int getVirtualcores();
 
     void setVirtualcores(int virtualcores);
-    
+
     @Column(name = PENDING_EVENT_ID)
     int getpendingeventid();
 
     void setpendingeventid(int pendingid);
-    
-  }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
+  }
 
   @Override
   public Resource findEntry(String id)
       throws StorageException {
     LOG.debug("HOP :: ClusterJ Resource.findEntry - START:" + id);
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     ResourceDTO resourceDTO;
     resourceDTO = session.find(ResourceDTO.class, id);
     LOG.debug("HOP :: ClusterJ Resource.findEntry - FINISH:" + id);
     Resource result = null;
     if (resourceDTO != null) {
-      result= createHopResource(resourceDTO);
+      result = createHopResource(resourceDTO);
     }
     session.release(resourceDTO);
     return result;
@@ -92,7 +91,7 @@ public class ResourceClusterJ
   public Map<String, Resource> getAll()
       throws StorageException {
     LOG.debug("HOP :: ClusterJ Resource.getAll - START");
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<ResourceDTO> dobj =
         qb.createQueryDefinition(ResourceDTO.class);
@@ -108,7 +107,7 @@ public class ResourceClusterJ
 
   @Override
   public void addAll(Collection<Resource> toAdd) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     List<ResourceDTO> toPersist = new ArrayList<ResourceDTO>();
     for (Resource req : toAdd) {
       toPersist.add(createPersistable(req, session));
@@ -120,7 +119,7 @@ public class ResourceClusterJ
 
   @Override
   public void removeAll(Collection<Resource> toRemove) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     List<ResourceDTO> toPersist = new ArrayList<ResourceDTO>();
     for (Resource req : toRemove) {
       Object[] pk = new Object[3];
@@ -133,7 +132,7 @@ public class ResourceClusterJ
 
   @Override
   public void add(Resource resourceNode) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     ResourceDTO dto = createPersistable(resourceNode, session);
     session.savePersistent(dto);
     session.release(dto);
@@ -145,7 +144,7 @@ public class ResourceClusterJ
 
     }
     return new Resource(resourceDTO.getId(), resourceDTO.getMemory(), resourceDTO.
-        getVirtualcores(),resourceDTO.getpendingeventid());
+        getVirtualcores(), resourceDTO.getpendingeventid());
   }
 
   private ResourceDTO createPersistable(Resource resource, HopsSession session)
@@ -159,9 +158,9 @@ public class ResourceClusterJ
   }
 
   private Map<String, Resource> createMap(
-          List<ResourceDTO> results) {
+      List<ResourceDTO> results) {
     Map<String, Resource> map;
-    map = new HashMap<String, Resource>();
+    map = new HashMap<>();
     for (ResourceDTO dto : results) {
       Resource hop = createHopResource(dto);
       map.put(hop.getId(), hop);

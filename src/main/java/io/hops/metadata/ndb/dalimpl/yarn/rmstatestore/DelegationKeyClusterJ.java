@@ -23,6 +23,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -37,8 +38,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.DataFormatException;
 
-public class DelegationKeyClusterJ
+public class DelegationKeyClusterJ extends ClusterjDataAccess
     implements TablesDef.DelegationKeyTableDef, DelegationKeyDataAccess<DelegationKey> {
+
+  public DelegationKeyClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface DelegationKeyDTO {
@@ -55,11 +60,9 @@ public class DelegationKeyClusterJ
     void setdelegationkey(byte[] delegationkey);
   }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public void remove(DelegationKey removed) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     DelegationKeyDTO dto = session
         .newInstance(DelegationKeyClusterJ.DelegationKeyDTO.class,
             removed.getKey());
@@ -69,14 +72,14 @@ public class DelegationKeyClusterJ
 
   @Override
   public void removeAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     session.deletePersistentAll(DelegationKeyDTO.class);
   }
-  
+
   @Override
   public void add(DelegationKey hopDelegationKey)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     DelegationKeyDTO dto = createPersistable(hopDelegationKey, session);
     session.savePersistent(dto);
     session.release(dto);
@@ -84,10 +87,10 @@ public class DelegationKeyClusterJ
 
   @Override
   public List<DelegationKey> getAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<DelegationKeyDTO> dobj = qb.createQueryDefinition(
-            DelegationKeyDTO.class);
+        DelegationKeyDTO.class);
     HopsQuery<DelegationKeyDTO> query = session.createQuery(dobj);
     List<DelegationKeyDTO> queryResults = query.getResultList();
 
@@ -120,7 +123,7 @@ public class DelegationKeyClusterJ
   }
 
   private DelegationKeyDTO createPersistable(DelegationKey hop,
-      HopsSession session) throws StorageException {
+                                             HopsSession session) throws StorageException {
     DelegationKeyClusterJ.DelegationKeyDTO delegationKeyDTO = session.
         newInstance(DelegationKeyClusterJ.DelegationKeyDTO.class);
     delegationKeyDTO.setkey(hop.getKey());

@@ -26,14 +26,11 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.QuotaUpdateDataAccess;
 import io.hops.metadata.hdfs.entity.QuotaUpdate;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.mysqlserver.HopsSQLExceptionHelper;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
 import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
-import io.hops.metadata.ndb.wrapper.HopsPredicate;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.wrapper.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -43,8 +40,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class QuotaUpdateClusterj
+public class QuotaUpdateClusterj extends ClusterjDataAccess
     implements TablesDef.QuotaUpdateTableDef, QuotaUpdateDataAccess<QuotaUpdate> {
+
+  public QuotaUpdateClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface QuotaUpdateDTO {
@@ -72,14 +73,10 @@ public class QuotaUpdateClusterj
     void setDiskspaceDelta(long diskspaceDelta);
   }
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
-  private MysqlServerConnector mysqlConnector =
-      MysqlServerConnector.getInstance();
-
   @Override
   public void prepare(Collection<QuotaUpdate> added,
-      Collection<QuotaUpdate> removed) throws StorageException {
-    HopsSession session = connector.obtainSession();
+                      Collection<QuotaUpdate> removed) throws StorageException {
+    HopsSession session = getConnector().obtainSession();
     List<QuotaUpdateDTO> changes = new ArrayList<QuotaUpdateDTO>();
     List<QuotaUpdateDTO> deletions = new ArrayList<QuotaUpdateDTO>();
     if (removed != null) {
@@ -107,6 +104,7 @@ public class QuotaUpdateClusterj
   @Override
   public List<QuotaUpdate> findLimited(int limit) throws StorageException {
     ArrayList<QuotaUpdate> resultList;
+    MysqlServerConnector mysqlConnector = getMysqlConnector();
     try {
       Connection conn = mysqlConnector.obtainSession();
       PreparedStatement s = conn.prepareStatement(FIND_QUERY + limit);
@@ -130,7 +128,7 @@ public class QuotaUpdateClusterj
   }
 
   private QuotaUpdateDTO createPersistable(QuotaUpdate update,
-      HopsSession session) throws StorageException {
+                                           HopsSession session) throws StorageException {
     QuotaUpdateDTO dto = session.newInstance(QuotaUpdateDTO.class);
     dto.setId(update.getId());
     dto.setInodeId(update.getInodeId());
@@ -140,7 +138,7 @@ public class QuotaUpdateClusterj
   }
 
   private List<QuotaUpdate> convertAndRelease(HopsSession session,
-      List<QuotaUpdateDTO> list) throws StorageException {
+                                              List<QuotaUpdateDTO> list) throws StorageException {
     List<QuotaUpdate> result = new ArrayList<QuotaUpdate>();
     for (QuotaUpdateDTO dto : list) {
       result.add(new QuotaUpdate(dto.getId(), dto.getInodeId(),
@@ -154,7 +152,7 @@ public class QuotaUpdateClusterj
 
   @Override
   public List<QuotaUpdate> findByInodeId(int inodeId) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<QuotaUpdateDTO> dobj =
         qb.createQueryDefinition(QuotaUpdateDTO.class);
@@ -169,7 +167,7 @@ public class QuotaUpdateClusterj
 
   @Override
   public int getCount() throws StorageException {
-    int count = MySQLQueryHelper.countAll(TablesDef.QuotaUpdateTableDef.TABLE_NAME);
+    int count = MySQLQueryHelper.countAll(getMysqlConnector(), TablesDef.QuotaUpdateTableDef.TABLE_NAME);
     return count;
   }
 }

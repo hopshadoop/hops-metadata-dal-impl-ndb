@@ -23,6 +23,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -37,9 +38,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.DataFormatException;
 
-public class ApplicationStateClusterJ implements
-    TablesDef.ApplicationStateTableDef,
-    ApplicationStateDataAccess<ApplicationState> {
+public class ApplicationStateClusterJ extends ClusterjDataAccess
+    implements TablesDef.ApplicationStateTableDef, ApplicationStateDataAccess<ApplicationState> {
+
+  public ApplicationStateClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface ApplicationStateDTO {
@@ -71,27 +75,25 @@ public class ApplicationStateClusterJ implements
     void setappsmstate(String appstate);
   }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public ApplicationState findByApplicationId(String id)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
 
     ApplicationStateDTO appStateDTO = session.find(ApplicationStateDTO.class, id);
 
-    ApplicationState result =  createHopApplicationState(appStateDTO);
+    ApplicationState result = createHopApplicationState(appStateDTO);
     session.release(appStateDTO);
     return result;
   }
-  
+
   @Override
   public List<ApplicationState> getAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<ApplicationStateDTO> dobj = qb.createQueryDefinition(
-            ApplicationStateDTO.class);
-      //Predicate pred1 = dobj.get("applicationid").equal(dobj.param("applicationid"));
+        ApplicationStateDTO.class);
+    //Predicate pred1 = dobj.get("applicationid").equal(dobj.param("applicationid"));
     //dobj.where(pred1);
     HopsQuery<ApplicationStateDTO> query = session.createQuery(dobj);
     //query.setParameter("applicationid", applicationid);
@@ -103,7 +105,7 @@ public class ApplicationStateClusterJ implements
 
   @Override
   public void add(ApplicationState toAdd) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     ApplicationStateDTO dto = createPersistable(toAdd, session);
     session.savePersistent(dto);
     session.flush();
@@ -112,19 +114,19 @@ public class ApplicationStateClusterJ implements
 
   @Override
   public void remove(ApplicationState toRemove) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     ApplicationStateDTO dto = session.newInstance(ApplicationStateDTO.class, toRemove.
-                getApplicationId());
+        getApplicationId());
     session.deletePersistent(dto);
     session.release(dto);
   }
-  
+
   @Override
   public void removeAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     session.deletePersistentAll(ApplicationStateDTO.class);
   }
-  
+
   private ApplicationState createHopApplicationState(
       ApplicationStateDTO appStateDTO) throws StorageException {
     if (appStateDTO != null) {
@@ -156,7 +158,7 @@ public class ApplicationStateClusterJ implements
   }
 
   private ApplicationStateDTO createPersistable(ApplicationState hop,
-      HopsSession session) throws StorageException {
+                                                HopsSession session) throws StorageException {
     ApplicationStateDTO appStateDTO =
         session.newInstance(ApplicationStateClusterJ.ApplicationStateDTO.class);
     appStateDTO.setapplicationid(hop.getApplicationid());
