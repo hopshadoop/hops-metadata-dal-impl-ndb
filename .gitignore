@@ -9,3 +9,5 @@
 target
 build
 *.junit
+
+ndb-config.properties
