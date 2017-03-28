@@ -54,7 +54,7 @@ public class MultiZoneClusterjConnector implements MultiZoneStorageConnector {
   @Override
   public void setConfiguration(Properties conf) throws StorageException {
     if(initialized) {
-      throw new StorageException("instance already initialized");
+      return;
     }
 
     setConfigurationInternal(conf);
