@@ -13,6 +13,7 @@ The `io.hops.metadata.zone` must be set to `PRIMARY` or `SECONDARY` depending on
 
 Configuration for the PRIMARY cluster is then the same as the single-zone configuration with `io.hops.metadata.local.clusterj.*` and `io.hops.metadata.local.mysqlserver.*` keys.
 The keys for clusterj follow the same format expected by the [clusterj driver](https://dev.mysql.com/doc/ndbapi/en/mccj-using-clusterj-start.html): `com.mysql.clusterj.*`.
+Exact keys can be found in [com.mysql.clusterj.Constants](https://dev.mysql.com/doc/ndbapi/en/mccj-clusterj-constants.html#mccj-clusterj-constants-default_property_connection_pool_size).
 
 Configuration for the SECONDARY cluster is performed by using the `io.hops.metadata.local.{clusterj, mysqlserver}.*` keys to define the connection to the local metadata store and the `io.hops.metadata.primary.{clusterj, mysqlserver}.*` keys to define the connection to the remote (primary) metadata store.
 
@@ -23,6 +24,8 @@ io.hops.metadata.multizone = true
 io.hops.metadata.zone = PRIMARY
 io.hops.metadata.local.clusterj.connectstring=meta.cluster1.example.com
 io.hops.metadata.local.clusterj.database=hopsfs_meta
+# keep a pool of 100 connections (it is probably a good idea to set this > 1)
+io.hops.metadata.local.clusterj.connection.pool.size = 100
 
 io.hops.metadata.local.mysql.host = meta.cluster1.example.com
 io.hops.metadata.local.mysql.port = 3306
@@ -38,6 +41,7 @@ io.hops.metadata.zone = SECONDARY
 
 # connection to secondary (local)
 io.hops.metadata.local.clusterj.connectstring=meta.cluster2.example.com
+io.hops.metadata.local.clusterj.database=hopsfs_meta
 io.hops.metadata.local.mysql.host = meta.cluster2.example.com
 io.hops.metadata.local.mysql.port = ...
 io.hops.metadata.local.mysql.username = ...
@@ -46,6 +50,7 @@ io.hops.metadata.local.mysql.password = ...
 
 # connection to primary
 io.hops.metadata.primary.clusterj.connectstring=meta.cluster1.example.com
+io.hops.metadata.local.clusterj.database=hopsfs_meta
 io.hops.metadata.primary.mysql.host = meta.cluster1.example.com
 io.hops.metadata.primary.mysql.port = ...
 io.hops.metadata.primary.mysql.username = ...
