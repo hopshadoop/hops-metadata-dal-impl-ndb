@@ -11,7 +11,7 @@ CREATE TABLE `hdfs_block_infos` (
   `primary_node_index` int(11) DEFAULT NULL,
   `block_recovery_id` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`inode_id`,`block_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -21,7 +21,7 @@ CREATE TABLE `hdfs_block_lookup_table` (
   `block_id` bigint(20) NOT NULL,
   `inode_id` int(11) NOT NULL,
   PRIMARY KEY (`block_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'$$
 
 
 delimiter $$
@@ -33,7 +33,7 @@ CREATE TABLE `hdfs_corrupt_replicas` (
   `timestamp` bigint(20) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`),
   KEY `timestamp` (`timestamp`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -45,7 +45,7 @@ CREATE TABLE `hdfs_excess_replicas` (
   `storage_id` int(11) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`),
   KEY `storage_idx` (`storage_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -58,7 +58,7 @@ CREATE TABLE `hdfs_inode_attributes` (
   `nscount` bigint(20) DEFAULT NULL,
   `diskspace` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`inodeId`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'$$
 
 
 delimiter $$
@@ -91,7 +91,7 @@ CREATE TABLE `hdfs_inodes` (
   KEY `inode_idx` (`id`),
   KEY `c1` (`parent_id`,`partition_id`),
   KEY `c2` (`partition_id`,`parent_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (partition_id) */  $$
 
 delimiter $$
@@ -140,7 +140,7 @@ CREATE TABLE `hdfs_invalidated_blocks` (
   `num_bytes` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`),
   KEY `storage_idx` (`storage_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -177,7 +177,7 @@ CREATE TABLE `hdfs_lease_paths` (
   `path` varchar(3000) NOT NULL,
   PRIMARY KEY (`holder_id`,`path`),
   KEY `path_idx` (`path`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (holder_id) */$$
 
 delimiter $$
@@ -188,7 +188,7 @@ CREATE TABLE `hdfs_leases` (
   `last_update` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`holder_id`,`holder`),
   KEY `update_idx` (`last_update`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (holder_id) */$$
 
 delimiter $$
@@ -216,7 +216,7 @@ CREATE TABLE `hdfs_pending_blocks` (
   `time_stamp` bigint(20) NOT NULL,
   `num_replicas_in_progress` int(11) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -228,7 +228,7 @@ CREATE TABLE `hdfs_replica_under_constructions` (
   `storage_id` int(11) NOT NULL,
   `state` int(11) DEFAULT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -240,7 +240,7 @@ CREATE TABLE `hdfs_replicas` (
   `storage_id` int(11) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`),
   KEY `storage_idx` (`storage_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -270,7 +270,7 @@ CREATE TABLE `hdfs_under_replicated_blocks` (
   `timestamp` bigint(20) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`),
   KEY `level` (`level`,`timestamp`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -334,7 +334,7 @@ CREATE TABLE `hdfs_on_going_sub_tree_ops` (
   PRIMARY KEY (`partition_id`,`path`),                                     
   KEY `partindex` (`partition_id`),                                        
   KEY `nameidx` (`path`)                                                   
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1                                 
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (partition_id) */$$                              
 
 delimiter $$
