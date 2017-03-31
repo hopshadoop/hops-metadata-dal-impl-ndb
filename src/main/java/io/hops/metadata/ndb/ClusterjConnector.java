@@ -48,6 +48,7 @@ import org.apache.commons.logging.LogFactory;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.*;
 
 /**
  * A clusterj zoneConnector allows the DAL to connect to the backend NDB and MySQL databases.
@@ -107,6 +108,8 @@ public class ClusterjConnector implements StorageConnector {
     // translate the settings from io.hops.metadata.{local,remote}.clusterj to com.mysql.clusterj
     conf = clusterjProperties(conf);
 
+    // raise log level for clusterj
+    Logger.getLogger("com.mysql.clusterj").setLevel(Level.WARNING);
     // this variables are later used for logging
     clusterConnectString = (String) conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING);
     databaseName = (String) conf.get(Constants.PROPERTY_CLUSTER_DATABASE);
