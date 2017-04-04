@@ -126,15 +126,16 @@ public class ClusterjConnector implements StorageConnector {
    * Close the session associated with the thread.
    * This is ok performance-wise because the underlying session keeps a pool of connections.
    * See https://dev.mysql.com/doc/ndbapi/en/mccj-using-clusterj-start.html and the ClusterJ source for more info.
+   *
    * @param error ignored.
    * @throws StorageException in case of errors closing the session
    */
   private void returnSession(boolean error) throws StorageException {
     HopsSession session = this.sessions.get();
-    if(session != null) {
+    if (session != null && error) {
       session.close();
+      this.sessions.remove();
     }
-    this.sessions.remove();
   }
 
   /**
@@ -154,6 +155,7 @@ public class ClusterjConnector implements StorageConnector {
 
   /**
    * Fetches the active transaction from the session.
+   *
    * @return the active transaction
    * @throws StorageException if there is no active transaction
    */
@@ -173,12 +175,16 @@ public class ClusterjConnector implements StorageConnector {
    */
   @Override
   public void commit() throws StorageException {
+    boolean error = false;
     try {
       HopsTransaction tx = activeTransaction();
       tx.commit();
+    } catch (StorageException exc) {
+      error = true;
+      throw exc;
     } finally {
       // the error parameter is ignore, see the doc for the method
-      returnSession(true);
+      returnSession(error);
     }
   }
 
@@ -189,12 +195,16 @@ public class ClusterjConnector implements StorageConnector {
    */
   @Override
   public void rollback() throws StorageException {
+    boolean error = false;
     try {
       HopsTransaction tx = activeTransaction();
       tx.rollback();
+    } catch(StorageException exc) {
+      error = true;
+      throw exc;
     } finally {
       // the error parameter is ignore, see the doc for the method
-      returnSession(true);
+      returnSession(error);
     }
   }
 
@@ -230,7 +240,7 @@ public class ClusterjConnector implements StorageConnector {
 
   @Override
   public void stopStorage() throws StorageException {
-    if(this.sessionFactory != null) {
+    if (this.sessionFactory != null) {
       this.sessionFactory.close();
     }
   }
