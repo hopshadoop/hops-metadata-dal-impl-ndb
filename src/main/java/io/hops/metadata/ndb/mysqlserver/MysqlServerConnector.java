@@ -41,22 +41,19 @@ import java.util.Properties;
 public class MysqlServerConnector {
   static final Log LOG = LogFactory.getLog(MysqlServerConnector.class);
 
-  private Properties conf;
   /**
    * Never access this variable directly. Use getConnectionPool
    *
    * @see MysqlServerConnector#getConnectionPool()
    */
   private volatile HikariDataSource connectionPool;
-  private ThreadLocal<Connection> connection = new ThreadLocal<Connection>();
+  private ThreadLocal<Connection> connection = new ThreadLocal<>();
 
-  private String configPrefix;
+  private final String configPrefix;
+  private final Properties conf;
 
-  public MysqlServerConnector(String configPrefix) {
+  public MysqlServerConnector(final String configPrefix, final Properties conf) {
     this.configPrefix = configPrefix;
-  }
-
-  public void setConfiguration(Properties conf) throws StorageException {
     this.conf = conf;
   }
 

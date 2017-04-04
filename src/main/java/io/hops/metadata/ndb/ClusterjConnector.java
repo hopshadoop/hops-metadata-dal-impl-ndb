@@ -48,7 +48,8 @@ import org.apache.commons.logging.LogFactory;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A clusterj zoneConnector allows the DAL to connect to the backend NDB and MySQL databases.
@@ -58,9 +59,14 @@ public class ClusterjConnector implements StorageConnector {
   // logger
   private static final Log LOG = LogFactory.getLog(ClusterjConnector.class);
 
+  static {
+    // raise log level for clusterj to WARN
+    Logger.getLogger("com.mysql.clusterj").setLevel(Level.WARNING);
+  }
+
   // initialization data
-  private String clusterConnectString;
-  private String databaseName;
+  private final String clusterConnectString;
+  private final String databaseName;
 
   // session data
   private SessionFactory sessionFactory;
@@ -74,16 +80,24 @@ public class ClusterjConnector implements StorageConnector {
 
   /**
    * builds a new instance of ClusterjConnector with a given config prefix.
+   * There should be only one instance of this per database cluster.
+   * according to https://dev.mysql.com/doc/ndbapi/en/mccj-using-clusterj-start.html
+   * "Usually, there is only a single SessionFactory per NDB Cluster, per Java Virtual Machine."
    *
    * @param configPrefix the prefix to use, either io.hops.metadata.local or io.hops.metadata.primary
+   * @param conf         the configuration parameters for this and the mysql connector
    */
-  public ClusterjConnector(final String configPrefix) {
+  public ClusterjConnector(final String configPrefix, final Properties conf) {
     this.configPrefix = configPrefix;
-    this.mysqlConnector = new MysqlServerConnector(configPrefix);
+    this.mysqlConnector = new MysqlServerConnector(configPrefix, conf);
+
+    clusterConnectString = (String) conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING);
+    databaseName = (String) conf.get(Constants.PROPERTY_CLUSTER_DATABASE);
+    this.sessionFactory = ClusterJHelper.getSessionFactory(clusterjProperties(conf));
   }
 
-  private Properties clusterjProperties(Properties conf) {
-    String clusterjPrefix = this.configPrefix + ".clusterj";
+  private Properties clusterjProperties(final Properties conf) {
+    final String clusterjPrefix = this.configPrefix + ".clusterj";
     Properties res = new Properties();
     for (Map.Entry<Object, Object> e : conf.entrySet()) {
       String key = (String) e.getKey();
@@ -93,27 +107,6 @@ public class ClusterjConnector implements StorageConnector {
       }
     }
     return res;
-  }
-
-  @Override
-  public void setConfiguration(Properties conf) throws StorageException {
-    // according to https://dev.mysql.com/doc/ndbapi/en/mccj-using-clusterj-start.html
-    // "Usually, there is only a single SessionFactory per NDB Cluster, per Java Virtual Machine."
-    if (sessionFactory != null) {
-      throw new StorageException("instance was already initialized");
-    }
-
-    // initialize inner mysql zoneConnector
-    mysqlConnector.setConfiguration(conf);
-    // translate the settings from io.hops.metadata.{local,remote}.clusterj to com.mysql.clusterj
-    conf = clusterjProperties(conf);
-
-    // raise log level for clusterj
-    Logger.getLogger("com.mysql.clusterj").setLevel(Level.WARNING);
-    // this variables are later used for logging
-    clusterConnectString = (String) conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING);
-    databaseName = (String) conf.get(Constants.PROPERTY_CLUSTER_DATABASE);
-    this.sessionFactory = ClusterJHelper.getSessionFactory(conf);
   }
 
   /**

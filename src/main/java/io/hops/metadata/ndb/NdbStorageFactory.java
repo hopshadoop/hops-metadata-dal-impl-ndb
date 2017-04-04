@@ -53,12 +53,13 @@ public class NdbStorageFactory implements DalStorageFactory {
   }
 
   private Map<Class, DataAccessBuilder> dataAccessMap = new HashMap<>();
+  private MultiZoneClusterjConnector connector;
 
   @Override
   public void setConfiguration(Properties conf)
       throws StorageInitializtionException {
     try {
-      MultiZoneClusterjConnector.getInstance().setConfiguration(conf);
+      connector = new MultiZoneClusterjConnector(conf);
       initDataAccessMap();
     } catch (IOException ex) {
       throw new StorageInitializtionException(ex);
@@ -67,7 +68,7 @@ public class NdbStorageFactory implements DalStorageFactory {
 
   @Override
   public MultiZoneStorageConnector getMultiZoneConnector() {
-    return MultiZoneClusterjConnector.getInstance();
+    return connector;
   }
 
   /**

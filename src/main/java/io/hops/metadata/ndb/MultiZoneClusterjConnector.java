@@ -11,75 +11,43 @@ import org.apache.commons.logging.LogFactory;
 import java.util.Properties;
 
 public class MultiZoneClusterjConnector implements MultiZoneStorageConnector {
-  private enum Zone {
+  public enum Zone {
     PRIMARY,
     SECONDARY,
   }
-
-  private boolean initialized = false;
-
-  private static final String prefixLocal = "io.hops.metadata.local";
-  private static final String prefixPrimary = "io.hops.metadata.primary";
-
   private static final Log LOG = LogFactory.getLog(MultiZoneStorageConnector.class);
 
-  private Zone zone = Zone.PRIMARY;
-  private boolean multiZone;
+  private final Zone zone;
+  private final boolean multiZone;
+  // we keep this in case we need to initialize again
+  private final Properties conf;
 
   /**
    * local and primary will contain connections to the local database and primary database.
    * note that if multiZone is false or if the primary cluster is also the local cluster
    * then only local is set and primary == null
    */
-  private ClusterjConnector local, primary;
-
-  // singletons stuff
-  private static MultiZoneClusterjConnector instance;
-
-  // private constructor for singleton
-  private MultiZoneClusterjConnector() {}
-
-  public static MultiZoneClusterjConnector getInstance() {
-    if(instance == null) {
-      instance = new MultiZoneClusterjConnector();
-    }
-    return instance;
-  }
+  private ClusterjConnector local;
+  private ClusterjConnector primary;
 
   /**
-   * setConfiguration reads configuration and sets up clusterj connection(s) to the database(s).
-   * @param conf configuration to load from
+   * setConfiguration configures and registers the underlying storage connectors.
+   * At most there will be two storage connectors registered, the LOCAL and PRIMARY clusters.
+   * @param conf configuration parameters for the connectors
    * @throws StorageException
    */
-  @Override
-  public void setConfiguration(Properties conf) throws StorageException {
-    if(initialized) {
-      return;
-    }
+  public MultiZoneClusterjConnector(final Properties conf) throws StorageException {
+    this.conf = conf;
+    LOG.debug("initializing clusterj connectors");
+    LOG.debug("loading configuration for local cluster");
+    this.local = new ClusterjConnector("io.hops.metadata.local", conf);
 
-    setConfigurationInternal(conf);
-    // if it did not throw an exception it is initialized
-    initialized = true;
-  }
-
-  private void setConfigurationInternal(Properties conf) throws StorageException {
-    LOG.info("initializing clusterj connectors");
-    LOG.info("loading configuration for local cluster");
-    try {
-      local = new ClusterjConnector(prefixLocal);
-      local.setConfiguration(conf);
-    } catch (StorageException exc) {
-      this.cleanup();
-      throw exc;
-    }
-
-    multiZone = Boolean.parseBoolean(
-        conf.getProperty("io.hops.metadata.multizone", "false")
-    );
+    multiZone = Boolean.parseBoolean(conf.getProperty("io.hops.metadata.multizone", "false"));
 
     // if we are not running in multi-zone mode, we are done here
     if(!multiZone) {
-      LOG.info("multi-zone mode: disabled");
+      LOG.debug("multi-zone mode: disabled");
+      this.zone = Zone.PRIMARY;
       return;
     }
 
@@ -89,32 +57,16 @@ public class MultiZoneClusterjConnector implements MultiZoneStorageConnector {
     } catch (IllegalArgumentException exc) {
       throw new StorageException("invalid zone " + z, exc);
     }
-    LOG.info("multi-zone mode: enabled, zone: " + this.zone.toString());
+    LOG.debug("multi-zone mode: enabled, zone: " + this.zone.toString());
 
     // we already loaded the connection to the local metadata cluster and we are in the primary zone.
-    if(zone == Zone.PRIMARY) {
+    if(this.zone == Zone.PRIMARY) {
       // we are done
       return;
     }
 
-    LOG.info("loading configuration for primary cluster");
-    try {
-      primary = new ClusterjConnector(prefixPrimary);
-      primary.setConfiguration(conf);
-    } catch (StorageException exc) {
-      this.cleanup();
-      throw exc;
-    }
-  }
-
-  private void cleanup() throws StorageException {
-    if(this.local != null) {
-      this.local.stopStorage();
-    }
-
-    if(this.primary != null) {
-      this.primary.stopStorage();
-    }
+    LOG.debug("loading configuration for primary cluster");
+    this.primary = new ClusterjConnector("io.hops.metadata.primary", conf);
   }
 
   public MysqlServerConnector mysqlConnectorFor(TransactionCluster cluster) {
