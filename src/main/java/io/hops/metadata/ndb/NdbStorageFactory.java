@@ -40,11 +40,14 @@ import io.hops.metadata.yarn.dal.rmstatestore.ApplicationAttemptStateDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.ApplicationStateDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.DelegationKeyDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.DelegationTokenDataAccess;
+import org.ehcache.core.collections.ConcurrentWeakIdentityHashMap;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class NdbStorageFactory implements DalStorageFactory {
 
@@ -55,11 +58,16 @@ public class NdbStorageFactory implements DalStorageFactory {
   private Map<Class, DataAccessBuilder> dataAccessMap = new HashMap<>();
   private MultiZoneClusterjConnector connector;
 
+  // we need a map with weak key references so that old connectors get GC'ed
+  private final ConcurrentMap<StorageConnector, ConcurrentMap<Class, EntityDataAccess>> dataAccessCache =
+      new ConcurrentWeakIdentityHashMap<>();
+
   @Override
   public void setConfiguration(Properties conf)
       throws StorageInitializtionException {
     try {
       connector = new MultiZoneClusterjConnector(conf);
+      dataAccessCache.clear();
       initDataAccessMap();
     } catch (IOException ex) {
       throw new StorageInitializtionException(ex);
@@ -76,7 +84,19 @@ public class NdbStorageFactory implements DalStorageFactory {
    */
   @Override
   public EntityDataAccess getDataAccess(StorageConnector connector, Class type) {
-    return dataAccessMap.get(type).build((ClusterjConnector) connector);
+    ConcurrentMap<Class, EntityDataAccess> map = dataAccessCache.get(connector);
+    if(map == null) {
+      map = new ConcurrentHashMap<>();
+      dataAccessCache.put(connector, map);
+    }
+
+    EntityDataAccess access = map.get(type);
+    if (access == null) {
+      access = dataAccessMap.get(type).build((ClusterjConnector) connector);
+      map.put(type, access);
+    }
+
+    return access;
   }
 
   private void initDataAccessMap() {

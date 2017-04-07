@@ -123,11 +123,11 @@ public class ClusterjConnector implements StorageConnector {
   }
 
   /**
-   * Close the session associated with the thread.
-   * This is ok performance-wise because the underlying session keeps a pool of connections.
+   * If the session bound to the thread exists and there was an error, the session is closed and discarded.
+   * Otherwise does nothing.
    * See https://dev.mysql.com/doc/ndbapi/en/mccj-using-clusterj-start.html and the ClusterJ source for more info.
    *
-   * @param error ignored.
+   * @param error whether there was an error
    * @throws StorageException in case of errors closing the session
    */
   private void returnSession(boolean error) throws StorageException {
