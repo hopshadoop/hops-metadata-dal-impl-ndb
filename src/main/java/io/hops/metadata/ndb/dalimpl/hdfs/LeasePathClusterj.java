@@ -56,6 +56,14 @@ public class LeasePathClusterj
     @Index(name = "path_idx")
     String getPath();
     void setPath(String path);
+
+    @Column(name = LAST_BLOCK_ID)
+    long getLastBlockId();
+    void setLastBlockId(long lastBlockId);
+
+    @Column(name = PENULTIMATE_BLOCK_ID)
+    long getPenultimateBlockId();
+    void setPenultimateBlockId(long penultimateBlockId);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -180,12 +188,15 @@ public class LeasePathClusterj
 
   private LeasePath createLeasePath(LeasePathsDTO leasePathTable) {
     return new LeasePath(leasePathTable.getPath(),
-        leasePathTable.getHolderId());
+        leasePathTable.getHolderId(), leasePathTable.getLastBlockId(),
+        leasePathTable.getPenultimateBlockId());
   }
 
   private void createPersistableLeasePathInstance(LeasePath lp,
       LeasePathsDTO lTable) {
     lTable.setHolderId(lp.getHolderId());
     lTable.setPath(lp.getPath());
+    lTable.setLastBlockId(lp.getLastBlockId());
+    lTable.setPenultimateBlockId(lp.getPenultimateBlockId());
   }
 }

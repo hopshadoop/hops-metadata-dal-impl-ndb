@@ -175,6 +175,8 @@ delimiter $$
 CREATE TABLE `hdfs_lease_paths` (
   `holder_id` int(11) NOT NULL,
   `path` varchar(3000) NOT NULL,
+  `last_block_id` bigint(20) DEFAULT -1,
+  `penultimate_block_id` bigint(20) DEFAULT -1,
   PRIMARY KEY (`holder_id`,`path`),
   KEY `path_idx` (`path`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
