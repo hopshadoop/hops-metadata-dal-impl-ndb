@@ -42,12 +42,18 @@ public class OnGoingSubTreeOpsClusterj
     implements TablesDef.OnGoingSubTreeOpsDef, OngoingSubTreeOpsDataAccess<SubTreeOperation> {
 
   @PersistenceCapable(table = TABLE_NAME)
+  @PartitionKey(column =  PARTITION_ID)
   public interface OnGoingSubTreeOpsDTO {
     @PrimaryKey
     @Column(name = PATH)
     String getPath();
     void setPath(String path);
-    
+
+    @PrimaryKey
+    @Column(name = PARTITION_ID)
+    int getPartitionId();
+    void setPartitionId(int partitionId);
+
     @Column(name = NAME_NODE_ID)
     long getNamenodeId();
     void setNamenodeId(long namenodeId);
@@ -80,7 +86,10 @@ public class OnGoingSubTreeOpsClusterj
     }
 
     for (SubTreeOperation ops : removed) {
-      OnGoingSubTreeOpsDTO opsTable = dbSession.newInstance(OnGoingSubTreeOpsDTO.class, ops.getPath());
+      Object[] key = new Object[2];
+      key[0] = getHash(ops.getPath());
+      key[1] = ops.getPath();
+      OnGoingSubTreeOpsDTO opsTable = dbSession.newInstance(OnGoingSubTreeOpsDTO.class, key);
       deletions.add(opsTable);
     }
     if(!deletions.isEmpty()){
@@ -119,14 +128,17 @@ public class OnGoingSubTreeOpsClusterj
   @Override
   public Collection<SubTreeOperation> findByPathsByPrefix(String prefix)
       throws StorageException {
+
     HopsSession dbSession = connector.obtainSession();
     HopsQueryBuilder qb = dbSession.getQueryBuilder();
     HopsQueryDomainType dobj = qb.createQueryDefinition(OnGoingSubTreeOpsDTO.class);
+    HopsPredicate pred = dobj.get("partitionId").equal(dobj.param("partitionIDParam"));
     HopsPredicateOperand propertyPredicate = dobj.get("path");
     HopsPredicateOperand propertyLimit = dobj.param("prefix");
     HopsPredicate like = propertyPredicate.like(propertyLimit);
-    dobj.where(like);
+    dobj.where(pred.and(like));
     HopsQuery query = dbSession.createQuery(dobj);
+    query.setParameter("partitionIDParam", getHash(prefix));
     query.setParameter("prefix", prefix + "%");
     query.setLimits(0, LIMIT);
     return convertAndRelease(dbSession, query.getResultList());
@@ -153,7 +165,16 @@ public class OnGoingSubTreeOpsClusterj
   private void createPersistableSubTreeOp(SubTreeOperation op,
       OnGoingSubTreeOpsDTO opDto) {
     opDto.setPath(op.getPath());
+    opDto.setPartitionId(getHash(op.getPath()));
     opDto.setNamenodeId(op.getNameNodeId());
     opDto.setOpName(op.getOpType().ordinal());
+  }
+
+  private static int getHash(String path){
+    String[] pathComponents =  PathUtils.getPathNames(path);
+    if(pathComponents.length == 1){
+      throw new UnsupportedOperationException("Taking sub tree lock on the root is not yet supported ");
+    }
+    return  pathComponents[1].hashCode();
   }
 }

@@ -5,7 +5,7 @@
 
   <groupId>io.hops.metadata</groupId>
   <artifactId>hops-metadata-dal-impl-ndb</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <packaging>jar</packaging>
 
   <name>hops-metadata-dal-impl-ndb</name>
@@ -25,8 +25,8 @@
     
     <dependency>
       <groupId>com.mysql.ndb</groupId>
-      <artifactId>clusterj-part-key-fix</artifactId>
-      <version>7.4.7</version>
+      <artifactId>clusterj-hops-fix</artifactId>
+      <version>7.5.4</version>
     </dependency>
 
     <dependency>
@@ -112,8 +112,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>2.3.2</version>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>1.7</source>
+          <target>1.7</target>
         </configuration>
       </plugin>
     </plugins>
@@ -135,5 +135,4 @@
     </repository>
     <downloadUrl>http://kompics.sics.se/maven/repository</downloadUrl>
   </distributionManagement>
-
 </project>

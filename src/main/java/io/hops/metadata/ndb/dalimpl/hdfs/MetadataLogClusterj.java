@@ -60,10 +60,15 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
 
     void setTimestamp(long timestamp);
 
-    @Column(name = INODE_PID)
-    int getInodePId();
+    @Column(name = INODE_PARTITION_ID)
+    int getInodePartitionId();
 
-    void setInodePId(int inodePId);
+    void setInodePartitionId(int inodePartitionId);
+
+    @Column(name = INODE_PARENT_ID)
+    int getInodeParentId();
+
+    void setInodeParentId(int inodeParentId);
 
     @Column(name = INODE_NAME)
     String getInodeName();
@@ -100,25 +105,22 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
         logEntries.size());
     ArrayList<DatasetINodeLookupDTO> newLookupDTOS = new
         ArrayList<DatasetINodeLookupDTO>(logEntries.size());
-    ArrayList<DatasetINodeLookupDTO> removeLookupDTOS = new
-        ArrayList<DatasetINodeLookupDTO>(logEntries.size());
     for (MetadataLogEntry logEntry : logEntries) {
       added.add(createPersistable(logEntry));
       DatasetINodeLookupDTO lookupDTO = createLookupPersistable(logEntry);
       if(logEntry.getOperation() == MetadataLogEntry.Operation.ADD){
         newLookupDTOS.add(lookupDTO);
       }else if(logEntry.getOperation() == MetadataLogEntry.Operation.DELETE){
-        removeLookupDTOS.add(lookupDTO);
+        session.deletePersistent(lookupDTO);
+        session.release(lookupDTO);
       }
     }
 
     session.makePersistentAll(added);
     session.savePersistentAll(newLookupDTOS);
-    session.deletePersistentAll(removeLookupDTOS);
 
     session.release(added);
     session.release(newLookupDTOS);
-    session.release(removeLookupDTOS);
   }
 
   @Override
@@ -145,7 +147,8 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     MetadataLogEntryDto dto = session.newInstance(MetadataLogEntryDto.class);
     dto.setDatasetId(logEntry.getDatasetId());
     dto.setInodeId(logEntry.getInodeId());
-    dto.setInodePId(logEntry.getInodeParentId());
+    dto.setInodePartitionId(logEntry.getInodePartitionId());
+    dto.setInodeParentId(logEntry.getInodeParentId());
     dto.setInodeName(logEntry.getInodeName());
     dto.setTimestamp(logEntry.getTimestamp());
     dto.setOperation(logEntry.getOperationOrdinal());
@@ -193,7 +196,8 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     return new MetadataLogEntry(
         dto.getDatasetId(),
         dto.getInodeId(),
-        dto.getInodePId(),
+        dto.getInodePartitionId(),
+        dto.getInodeParentId(),
         dto.getInodeName(),
         dto.getTimestamp(),
         MetadataLogEntry.Operation.values()[dto.getOperation()]);
