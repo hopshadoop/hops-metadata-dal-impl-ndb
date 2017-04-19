@@ -23,11 +23,11 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.metadata.election.TablesDef;
 import io.hops.metadata.election.entity.LeDescriptor;
+import io.hops.metadata.ndb.ClusterjConnector;
 
 import java.security.InvalidParameterException;
 
-public class HdfsLeaderClusterj extends LeDescriptorClusterj
-    implements TablesDef.HdfsLeaderTableDef {
+public class HdfsLeaderClusterj extends LeDescriptorClusterj implements TablesDef.HdfsLeaderTableDef {
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface HdfsLeaderDTO extends LeaderDTO {
@@ -79,7 +79,7 @@ public class HdfsLeaderClusterj extends LeDescriptorClusterj
         lTable.getCounter(), lTable.getHostname(), lTable.getHttpAddress());
   }
 
-  public HdfsLeaderClusterj() {
-    super(HdfsLeaderDTO.class);
+  public HdfsLeaderClusterj(ClusterjConnector connector) {
+    super(connector, HdfsLeaderDTO.class);
   }
 }

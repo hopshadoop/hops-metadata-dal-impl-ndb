@@ -25,12 +25,16 @@ import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.MisReplicatedRangeQueueDataAccess;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 
-public class MisReplicatedRangeQueueClusterj
-    implements TablesDef.MisReplicatedRangeQueueTableDef,
-    MisReplicatedRangeQueueDataAccess {
+public class MisReplicatedRangeQueueClusterj extends ClusterjDataAccess
+    implements TablesDef.MisReplicatedRangeQueueTableDef, MisReplicatedRangeQueueDataAccess {
+
+  public MisReplicatedRangeQueueClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface MisReplicatedRangeQueueDTO {
@@ -42,13 +46,12 @@ public class MisReplicatedRangeQueueClusterj
     void setRange(String range);
   }
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
   private final static String SEPERATOR = "-";
 
   @Override
   public void insert(long start, long end) throws StorageException {
     try {
-      HopsSession session = connector.obtainSession();
+      HopsSession session = getConnector().obtainSession();
       MisReplicatedRangeQueueDTO dto = session
           .newInstance(MisReplicatedRangeQueueDTO.class, getRange(start, end));
       session.savePersistent(dto);
@@ -62,7 +65,7 @@ public class MisReplicatedRangeQueueClusterj
   @Override
   public void remove(long start, long end) throws StorageException {
     try {
-      HopsSession session = connector.obtainSession();
+      HopsSession session = getConnector().obtainSession();
       MisReplicatedRangeQueueDTO oldR = session
           .newInstance(MisReplicatedRangeQueueDTO.class, getRange(start, end));
       session.deletePersistent(oldR);
@@ -74,7 +77,7 @@ public class MisReplicatedRangeQueueClusterj
 
   @Override
   public int countAll() throws StorageException {
-    return MySQLQueryHelper.countAll(TABLE_NAME);
+    return MySQLQueryHelper.countAll(getMysqlConnector(), TABLE_NAME);
   }
 
   private String getRange(long start, long end) {

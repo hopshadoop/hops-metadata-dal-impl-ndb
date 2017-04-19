@@ -23,26 +23,23 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.wrapper.HopsPredicate;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
+import io.hops.metadata.ndb.wrapper.*;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
 import io.hops.metadata.yarn.entity.FinishedApplications;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class FinishedApplicationsClusterJ
+public class FinishedApplicationsClusterJ extends ClusterjDataAccess
     implements TablesDef.FinishedApplicationsTableDef,
     FinishedApplicationsDataAccess<FinishedApplications> {
+
+  public FinishedApplicationsClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   private static final Log LOG =
       LogFactory.getLog(FinishedApplicationsClusterJ.class);
@@ -61,17 +58,15 @@ public class FinishedApplicationsClusterJ
     String getapplicationid();
 
     void setapplicationid(String applicationid);
-    
-  }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
+  }
 
   @Override
   public List<FinishedApplications> findByRMNode(String rmnodeid)
       throws StorageException {
     LOG.debug("HOP :: ClusterJ FinishedApplications.findByRMNode - START:" +
         rmnodeid);
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<FinishedApplicationsDTO> dobj = qb.
@@ -95,7 +90,7 @@ public class FinishedApplicationsClusterJ
   public Map<String, List<FinishedApplications>> getAll()
       throws StorageException {
     LOG.debug("HOP :: ClusterJ FinishedApplications.getAll - START");
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<FinishedApplicationsDTO> dobj =
         qb.createQueryDefinition(FinishedApplicationsDTO.class);
@@ -106,13 +101,13 @@ public class FinishedApplicationsClusterJ
     LOG.debug("HOP :: ClusterJ FinishedApplications.getAll - FINISH");
     Map<String, List<FinishedApplications>> result = createMap(queryResults);
     session.release(queryResults);
-      return result;
+    return result;
   }
 
   @Override
   public void addAll(Collection<FinishedApplications> applications)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     List<FinishedApplicationsDTO> toModify =
         new ArrayList<FinishedApplicationsDTO>();
     for (FinishedApplications entry : applications) {
@@ -125,17 +120,17 @@ public class FinishedApplicationsClusterJ
   @Override
   public void add(FinishedApplications application)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     FinishedApplicationsDTO toPersist = createPersistable(application, session);
     session.savePersistent(toPersist);
-    
+
     session.release(toPersist);
   }
-  
+
   @Override
   public void removeAll(Collection<FinishedApplications> applications)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     List<FinishedApplicationsDTO> toRemove =
         new ArrayList<FinishedApplicationsDTO>();
     for (FinishedApplications entry : applications) {
@@ -146,12 +141,12 @@ public class FinishedApplicationsClusterJ
   }
 
   private FinishedApplications createHopFinishedApplications(
-          FinishedApplicationsDTO dto) {
+      FinishedApplicationsDTO dto) {
     return new FinishedApplications(dto.getrmnodeid(), dto.getapplicationid());
   }
 
   private FinishedApplicationsDTO createPersistable(FinishedApplications hop,
-      HopsSession session) throws StorageException {
+                                                    HopsSession session) throws StorageException {
     FinishedApplicationsDTO dto =
         session.newInstance(FinishedApplicationsDTO.class);
     dto.setrmnodeid(hop.getRMNodeID());

@@ -23,27 +23,21 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.wrapper.HopsPredicate;
-
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
+import io.hops.metadata.ndb.wrapper.*;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.quota.ProjectsDailyCostDataAccess;
 import io.hops.metadata.yarn.entity.quota.ProjectDailyCost;
 import io.hops.metadata.yarn.entity.quota.ProjectDailyId;
-import java.util.ArrayList;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class ProjectsDailyCostClusterJ implements
-        TablesDef.ProjectsDailyCostTableDef,
-        ProjectsDailyCostDataAccess<ProjectDailyCost> {
+public class ProjectsDailyCostClusterJ extends ClusterjDataAccess
+    implements TablesDef.ProjectsDailyCostTableDef, ProjectsDailyCostDataAccess<ProjectDailyCost> {
 
+  public ProjectsDailyCostClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface ProjectDailyCostDTO {
@@ -73,33 +67,31 @@ public class ProjectsDailyCostClusterJ implements
 
   }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public Map<ProjectDailyId, ProjectDailyCost> getAll() throws
-          StorageException {
-    HopsSession session = connector.obtainSession();
+      StorageException {
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<ProjectDailyCostDTO> dobj = qb.
-            createQueryDefinition(ProjectDailyCostDTO.class);
+        createQueryDefinition(ProjectDailyCostDTO.class);
     HopsQuery<ProjectDailyCostDTO> query = session.createQuery(dobj);
 
     List<ProjectDailyCostDTO> queryResults = query.getResultList();
     Map<ProjectDailyId, ProjectDailyCost> result = createMap(
-            queryResults);
+        queryResults);
     session.release(queryResults);
     return result;
   }
 
   @Override
   public Map<ProjectDailyId, ProjectDailyCost> getByDay(long day)
-          throws StorageException {
-    HopsSession session = connector.obtainSession();
+      throws StorageException {
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType dobj = qb.createQueryDefinition(
-            ProjectDailyCostDTO.class);
+        ProjectDailyCostDTO.class);
 
     HopsPredicate predicate = dobj.get(DAY).equal(dobj.param(DAY));
     dobj.where(predicate);
@@ -114,33 +106,33 @@ public class ProjectsDailyCostClusterJ implements
   }
 
   public static Map<ProjectDailyId, ProjectDailyCost> createMap(
-          List<ProjectDailyCostDTO> results) {
+      List<ProjectDailyCostDTO> results) {
     Map<ProjectDailyId, ProjectDailyCost> map
-            = new HashMap<ProjectDailyId, ProjectDailyCost>();
+        = new HashMap<>();
     for (ProjectDailyCostDTO persistable
-            : results) {
+        : results) {
       ProjectDailyCost hop = createHopProjectDailyCost(persistable);
       map.
-              put(new ProjectDailyId(hop.getProjectName(), hop.
-                              getProjectUser(), hop.getDay()), hop);
+          put(new ProjectDailyId(hop.getProjectName(), hop.
+              getProjectUser(), hop.getDay()), hop);
     }
     return map;
   }
 
   private static ProjectDailyCost createHopProjectDailyCost(
-          ProjectDailyCostDTO csDTO) {
+      ProjectDailyCostDTO csDTO) {
     ProjectDailyCost hop
-            = new ProjectDailyCost(csDTO.getProjectName(), csDTO.getUser(),
-                    csDTO.getDay(), csDTO.getCreditUsed());
+        = new ProjectDailyCost(csDTO.getProjectName(), csDTO.getUser(),
+        csDTO.getDay(), csDTO.getCreditUsed());
     return hop;
   }
 
   @Override
   public void addAll(Collection<ProjectDailyCost> yarnProjectDailyCost)
-          throws StorageException {
-    HopsSession session = connector.obtainSession();
+      throws StorageException {
+    HopsSession session = getConnector().obtainSession();
     List<ProjectDailyCostDTO> toAdd
-            = new ArrayList<ProjectDailyCostDTO>();
+        = new ArrayList<>();
     for (ProjectDailyCost _yarnProjectDailyCost : yarnProjectDailyCost) {
       toAdd.add(createPersistable(_yarnProjectDailyCost, session));
     }
@@ -150,11 +142,11 @@ public class ProjectsDailyCostClusterJ implements
   }
 
   private ProjectDailyCostDTO createPersistable(
-          ProjectDailyCost hopPQ, HopsSession session) throws
-          StorageException {
+      ProjectDailyCost hopPQ, HopsSession session) throws
+      StorageException {
     ProjectDailyCostDTO pqDTO = session.
-            newInstance(
-                    ProjectDailyCostDTO.class);
+        newInstance(
+            ProjectDailyCostDTO.class);
     //Set values to persist new ContainerStatus
     pqDTO.setProjectName(hopPQ.getProjectName());
     pqDTO.setUser(hopPQ.getProjectUser());

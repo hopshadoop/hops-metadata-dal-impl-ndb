@@ -21,8 +21,10 @@ package io.hops.metadata.ndb.dalimpl.election;
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
+import io.hops.StorageConnector;
 import io.hops.metadata.election.TablesDef;
 import io.hops.metadata.election.entity.LeDescriptor;
+import io.hops.metadata.ndb.ClusterjConnector;
 
 import java.security.InvalidParameterException;
 
@@ -70,7 +72,7 @@ public class YarnLeaderClusterj extends LeDescriptorClusterj
         lTable.getCounter(), lTable.getHostname(), lTable.getHttpAddress());
   }
 
-  public YarnLeaderClusterj() {
-    super(YarnLeaderDTO.class);
+  public YarnLeaderClusterj(ClusterjConnector connector) {
+    super(connector, YarnLeaderDTO.class);
   }
 }

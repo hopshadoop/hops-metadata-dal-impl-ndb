@@ -23,6 +23,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -33,18 +34,17 @@ import io.hops.metadata.yarn.entity.RMNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Implements connection of RMNodeImpl to NDB.
  */
-public class RMNodeClusterJ
+public class RMNodeClusterJ extends ClusterjDataAccess
     implements TablesDef.RMNodeTableDef, RMNodeDataAccess<RMNode> {
+
+  public RMNodeClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   private static final Log LOG = LogFactory.getLog(RMNodeClusterJ.class);
 
@@ -91,20 +91,18 @@ public class RMNodeClusterJ
     String getnodemanagerversion();
 
     void setnodemanagerversion(String nodemanagerversion);
-    
+
     @Column(name = PENDING_EVENT_ID)
     int getpendingeventid();
 
     void setpendingeventid(int pendingeventid);
-    
-  }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
+  }
 
   @Override
   public RMNode findByNodeId(String nodeid) throws StorageException {
     LOG.debug("HOP :: ClusterJ RMNode.findByNodeId - START:" + nodeid);
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     RMNodeDTO rmnodeDTO = session.find(RMNodeDTO.class, nodeid);
     RMNode result = null;
     if (rmnodeDTO != null) {
@@ -119,7 +117,7 @@ public class RMNodeClusterJ
   @Override
   public Map<String, RMNode> getAll() throws StorageException {
     LOG.debug("HOP :: ClusterJ RMNode.getAll - START");
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<RMNodeDTO> dobj =
         qb.createQueryDefinition(RMNodeDTO.class);
@@ -133,7 +131,7 @@ public class RMNodeClusterJ
 
   @Override
   public void addAll(List<RMNode> toAdd) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
     Collections.sort(toAdd);
     for (RMNode req : toAdd) {
@@ -145,7 +143,7 @@ public class RMNodeClusterJ
 
   @Override
   public void removeAll(Collection<RMNode> toRemove) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
     for (RMNode entry : toRemove) {
       toPersist.add(session.newInstance(RMNodeDTO.class, entry.
@@ -157,7 +155,7 @@ public class RMNodeClusterJ
 
   @Override
   public void add(RMNode rmNode) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     RMNodeDTO dto = createPersistable(rmNode, session);
     session.savePersistent(dto);
     session.release(dto);
@@ -197,8 +195,8 @@ public class RMNodeClusterJ
    */
   public static RMNode createHopRMNode(RMNodeDTO rmDTO) {
     return new RMNode(rmDTO.getNodeid(), rmDTO.getHostname(),
-            rmDTO.getCommandport(), rmDTO.getHttpport(), rmDTO.getHealthreport(),
-            rmDTO.getLasthealthreporttime(), rmDTO.getcurrentstate(),
-            rmDTO.getnodemanagerversion(), rmDTO.getpendingeventid());
+        rmDTO.getCommandport(), rmDTO.getHttpport(), rmDTO.getHealthreport(),
+        rmDTO.getLasthealthreporttime(), rmDTO.getcurrentstate(),
+        rmDTO.getnodemanagerversion(), rmDTO.getpendingeventid());
   }
 }

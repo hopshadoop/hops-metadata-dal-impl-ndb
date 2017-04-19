@@ -18,55 +18,50 @@
  */
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
-import com.mysql.clusterj.annotation.Column;
-import com.mysql.clusterj.annotation.Index;
-import com.mysql.clusterj.annotation.PartitionKey;
-import com.mysql.clusterj.annotation.PersistenceCapable;
-import com.mysql.clusterj.annotation.PrimaryKey;
+import com.mysql.clusterj.annotation.*;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
-import static io.hops.metadata.hdfs.TablesDef.LeasePathTableDef.HOLDER_ID;
 import io.hops.metadata.hdfs.dal.LeasePathDataAccess;
 import io.hops.metadata.hdfs.entity.LeasePath;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.wrapper.HopsPredicate;
-import io.hops.metadata.ndb.wrapper.HopsPredicateOperand;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
+import io.hops.metadata.ndb.wrapper.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class LeasePathClusterj
+public class LeasePathClusterj extends ClusterjDataAccess
     implements TablesDef.LeasePathTableDef, LeasePathDataAccess<LeasePath> {
+
+  public LeasePathClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   @PartitionKey(column = HOLDER_ID)
   public interface LeasePathsDTO {
-    @PrimaryKey  
+    @PrimaryKey
     @Column(name = HOLDER_ID)
     int getHolderId();
+
     void setHolderId(int holder_id);
 
     @PrimaryKey
     @Column(name = PATH)
     @Index(name = "path_idx")
     String getPath();
+
     void setPath(String path);
   }
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public void prepare(Collection<LeasePath> removed,
-      Collection<LeasePath> newed, Collection<LeasePath> modified)
+                      Collection<LeasePath> newed, Collection<LeasePath> modified)
       throws StorageException {
     List<LeasePathsDTO> changes = new ArrayList<LeasePathsDTO>();
     List<LeasePathsDTO> deletions = new ArrayList<LeasePathsDTO>();
-    HopsSession dbSession = connector.obtainSession();
+    HopsSession dbSession = getConnector().obtainSession();
     for (LeasePath lp : newed) {
       LeasePathsDTO lTable = dbSession.newInstance(LeasePathsDTO.class);
       createPersistableLeasePathInstance(lp, lTable);
@@ -95,7 +90,7 @@ public class LeasePathClusterj
   @Override
   public Collection<LeasePath> findByHolderId(int holderId)
       throws StorageException {
-    HopsSession dbSession = connector.obtainSession();
+    HopsSession dbSession = getConnector().obtainSession();
     HopsQueryBuilder qb = dbSession.getQueryBuilder();
     HopsQueryDomainType<LeasePathsDTO> dobj =
         qb.createQueryDefinition(LeasePathsDTO.class);
@@ -103,7 +98,7 @@ public class LeasePathClusterj
     dobj.where(pred1);
     HopsQuery<LeasePathsDTO> query = dbSession.createQuery(dobj);
     query.setParameter("param1", holderId);
-    
+
     Collection<LeasePathsDTO> dtos = query.getResultList();
     Collection<LeasePath> lpl = createList(dtos);
     dbSession.release(dtos);
@@ -112,7 +107,7 @@ public class LeasePathClusterj
 
   @Override
   public LeasePath findByPath(String path) throws StorageException {
-    HopsSession dbSession = connector.obtainSession();
+    HopsSession dbSession = getConnector().obtainSession();
     HopsQueryBuilder qb = dbSession.getQueryBuilder();
     HopsQueryDomainType<LeasePathsDTO> dobj =
         qb.createQueryDefinition(LeasePathsDTO.class);
@@ -120,22 +115,22 @@ public class LeasePathClusterj
     dobj.where(pred1);
     HopsQuery<LeasePathsDTO> query = dbSession.createQuery(dobj);
     query.setParameter("param1", path);
-    
+
     List<LeasePathsDTO> dtos = query.getResultList();
-    if(dtos == null || dtos.size() == 0){
-        return null;
-    }else if(dtos.size() == 1){
-        LeasePath lp = createLeasePath(dtos.get(0));
-        return lp;
+    if (dtos == null || dtos.size() == 0) {
+      return null;
+    } else if (dtos.size() == 1) {
+      LeasePath lp = createLeasePath(dtos.get(0));
+      return lp;
     } else {
-        throw new StorageException("Found more than one paths");
+      throw new StorageException("Found more than one paths");
     }
   }
 
   @Override
   public Collection<LeasePath> findByPrefix(String prefix)
       throws StorageException {
-    HopsSession dbSession = connector.obtainSession();
+    HopsSession dbSession = getConnector().obtainSession();
     HopsQueryBuilder qb = dbSession.getQueryBuilder();
     HopsQueryDomainType dobj = qb.createQueryDefinition(LeasePathsDTO.class);
     HopsPredicateOperand propertyPredicate = dobj.get("path");
@@ -145,7 +140,7 @@ public class LeasePathClusterj
     dobj.where(like);
     HopsQuery query = dbSession.createQuery(dobj);
     query.setParameter(param, prefix + "%");
-    
+
     Collection<LeasePathsDTO> dtos = query.getResultList();
     Collection<LeasePath> lpl = createList(dtos);
     dbSession.release(dtos);
@@ -154,10 +149,10 @@ public class LeasePathClusterj
 
   @Override
   public Collection<LeasePath> findAll() throws StorageException {
-    HopsSession dbSession = connector.obtainSession();
+    HopsSession dbSession = getConnector().obtainSession();
     HopsQueryBuilder qb = dbSession.getQueryBuilder();
     HopsQuery query = dbSession.createQuery(
-            qb.createQueryDefinition(LeasePathsDTO.class));    
+        qb.createQueryDefinition(LeasePathsDTO.class));
     Collection<LeasePathsDTO> dtos = query.getResultList();
     Collection<LeasePath> lpl = createList(dtos);
     dbSession.release(dtos);
@@ -166,7 +161,7 @@ public class LeasePathClusterj
 
   @Override
   public void removeAll() throws StorageException {
-    HopsSession dbSession = connector.obtainSession();
+    HopsSession dbSession = getConnector().obtainSession();
     dbSession.deletePersistentAll(LeasePathsDTO.class);
   }
 
@@ -184,7 +179,7 @@ public class LeasePathClusterj
   }
 
   private void createPersistableLeasePathInstance(LeasePath lp,
-      LeasePathsDTO lTable) {
+                                                  LeasePathsDTO lTable) {
     lTable.setHolderId(lp.getHolderId());
     lTable.setPath(lp.getPath());
   }

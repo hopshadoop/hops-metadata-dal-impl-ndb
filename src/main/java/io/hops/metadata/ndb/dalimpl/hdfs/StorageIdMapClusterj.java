@@ -26,6 +26,7 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.StorageIdMapDataAccess;
 import io.hops.metadata.hdfs.entity.StorageId;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -35,8 +36,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class StorageIdMapClusterj
+public class StorageIdMapClusterj extends ClusterjDataAccess
     implements TablesDef.StorageIdMapTableDef, StorageIdMapDataAccess<StorageId> {
+
+  public StorageIdMapClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface StorageIdDTO {
@@ -52,11 +57,9 @@ public class StorageIdMapClusterj
     void setSId(int sId);
   }
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public void add(StorageId s) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     StorageIdDTO sdto = session.newInstance(StorageIdDTO.class);
     sdto.setSId(s.getsId());
     sdto.setStorageId(s.getStorageId());
@@ -66,7 +69,7 @@ public class StorageIdMapClusterj
 
   @Override
   public StorageId findByPk(String storageId) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     StorageIdDTO sdto = session.find(StorageIdDTO.class, storageId);
     if (sdto == null) {
       return null;
@@ -76,7 +79,7 @@ public class StorageIdMapClusterj
 
   @Override
   public Collection<StorageId> findAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<StorageIdDTO> qdt =
         qb.createQueryDefinition(StorageIdDTO.class);
@@ -85,7 +88,7 @@ public class StorageIdMapClusterj
   }
 
   private Collection<StorageId> convertAndRelease(HopsSession session,
-      List<StorageIdDTO> dtos) throws StorageException {
+                                                  List<StorageIdDTO> dtos) throws StorageException {
     List<StorageId> hopstorageId = new ArrayList<StorageId>();
     for (StorageIdDTO sdto : dtos) {
       hopstorageId.add(convertAndRelease(session, sdto));

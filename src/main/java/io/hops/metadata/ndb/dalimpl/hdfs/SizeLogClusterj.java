@@ -23,19 +23,18 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.SizeLogDataAccess;
 import io.hops.metadata.hdfs.entity.SizeLogEntry;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.wrapper.HopsPredicate;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
+import io.hops.metadata.ndb.wrapper.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class SizeLogClusterj implements TablesDef.SizeLogTableDef,
-    SizeLogDataAccess<SizeLogEntry> {
+public class SizeLogClusterj extends ClusterjDataAccess
+    implements TablesDef.SizeLogTableDef, SizeLogDataAccess<SizeLogEntry> {
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
+  public SizeLogClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface SizeLogEntryDto {
@@ -54,7 +53,7 @@ public class SizeLogClusterj implements TablesDef.SizeLogTableDef,
 
   @Override
   public void add(SizeLogEntry logEntry) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     SizeLogEntryDto dto = session.newInstance(SizeLogEntryDto.class);
     dto.setInodeId(logEntry.getInodeId());
     dto.setSize(logEntry.getSize());
@@ -64,7 +63,7 @@ public class SizeLogClusterj implements TablesDef.SizeLogTableDef,
 
   @Override
   public Collection<SizeLogEntry> find(int fileId) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<SizeLogEntryDto> dobj =
         qb.createQueryDefinition(SizeLogEntryDto.class);
@@ -76,7 +75,7 @@ public class SizeLogClusterj implements TablesDef.SizeLogTableDef,
   }
 
   private Collection<SizeLogEntry> convertAndRelease(HopsSession session,
-      Collection<SizeLogEntryDto> dtos) throws StorageException {
+                                                     Collection<SizeLogEntryDto> dtos) throws StorageException {
     ArrayList<SizeLogEntry> list = new ArrayList<SizeLogEntry>(dtos.size());
     for (SizeLogEntryDto dto : dtos) {
       SizeLogEntry logEntry = new SizeLogEntry(dto.getInodeId(), dto.getSize());

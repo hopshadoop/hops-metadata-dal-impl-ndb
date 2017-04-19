@@ -23,26 +23,31 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.quota.PriceMultiplicatorDataAccess;
 import io.hops.metadata.yarn.entity.quota.PriceMultiplicator;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import io.hops.metadata.yarn.TablesDef;
 
 
-public class PriceMultiplicatorClusterJ implements
-        TablesDef.PriceMultiplicatorTableDef,
-        PriceMultiplicatorDataAccess<PriceMultiplicator> {
+public class PriceMultiplicatorClusterJ extends ClusterjDataAccess
+    implements TablesDef.PriceMultiplicatorTableDef, PriceMultiplicatorDataAccess<PriceMultiplicator> {
+
+  public PriceMultiplicatorClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   private static final Log LOG = LogFactory.getLog(
-          PriceMultiplicatorClusterJ.class);
+      PriceMultiplicatorClusterJ.class);
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface PriceMultiplicatorDTO {
@@ -60,34 +65,32 @@ public class PriceMultiplicatorClusterJ implements
 
   }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public Map<PriceMultiplicator.MultiplicatorType, PriceMultiplicator> getAll() throws
-          StorageException {
+      StorageException {
     LOG.debug("HOP :: ClusterJ PriceMultiplicator.getAll - START");
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<PriceMultiplicatorClusterJ.PriceMultiplicatorDTO> dobj
-            = qb.createQueryDefinition(
-                    PriceMultiplicatorClusterJ.PriceMultiplicatorDTO.class);
+        = qb.createQueryDefinition(
+        PriceMultiplicatorClusterJ.PriceMultiplicatorDTO.class);
     HopsQuery<PriceMultiplicatorClusterJ.PriceMultiplicatorDTO> query = session.
-            createQuery(dobj);
+        createQuery(dobj);
 
     List<PriceMultiplicatorClusterJ.PriceMultiplicatorDTO> queryResults = query.
-            getResultList();
+        getResultList();
     LOG.debug("HOP :: ClusterJ PriceMultiplicator.getAll - STOP");
     Map<PriceMultiplicator.MultiplicatorType, PriceMultiplicator> result = createMap(
-            queryResults);
+        queryResults);
     session.release(queryResults);
     return result;
   }
 
   public static Map<PriceMultiplicator.MultiplicatorType, PriceMultiplicator> createMap(
-          List<PriceMultiplicatorClusterJ.PriceMultiplicatorDTO> results) {
+      List<PriceMultiplicatorClusterJ.PriceMultiplicatorDTO> results) {
     Map<PriceMultiplicator.MultiplicatorType, PriceMultiplicator> map
-            = new HashMap<PriceMultiplicator.MultiplicatorType, PriceMultiplicator>();
+        = new HashMap<>();
     for (PriceMultiplicatorClusterJ.PriceMultiplicatorDTO persistable : results) {
       PriceMultiplicator hop = createHopPriceMultiplicator(persistable);
       map.put(hop.getId(), hop);
@@ -96,26 +99,26 @@ public class PriceMultiplicatorClusterJ implements
   }
 
   private static PriceMultiplicator createHopPriceMultiplicator(
-          PriceMultiplicatorClusterJ.PriceMultiplicatorDTO csDTO) {
+      PriceMultiplicatorClusterJ.PriceMultiplicatorDTO csDTO) {
     PriceMultiplicator hop = new PriceMultiplicator(PriceMultiplicator.MultiplicatorType.
-            valueOf(csDTO.getId()), csDTO.getMultiplicator());
+        valueOf(csDTO.getId()), csDTO.getMultiplicator());
     return hop;
   }
 
   @Override
   public void add(PriceMultiplicator yarnRunningPrice) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     PriceMultiplicatorClusterJ.PriceMultiplicatorDTO toAdd = createPersistable(
-            yarnRunningPrice, session);
+        yarnRunningPrice, session);
     session.savePersistent(toAdd);
     session.release(toAdd);
   }
 
   private PriceMultiplicatorClusterJ.PriceMultiplicatorDTO createPersistable(
-          PriceMultiplicator hopPQ,
-          HopsSession session) throws StorageException {
+      PriceMultiplicator hopPQ,
+      HopsSession session) throws StorageException {
     PriceMultiplicatorClusterJ.PriceMultiplicatorDTO pqDTO = session.newInstance(
-            PriceMultiplicatorClusterJ.PriceMultiplicatorDTO.class);
+        PriceMultiplicatorClusterJ.PriceMultiplicatorDTO.class);
     //Set values to persist new PriceMultiplicatorDTO
     pqDTO.setId(hopPQ.getId().name());
     pqDTO.setMultiplicator(hopPQ.getValue());

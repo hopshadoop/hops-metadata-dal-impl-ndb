@@ -1,0 +1,19 @@
+#
+#    Do not add spaces in the file. it is also used by some deployment scripts that fail if there are redundant spaces
+#
+io.hops.metadata.multizone=false
+io.hops.metadata.zone=PRIMARY
+io.hops.metadata.local.clusterj.connectstring=
+io.hops.metadata.local.clusterj.database=
+#  probably a good idea to set this > 1
+io.hops.metadata.local.clusterj.connection.pool.size=10
+io.hops.metadata.local.clusterj.max.transactions=1024
+
+io.hops.metadata.ndb.mysqlserver.data_source_class_name = com.mysql.jdbc.jdbc2.optional.MysqlDataSource
+io.hops.metadata.ndb.mysqlserver.connection_pool_size = 1
+
+io.hops.metadata.local.mysqlserver.host=
+io.hops.metadata.local.mysqlserver.port=
+io.hops.metadata.local.mysqlserver.username=
+io.hops.metadata.local.mysqlserver.password=
+io.hops.metadata.local.mysqlserver.connection_pool_size=1

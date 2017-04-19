@@ -23,6 +23,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -30,14 +31,19 @@ import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.quota.ContainersCheckPointsDataAccess;
 import io.hops.metadata.yarn.entity.quota.ContainerCheckPoint;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ContainersCheckPointsClusterJ implements
-        TablesDef.ContainersCheckPointsTableDef,
-        ContainersCheckPointsDataAccess<ContainerCheckPoint> {
+public class ContainersCheckPointsClusterJ extends ClusterjDataAccess
+    implements TablesDef.ContainersCheckPointsTableDef,
+    ContainersCheckPointsDataAccess<ContainerCheckPoint> {
+
+  public ContainersCheckPointsClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface ContainerCheckPointDTO {
@@ -52,24 +58,22 @@ public class ContainersCheckPointsClusterJ implements
     long getCheckPoint();
 
     void setCheckPoint(long checkPoint);
-    
+
     @Column(name = MULTIPLICATOR)
     float getPrice();
 
     void setPrice(float price);
-    
-    
-  }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
+
+  }
 
   @Override
   public Map<String, ContainerCheckPoint> getAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<ContainerCheckPointDTO> dobj = qb.
-            createQueryDefinition(ContainerCheckPointDTO.class);
+        createQueryDefinition(ContainerCheckPointDTO.class);
     HopsQuery<ContainerCheckPointDTO> query = session.createQuery(dobj);
 
     List<ContainerCheckPointDTO> queryResults = query.getResultList();
@@ -80,10 +84,10 @@ public class ContainersCheckPointsClusterJ implements
 
   @Override
   public void addAll(List<ContainerCheckPoint> containersCheckPoints) throws
-          StorageException {
-    HopsSession session = connector.obtainSession();
+      StorageException {
+    HopsSession session = getConnector().obtainSession();
     List<ContainerCheckPointDTO> toAdd
-            = new ArrayList<ContainerCheckPointDTO>();
+        = new ArrayList<>();
     for (ContainerCheckPoint checkPoint : containersCheckPoints) {
       toAdd.add(createPersistable(checkPoint, session));
     }
@@ -93,20 +97,20 @@ public class ContainersCheckPointsClusterJ implements
 
   @Override
   public void removeAll(List<ContainerCheckPoint> containersCheckPoints) throws
-          StorageException {
-    HopsSession session = connector.obtainSession();
+      StorageException {
+    HopsSession session = getConnector().obtainSession();
     List<ContainerCheckPointDTO> toRemove
-            = new ArrayList<ContainerCheckPointDTO>();
+        = new ArrayList<>();
     for (ContainerCheckPoint checkPoint : containersCheckPoints) {
       toRemove.add(createPersistable(checkPoint, session));
     }
     session.deletePersistentAll(toRemove);
     session.release(toRemove);
   }
-  
+
   private ContainerCheckPointDTO createPersistable(
-          ContainerCheckPoint checkPoint, HopsSession session) throws
-          StorageException {
+      ContainerCheckPoint checkPoint, HopsSession session) throws
+      StorageException {
     ContainerCheckPointDTO ccpDTO = session.newInstance(ContainerCheckPointDTO.class);
     //Set values to persist new ContainerStatus
     ccpDTO.setContainerID(checkPoint.getContainerId());
@@ -117,12 +121,12 @@ public class ContainersCheckPointsClusterJ implements
   }
 
   public static Map<String, ContainerCheckPoint> createMap(
-          List<ContainerCheckPointDTO> dtos) {
-    Map<String, ContainerCheckPoint> map = new HashMap<String, ContainerCheckPoint>();
+      List<ContainerCheckPointDTO> dtos) {
+    Map<String, ContainerCheckPoint> map = new HashMap<>();
     for (ContainerCheckPointDTO dto : dtos) {
       map.put(dto.getContainerID(), new ContainerCheckPoint(dto.getContainerID()
-                                                           ,dto.getCheckPoint(), 
-                                                            dto.getPrice()));
+          , dto.getCheckPoint(),
+          dto.getPrice()));
     }
     return map;
   }

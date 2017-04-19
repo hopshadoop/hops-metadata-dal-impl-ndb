@@ -26,19 +26,18 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.MetadataLogDataAccess;
 import io.hops.metadata.hdfs.entity.MetadataLogEntry;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.wrapper.HopsPredicate;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
+import io.hops.metadata.ndb.wrapper.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
-    MetadataLogDataAccess<MetadataLogEntry> {
+public class MetadataLogClusterj extends ClusterjDataAccess
+    implements TablesDef.MetadataLogTableDef, MetadataLogDataAccess<MetadataLogEntry> {
 
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
+  public MetadataLogClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface MetadataLogEntryDto {
@@ -83,7 +82,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
 
 
   @PersistenceCapable(table = LOOKUP_TABLE_NAME)
-  public interface DatasetINodeLookupDTO{
+  public interface DatasetINodeLookupDTO {
 
     @PrimaryKey
     @Column(name = INODE_ID)
@@ -100,7 +99,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
   @Override
   public void addAll(Collection<MetadataLogEntry> logEntries)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     ArrayList<MetadataLogEntryDto> added = new ArrayList<MetadataLogEntryDto>(
         logEntries.size());
     ArrayList<DatasetINodeLookupDTO> newLookupDTOS = new
@@ -108,9 +107,9 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     for (MetadataLogEntry logEntry : logEntries) {
       added.add(createPersistable(logEntry));
       DatasetINodeLookupDTO lookupDTO = createLookupPersistable(logEntry);
-      if(logEntry.getOperation() == MetadataLogEntry.Operation.ADD){
+      if (logEntry.getOperation() == MetadataLogEntry.Operation.ADD) {
         newLookupDTOS.add(lookupDTO);
-      }else if(logEntry.getOperation() == MetadataLogEntry.Operation.DELETE){
+      } else if (logEntry.getOperation() == MetadataLogEntry.Operation.DELETE) {
         session.deletePersistent(lookupDTO);
         session.release(lookupDTO);
       }
@@ -125,15 +124,15 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
 
   @Override
   public void add(MetadataLogEntry metadataLogEntry) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     MetadataLogEntryDto dto = createPersistable(metadataLogEntry);
     DatasetINodeLookupDTO lookupDTO = createLookupPersistable(metadataLogEntry);
 
     session.makePersistent(dto);
 
-    if(metadataLogEntry.getOperation() == MetadataLogEntry.Operation.ADD){
+    if (metadataLogEntry.getOperation() == MetadataLogEntry.Operation.ADD) {
       session.savePersistent(lookupDTO);
-    }else if(metadataLogEntry.getOperation() == MetadataLogEntry.Operation.DELETE){
+    } else if (metadataLogEntry.getOperation() == MetadataLogEntry.Operation.DELETE) {
       session.deletePersistent(lookupDTO);
     }
 
@@ -143,7 +142,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
 
   private MetadataLogEntryDto createPersistable(MetadataLogEntry logEntry)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     MetadataLogEntryDto dto = session.newInstance(MetadataLogEntryDto.class);
     dto.setDatasetId(logEntry.getDatasetId());
     dto.setInodeId(logEntry.getInodeId());
@@ -156,8 +155,8 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
   }
 
   private DatasetINodeLookupDTO createLookupPersistable(MetadataLogEntry
-      logEntry) throws StorageException {
-    HopsSession session = connector.obtainSession();
+                                                            logEntry) throws StorageException {
+    HopsSession session = getConnector().obtainSession();
     DatasetINodeLookupDTO dto = session.newInstance(DatasetINodeLookupDTO
         .class);
     dto.setDatasetId(logEntry.getDatasetId());
@@ -167,7 +166,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
 
   @Override
   public Collection<MetadataLogEntry> find(int fileId) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<MetadataLogEntryDto> dobj =
         qb.createQueryDefinition(MetadataLogEntryDto.class);
@@ -175,7 +174,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     dobj.where(pred1);
     HopsQuery<MetadataLogEntryDto> query = session.createQuery(dobj);
     query.setParameter("inodeIdParam", fileId);
-    
+
     Collection<MetadataLogEntryDto> dtos = query.getResultList();
     Collection<MetadataLogEntry> mlel = createCollection(dtos);
     session.release(dtos);
@@ -206,7 +205,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
   @Override
   public Collection<MetadataLogEntry> readExisting(
       Collection<MetadataLogEntry> logEntries) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     final ArrayList<MetadataLogEntryDto> dtos =
         new ArrayList<MetadataLogEntryDto>();
     for (MetadataLogEntry logEntry : logEntries) {

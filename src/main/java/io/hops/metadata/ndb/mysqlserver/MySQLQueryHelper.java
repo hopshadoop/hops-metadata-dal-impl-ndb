@@ -18,7 +18,6 @@
  */
 package io.hops.metadata.ndb.mysqlserver;
 
-import com.mysql.jdbc.exceptions.MySQLIntegrityConstraintViolationException;
 import io.hops.exception.StorageException;
 
 import java.sql.Connection;
@@ -39,9 +38,6 @@ public class MySQLQueryHelper {
   public static final String MIN = "select min(%s) from %s";
   public static final String MAX = "select max(%s) from %s";
   
-  private static MysqlServerConnector connector =
-      MysqlServerConnector.getInstance();
-
   /**
    * Counts the number of rows in a given table.
    * <p/>
@@ -51,16 +47,16 @@ public class MySQLQueryHelper {
    * @return Total number of rows a given table.
    * @throws io.hops.exception.StorageException
    */
-  public static int countAll(String tableName) throws StorageException {
+  public static int countAll(MysqlServerConnector connector, String tableName) throws StorageException {
     // TODO[H]: Is it good to create and close connections in every call?
     String query = String.format(COUNT_QUERY, tableName);
-    return executeIntAggrQuery(query);
+    return executeIntAggrQuery(connector, query);
   }
   
-  public static int countAllUnique(String tableName, String columnName)
+  public static int countAllUnique(MysqlServerConnector connector, String tableName, String columnName)
       throws StorageException {
     String query = String.format(COUNT_QUERY_UNIQUE, columnName, tableName);
-    return executeIntAggrQuery(query);
+    return executeIntAggrQuery(connector, query);
   }
 
   /**
@@ -68,47 +64,49 @@ public class MySQLQueryHelper {
    * satisfies the given criterion. The criterion should be a valid SLQ
    * statement.
    *
+   *
+   * @param connector
    * @param tableName
    * @param criterion
    *     E.g. criterion="id > 100".
    * @return
    */
-  public static int countWithCriterion(String tableName, String criterion)
+  public static int countWithCriterion(MysqlServerConnector connector, String tableName, String criterion)
       throws StorageException {
     StringBuilder queryBuilder =
         new StringBuilder(String.format(COUNT_QUERY, tableName)).
             append(" where ").
             append(criterion);
-    return executeIntAggrQuery(queryBuilder.toString());
+    return executeIntAggrQuery(connector, queryBuilder.toString());
   }
   
-  public static boolean exists(String tableName, String criterion)
+  public static boolean exists(MysqlServerConnector connector, String tableName, String criterion)
       throws StorageException {
     StringBuilder query =
         new StringBuilder(String.format(SELECT_EXISTS_QUERY, tableName));
     query.append(" where ").append(criterion);
-    return executeBooleanQuery(String.format(SELECT_EXISTS, query.toString()));
+    return executeBooleanQuery(connector, String.format(SELECT_EXISTS, query.toString()));
   }
 
-  public static int minInt(String tableName, String column, String criterion)
+  public static int minInt(MysqlServerConnector connector, String tableName, String column, String criterion)
       throws StorageException {
     StringBuilder query =
         new StringBuilder(String.format(MIN, column, tableName));
     query.append(" where ").append(criterion);
-    return executeIntAggrQuery(query.toString());
+    return executeIntAggrQuery(connector, query.toString());
   }
   
-  public static int maxInt(String tableName, String column, String criterion)
+  public static int maxInt(MysqlServerConnector connector, String tableName, String column, String criterion)
       throws StorageException {
     StringBuilder query =
         new StringBuilder(String.format(MAX, column, tableName));
     query.append(" where ").append(criterion);
-    return executeIntAggrQuery(query.toString());
+    return executeIntAggrQuery(connector, query.toString());
   }
 
-  private static int executeIntAggrQuery(final String query)
+  private static int executeIntAggrQuery(MysqlServerConnector connector, final String query)
       throws StorageException {
-    return execute(query, new ResultSetHandler<Integer>() {
+    return execute(connector, query, new ResultSetHandler<Integer>() {
       @Override
       public Integer handle(ResultSet result) throws SQLException, StorageException {
         if (!result.next()) {
@@ -120,9 +118,9 @@ public class MySQLQueryHelper {
     });
   }
   
-  private static boolean executeBooleanQuery(final String query)
+  private static boolean executeBooleanQuery(MysqlServerConnector connector, final String query)
       throws StorageException {
-    return execute(query, new ResultSetHandler<Boolean>() {
+    return execute(connector, query, new ResultSetHandler<Boolean>() {
       @Override
       public Boolean handle(ResultSet result) throws SQLException, StorageException {
         if (!result.next()) {
@@ -134,7 +132,7 @@ public class MySQLQueryHelper {
     });
   }
 
-  public static int execute(String query) throws StorageException {
+  public static int execute(MysqlServerConnector connector, String query) throws StorageException {
     try {
       Connection conn = connector.obtainSession();
       PreparedStatement s = conn.prepareStatement(query);
@@ -150,7 +148,7 @@ public class MySQLQueryHelper {
     R handle(ResultSet result) throws SQLException, StorageException;
   }
 
-  public static <R> R execute(String query, ResultSetHandler<R> handler)
+  public static <R> R execute(MysqlServerConnector connector, String query, ResultSetHandler<R> handler)
       throws StorageException {
     try {
       Connection conn = connector.obtainSession();

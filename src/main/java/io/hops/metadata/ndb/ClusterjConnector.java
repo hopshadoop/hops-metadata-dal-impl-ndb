@@ -18,8 +18,10 @@
  */
 package io.hops.metadata.ndb;
 
+import com.mysql.clusterj.ClusterJHelper;
 import com.mysql.clusterj.Constants;
 import com.mysql.clusterj.LockMode;
+import com.mysql.clusterj.SessionFactory;
 import io.hops.StorageConnector;
 import io.hops.exception.StorageException;
 import io.hops.metadata.common.EntityDataAccess;
@@ -27,71 +29,15 @@ import io.hops.metadata.common.entity.Variable;
 import io.hops.metadata.election.TablesDef;
 import io.hops.metadata.election.dal.HdfsLeDescriptorDataAccess;
 import io.hops.metadata.election.dal.YarnLeDescriptorDataAccess;
-import io.hops.metadata.hdfs.dal.AccessTimeLogDataAccess;
-import io.hops.metadata.hdfs.dal.BlockChecksumDataAccess;
-import io.hops.metadata.hdfs.dal.BlockInfoDataAccess;
-import io.hops.metadata.hdfs.dal.BlockLookUpDataAccess;
-import io.hops.metadata.hdfs.dal.CorruptReplicaDataAccess;
-import io.hops.metadata.hdfs.dal.EncodingJobsDataAccess;
-import io.hops.metadata.hdfs.dal.EncodingStatusDataAccess;
-import io.hops.metadata.hdfs.dal.ExcessReplicaDataAccess;
-import io.hops.metadata.hdfs.dal.GroupDataAccess;
-import io.hops.metadata.hdfs.dal.INodeAttributesDataAccess;
-import io.hops.metadata.hdfs.dal.INodeDataAccess;
-import io.hops.metadata.hdfs.dal.InvalidateBlockDataAccess;
-import io.hops.metadata.hdfs.dal.LeaseDataAccess;
-import io.hops.metadata.hdfs.dal.LeasePathDataAccess;
-import io.hops.metadata.hdfs.dal.MetadataLogDataAccess;
-import io.hops.metadata.hdfs.dal.MisReplicatedRangeQueueDataAccess;
-import io.hops.metadata.hdfs.dal.OngoingSubTreeOpsDataAccess;
-import io.hops.metadata.hdfs.dal.PendingBlockDataAccess;
-import io.hops.metadata.hdfs.dal.QuotaUpdateDataAccess;
-import io.hops.metadata.hdfs.dal.RepairJobsDataAccess;
-import io.hops.metadata.hdfs.dal.ReplicaDataAccess;
-import io.hops.metadata.hdfs.dal.ReplicaUnderConstructionDataAccess;
-import io.hops.metadata.hdfs.dal.SafeBlocksDataAccess;
-import io.hops.metadata.hdfs.dal.SizeLogDataAccess;
-import io.hops.metadata.hdfs.dal.StorageIdMapDataAccess;
-import io.hops.metadata.hdfs.dal.UnderReplicatedBlockDataAccess;
-import io.hops.metadata.hdfs.dal.UserDataAccess;
-import io.hops.metadata.hdfs.dal.UserGroupDataAccess;
-import io.hops.metadata.hdfs.dal.VariableDataAccess;
+import io.hops.metadata.hdfs.dal.*;
 import io.hops.metadata.ndb.dalimpl.election.HdfsLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.election.YarnLeaderClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.BlockChecksumClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.BlockInfoClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.CorruptReplicaClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.EncodingStatusClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.ExcessReplicaClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.INodeAttributesClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.INodeClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.InvalidatedBlockClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.LeaseClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.LeasePathClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.OnGoingSubTreeOpsClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.PendingBlockClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.QuotaUpdateClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.ReplicaClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.ReplicaUnderConstructionClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.UnderReplicatedBlockClusterj;
-import io.hops.metadata.ndb.dalimpl.hdfs.VariableClusterj;
+import io.hops.metadata.ndb.dalimpl.hdfs.*;
 import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.ndb.wrapper.HopsTransaction;
-import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
-import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
-import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
-import io.hops.metadata.yarn.dal.NextHeartbeatDataAccess;
-import io.hops.metadata.yarn.dal.PendingEventDataAccess;
-import io.hops.metadata.yarn.dal.RMLoadDataAccess;
-import io.hops.metadata.yarn.dal.RMNodeDataAccess;
-import io.hops.metadata.yarn.dal.ResourceDataAccess;
-import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
-import io.hops.metadata.yarn.dal.quota.ContainersCheckPointsDataAccess;
-import io.hops.metadata.yarn.dal.quota.ContainersLogsDataAccess;
-import io.hops.metadata.yarn.dal.quota.PriceMultiplicatorDataAccess;
-import io.hops.metadata.yarn.dal.quota.ProjectQuotaDataAccess;
-import io.hops.metadata.yarn.dal.quota.ProjectsDailyCostDataAccess;
+import io.hops.metadata.yarn.dal.*;
+import io.hops.metadata.yarn.dal.quota.*;
 import io.hops.metadata.yarn.dal.rmstatestore.ApplicationAttemptStateDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.ApplicationStateDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.DelegationKeyDataAccess;
@@ -100,129 +46,165 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class ClusterjConnector implements StorageConnector<DBSession> {
+/**
+ * A clusterj zoneConnector allows the DAL to connect to the backend NDB and MySQL databases.
+ * The ClusterjConnector instance embeds a {@link MysqlServerConnector}
+ */
+public class ClusterjConnector implements StorageConnector {
+  // logger
+  private static final Log LOG = LogFactory.getLog(ClusterjConnector.class);
 
-  private final static ClusterjConnector instance = new ClusterjConnector();
-  private static boolean isInitialized = false;
-  private DBSessionProvider dbSessionProvider = null;
-  static ThreadLocal<DBSession> sessions = new ThreadLocal<DBSession>();
-  static final Log LOG = LogFactory.getLog(ClusterjConnector.class);
-  private String clusterConnectString;
-  private String databaseName;
-  
-  private ClusterjConnector() {
+  static {
+    // raise log level for clusterj to WARN
+    Logger.getLogger("com.mysql.clusterj").setLevel(Level.WARNING);
   }
 
-  public static ClusterjConnector getInstance() {
-    return instance;
-  }
+  // initialization data
+  private final String clusterConnectString;
+  private final String databaseName;
 
-  @Override
-  public void setConfiguration(Properties conf) throws StorageException {
-    if (isInitialized) {
-      LOG.warn("SessionFactory is already initialized");
-      return;
-    }
-    
-    clusterConnectString = (String) conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING);
-    LOG.info("Database connect string: " +
-        conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING));
-    databaseName = (String) conf.get(Constants.PROPERTY_CLUSTER_DATABASE);
-    LOG.info("Database name: " + conf.get(Constants.PROPERTY_CLUSTER_DATABASE));
-    LOG.info("Max Transactions: " +
-        conf.get(Constants.PROPERTY_CLUSTER_MAX_TRANSACTIONS));
+  // session data
+  private SessionFactory sessionFactory;
+  // keeps the current thread transaction
+  private ThreadLocal<HopsSession> sessions = new ThreadLocal<>();
 
-    int initialPoolSize =
-        Integer.parseInt((String) conf.get("io.hops.session.pool.size"));
-    int reuseCount =
-        Integer.parseInt((String) conf.get("io.hops.session.reuse.count"));
-    dbSessionProvider =
-        new DBSessionProvider(conf, reuseCount, initialPoolSize);
-    
-    isInitialized = true;
-  }
+  // configuration prefix (used to convert io.hops.metadata.{local, primary}.clusterj to com.mysql.clusterj)
+  private final String configPrefix;
 
-  /*
-   * Return a dbSession from a random dbSession factory in our pool.
+  private MysqlServerConnector mysqlConnector;
+
+  /**
+   * builds a new instance of ClusterjConnector with a given config prefix.
+   * There should be only one instance of this per database cluster.
+   * according to https://dev.mysql.com/doc/ndbapi/en/mccj-using-clusterj-start.html
+   * "Usually, there is only a single SessionFactory per NDB Cluster, per Java Virtual Machine."
    *
-   * NOTE: Do not close the dbSession returned by this call or you will die.
+   * @param configPrefix the prefix to use, either io.hops.metadata.local or io.hops.metadata.primary
+   * @param conf         the configuration parameters for this and the mysql connector
    */
-  @Override
-  public HopsSession obtainSession() throws StorageException {
-    DBSession dbSession = sessions.get();
-    if (dbSession == null) {
-      dbSession = dbSessionProvider.getSession();
-      sessions.set(dbSession);
-    }
-    return dbSession.getSession();
+  public ClusterjConnector(final String configPrefix, final Properties conf) {
+    this.configPrefix = configPrefix;
+    this.mysqlConnector = new MysqlServerConnector(configPrefix, conf);
+
+    clusterConnectString = (String) conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING);
+    databaseName = (String) conf.get(Constants.PROPERTY_CLUSTER_DATABASE);
+    this.sessionFactory = ClusterJHelper.getSessionFactory(clusterjProperties(conf));
   }
 
-  private void returnSession(boolean error) throws StorageException {
-    DBSession dbSession = sessions.get();
-    sessions.remove(); // remove, and return to the pool
-    dbSessionProvider.returnSession(dbSession,
-        error); // if there was an error then close the session
+  private Properties clusterjProperties(final Properties conf) {
+    final String clusterjPrefix = this.configPrefix + ".clusterj";
+    Properties res = new Properties();
+    for (Map.Entry<Object, Object> e : conf.entrySet()) {
+      String key = (String) e.getKey();
+      if (key.startsWith(clusterjPrefix)) {
+        String newKey = "com.mysql.clusterj" + key.substring(clusterjPrefix.length());
+        res.put(newKey, e.getValue());
+      }
+    }
+    return res;
   }
 
   /**
-   * begin a transaction.
+   * create a {@link HopsSession} if one is not bound to the thread already.
+   */
+  @Override
+  public HopsSession obtainSession() throws StorageException {
+    HopsSession session = this.sessions.get();
+    if (session == null) {
+      session = new HopsSession(sessionFactory.getSession());
+      this.sessions.set(session);
+    }
+    return session;
+  }
+
+  /**
+   * If the session bound to the thread exists and there was an error, the session is closed and discarded.
+   * Otherwise does nothing.
+   * See https://dev.mysql.com/doc/ndbapi/en/mccj-using-clusterj-start.html and the ClusterJ source for more info.
    *
-   * @throws io.hops.exception.StorageException
+   * @param error whether there was an error
+   * @throws StorageException in case of errors closing the session
+   */
+  private void returnSession(boolean error) throws StorageException {
+    HopsSession session = this.sessions.get();
+    if (session != null && error) {
+      session.close();
+      this.sessions.remove();
+    }
+  }
+
+  /**
+   * Begins a transaction.
+   *
+   * @throws StorageException
    */
   @Override
   public void beginTransaction() throws StorageException {
-    HopsSession session = obtainSession();
+    HopsSession session = this.obtainSession();
     if (session.currentTransaction().isActive()) {
-      LOG.fatal("Prevented starting transaction within a transaction.");
-      throw new Error("Can not start Tx inside another Tx");
+      throw new StorageException("Can not start Tx inside another Tx");
     }
     session.currentTransaction().begin();
   }
 
+
   /**
-   * Commit a transaction.
+   * Fetches the active transaction from the session.
    *
-   * @throws io.hops.exception.StorageException
+   * @return the active transaction
+   * @throws StorageException if there is no active transaction
+   */
+  private HopsTransaction activeTransaction() throws StorageException {
+    HopsSession session = obtainSession();
+    HopsTransaction tx = session.currentTransaction();
+    if (!tx.isActive()) {
+      throw new StorageException("there is no active transaction");
+    }
+    return tx;
+  }
+
+  /**
+   * Commits the active transaction.
+   *
+   * @throws StorageException if there are errors committing or if there is no active transaction
    */
   @Override
   public void commit() throws StorageException {
-    HopsSession session = null;
-    boolean dbError = false;
+    boolean error = false;
     try {
-      session = obtainSession();
-      HopsTransaction tx = session.currentTransaction();
-      if (!tx.isActive()) {
-        throw new StorageException("The transaction is not began!");
-      }
+      HopsTransaction tx = activeTransaction();
       tx.commit();
-    } catch (StorageException e) {
-      dbError = true;
-      throw e;
+    } catch (StorageException exc) {
+      error = true;
+      throw exc;
     } finally {
-      returnSession(dbError);
+      // the error parameter is ignore, see the doc for the method
+      returnSession(error);
     }
   }
- 
+
   /**
    * It rolls back only when the transaction is active.
+   *
+   * @throws StorageException if there are errors rolling back or if there is no active transaction
    */
   @Override
   public void rollback() throws StorageException {
-    HopsSession session = null;
-    boolean dbError = false;
+    boolean error = false;
     try {
-      session = obtainSession();
-      HopsTransaction tx = session.currentTransaction();
-      if (tx.isActive()) {
-        tx.rollback();
-      }
-    } catch (StorageException e) {
-      dbError = true;
-      throw e;
+      HopsTransaction tx = activeTransaction();
+      tx.rollback();
+    } catch(StorageException exc) {
+      error = true;
+      throw exc;
     } finally {
-      returnSession(dbError);
+      // the error parameter is ignore, see the doc for the method
+      returnSession(error);
     }
   }
 
@@ -258,7 +240,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
 
   @Override
   public void stopStorage() throws StorageException {
-    dbSessionProvider.stop();
+    if (this.sessionFactory != null) {
+      this.sessionFactory.close();
+    }
   }
 
   @Override
@@ -343,7 +327,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     return formatHDFS(false);
   }
 
-  private boolean formatYarn(boolean transactional) throws StorageException{
+  private boolean formatYarn(boolean transactional) throws StorageException {
     return format(transactional,
         ContainerIdToCleanDataAccess.class, ContainerStatusDataAccess.class,
         RMNodeDataAccess.class, FinishedApplicationsDataAccess.class,
@@ -355,8 +339,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         ContainersLogsDataAccess.class, ContainersCheckPointsDataAccess.class,
         ProjectsDailyCostDataAccess.class, PriceMultiplicatorDataAccess.class);
   }
-  
-  private boolean formatHDFS(boolean transactional) throws StorageException{
+
+  private boolean formatHDFS(boolean transactional) throws StorageException {
     return format(transactional,
         INodeDataAccess.class, BlockInfoDataAccess.class, LeaseDataAccess.class,
         LeasePathDataAccess.class, ReplicaDataAccess.class,
@@ -372,9 +356,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         MetadataLogDataAccess.class, AccessTimeLogDataAccess.class,
         SizeLogDataAccess.class, EncodingJobsDataAccess.class,
         RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
-        UserGroupDataAccess.class,VariableDataAccess.class);
+        UserGroupDataAccess.class, VariableDataAccess.class);
   }
-  
+
   private boolean formatAll(boolean transactional) throws StorageException {
     //HDFS
     if (!formatHDFS(transactional)) {
@@ -387,58 +371,58 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
 
     // shared
     return format(transactional,
-            VariableDataAccess.class
+        VariableDataAccess.class
     );
   }
 
   private boolean format(boolean transactional,
-      Class<? extends EntityDataAccess>... das) throws StorageException {
-    
+                         Class<? extends EntityDataAccess>... das) throws StorageException {
+
     final int RETRIES = 5; // in test
     for (int i = 0; i < RETRIES; i++) {
       try {
         for (Class e : das) {
           if (e == INodeDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.INodeTableDef.TABLE_NAME);
           } else if (e == BlockInfoDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.BlockInfoTableDef.TABLE_NAME);
           } else if (e == LeaseDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.LeaseTableDef.TABLE_NAME);
           } else if (e == LeasePathDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.LeasePathTableDef.TABLE_NAME);
           } else if (e == OngoingSubTreeOpsDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.OnGoingSubTreeOpsDef.TABLE_NAME);
           } else if (e == ReplicaDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.ReplicaTableDef.TABLE_NAME);
           } else if (e == ReplicaUnderConstructionDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.ReplicaUnderConstructionTableDef.TABLE_NAME);
           } else if (e == InvalidateBlockDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.InvalidatedBlockTableDef.TABLE_NAME);
           } else if (e == ExcessReplicaDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.ExcessReplicaTableDef.TABLE_NAME);
           } else if (e == PendingBlockDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.PendingBlockTableDef.TABLE_NAME);
           } else if (e == CorruptReplicaDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.CorruptReplicaTableDef.TABLE_NAME);
           } else if (e == UnderReplicatedBlockDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.UnderReplicatedBlockTableDef.TABLE_NAME);
           } else if (e == HdfsLeDescriptorDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, TablesDef.HdfsLeaderTableDef.TABLE_NAME);
           } else if (e == INodeAttributesDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.INodeAttributesTableDef.TABLE_NAME);
           } else if (e == VariableDataAccess.class) {
             HopsSession session = obtainSession();
@@ -453,54 +437,54 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             }
             session.currentTransaction().commit();
           } else if (e == StorageIdMapDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.StorageIdMapTableDef.TABLE_NAME);
           } else if (e == BlockLookUpDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.BlockLookUpTableDef.TABLE_NAME);
           } else if (e == SafeBlocksDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.SafeBlocksTableDef.TABLE_NAME);
           } else if (e == MisReplicatedRangeQueueDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.MisReplicatedRangeQueueTableDef.TABLE_NAME);
           } else if (e == QuotaUpdateDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.QuotaUpdateTableDef.TABLE_NAME);
           } else if (e == EncodingStatusDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.EncodingStatusTableDef.TABLE_NAME);
           } else if (e == BlockChecksumDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.BlockChecksumTableDef.TABLE_NAME);
           } else if (e == MetadataLogDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.MetadataLogTableDef.TABLE_NAME);
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.MetadataLogTableDef.LOOKUP_TABLE_NAME);
           } else if (e == AccessTimeLogDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.AccessTimeLogTableDef.TABLE_NAME);
           } else if (e == SizeLogDataAccess.class) {
-            MysqlServerConnector.truncateTable(transactional,
+            this.mysqlConnector.truncateTable(transactional,
                 io.hops.metadata.hdfs.TablesDef.SizeLogTableDef.TABLE_NAME);
           } else if (e == EncodingJobsDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.EncodingJobsTableDef.TABLE_NAME);
           } else if (e == RepairJobsDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.RepairJobsTableDef.TABLE_NAME);
           } else if (e == UserDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.UsersTableDef.TABLE_NAME);
-          }else if (e == GroupDataAccess.class) {
-            MysqlServerConnector
+          } else if (e == GroupDataAccess.class) {
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.GroupsTableDef.TABLE_NAME);
-          }else if (e == UserGroupDataAccess.class) {
-            MysqlServerConnector
+          } else if (e == UserGroupDataAccess.class) {
+            this.mysqlConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.UsersGroupsTableDef.TABLE_NAME);
           } else if (e == YarnLeDescriptorDataAccess.class) {
-            MysqlServerConnector
+            this.mysqlConnector
                 .truncateTable(transactional,
                     TablesDef.YarnLeaderTableDef.TABLE_NAME);
           } else if (e == ContainerIdToCleanDataAccess.class) {
@@ -552,7 +536,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.PriceMultiplicatorTableDef.TABLE_NAME);
           }
         }
-        MysqlServerConnector.truncateTable(transactional,
+        this.mysqlConnector.truncateTable(transactional,
             "hdfs_path_memcached");
         return true;
 
@@ -562,25 +546,20 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     } // end retry loop
     return false;
   }
-  
+
   private void truncate(boolean transactional, String tableName)
       throws StorageException, SQLException {
-    MysqlServerConnector.truncateTable(transactional, tableName);
+    this.mysqlConnector.truncateTable(transactional, tableName);
   }
 
   @Override
   public void dropAndRecreateDB() throws StorageException {
-    MysqlServerConnector.getInstance().dropAndRecreateDB();
+    this.mysqlConnector.dropAndRecreateDB();
   }
-  
+
   @Override
   public void flush() throws StorageException {
-    DBSession dbSession = sessions.get();
-    if (dbSession == null) {
-      dbSession = dbSessionProvider.getSession();
-      sessions.set(dbSession);
-    }
-    dbSession.getSession().flush();
+    obtainSession().flush();
   }
 
   public String getClusterConnectString() {
@@ -590,5 +569,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   public String getDatabaseName() {
     return databaseName;
   }
-  
+
+  public MysqlServerConnector getMysqlConnector() {
+    return this.mysqlConnector;
+  }
 }

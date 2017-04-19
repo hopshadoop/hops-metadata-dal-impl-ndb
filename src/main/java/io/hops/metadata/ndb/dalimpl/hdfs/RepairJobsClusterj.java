@@ -23,6 +23,7 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.RepairJobsDataAccess;
 import io.hops.metadata.hdfs.entity.RepairJob;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -32,13 +33,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class RepairJobsClusterj implements TablesDef.RepairJobsTableDef,
-    RepairJobsDataAccess<RepairJob> {
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
+public class RepairJobsClusterj extends ClusterjDataAccess
+    implements TablesDef.RepairJobsTableDef, RepairJobsDataAccess<RepairJob> {
+
+  public RepairJobsClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface RepairJobDto {
-
     @PrimaryKey
     @Column(name = JT_IDENTIFIER)
     String getJtidentifier();
@@ -69,7 +72,7 @@ public class RepairJobsClusterj implements TablesDef.RepairJobsTableDef,
 
   @Override
   public void add(RepairJob repairJob) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     RepairJobDto dto = createPersistable(repairJob);
     session.makePersistent(dto);
     session.release(dto);
@@ -77,7 +80,7 @@ public class RepairJobsClusterj implements TablesDef.RepairJobsTableDef,
 
   @Override
   public void delete(RepairJob encodingJob) throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     RepairJobDto dto = createPersistable(encodingJob);
     session.deletePersistent(dto);
     session.release(dto);
@@ -85,7 +88,7 @@ public class RepairJobsClusterj implements TablesDef.RepairJobsTableDef,
 
   @Override
   public Collection<RepairJob> findAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<RepairJobDto> dobj =
         qb.createQueryDefinition(RepairJobDto.class);
@@ -95,7 +98,7 @@ public class RepairJobsClusterj implements TablesDef.RepairJobsTableDef,
 
   private RepairJobDto createPersistable(RepairJob repairJob)
       throws StorageException {
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     RepairJobDto dto = session.newInstance(RepairJobDto.class);
     dto.setJtidentifier(repairJob.getJtIdentifier());
     dto.setJobId(repairJob.getJobId());
@@ -118,7 +121,7 @@ public class RepairJobsClusterj implements TablesDef.RepairJobsTableDef,
   }
 
   private List<RepairJob> convertAndRelease(HopsSession session,
-      List<RepairJobDto> dtos) throws StorageException {
+                                            List<RepairJobDto> dtos) throws StorageException {
     ArrayList<RepairJob> list =
         new ArrayList<RepairJob>(dtos.size());
     for (RepairJobDto dto : dtos) {

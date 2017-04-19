@@ -23,26 +23,23 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
-import io.hops.metadata.ndb.wrapper.HopsPredicate;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
+import io.hops.metadata.ndb.wrapper.*;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
 import io.hops.metadata.yarn.entity.UpdatedContainerInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class UpdatedContainerInfoClusterJ
-        implements TablesDef.UpdatedContainerInfoTableDef,
-        UpdatedContainerInfoDataAccess<UpdatedContainerInfo> {
+public class UpdatedContainerInfoClusterJ extends ClusterjDataAccess
+    implements TablesDef.UpdatedContainerInfoTableDef,
+    UpdatedContainerInfoDataAccess<UpdatedContainerInfo> {
+
+  public UpdatedContainerInfoClusterJ(ClusterjConnector connector) {
+    super(connector);
+  }
 
   private static final Log LOG = LogFactory.getLog(UpdatedContainerInfoClusterJ.class);
 
@@ -74,18 +71,16 @@ public class UpdatedContainerInfoClusterJ
 
   }
 
-  private final ClusterjConnector connector = ClusterjConnector.getInstance();
-
   @Override
   public Map<Integer, List<UpdatedContainerInfo>> findByRMNode(String rmnodeid)
-          throws StorageException {
+      throws StorageException {
     LOG.debug("HOP :: ClusterJ UpdatedContainerInfo.findByRMNode - START:" +
         rmnodeid);
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<UpdatedContainerInfoDTO> dobj = qb.
-            createQueryDefinition(UpdatedContainerInfoDTO.class);
+        createQueryDefinition(UpdatedContainerInfoDTO.class);
     HopsPredicate pred1 = dobj.get(RMNODEID).equal(dobj.param(RMNODEID));
     dobj.where(pred1);
 
@@ -104,7 +99,7 @@ public class UpdatedContainerInfoClusterJ
 
   @Override
   public List<UpdatedContainerInfo> findByRMNodeList(
-          String rmnodeid) throws StorageException {
+      String rmnodeid) throws StorageException {
     List<UpdatedContainerInfoDTO> results = findByRMNodeInt(rmnodeid);
     if (results != null && !results.isEmpty()) {
       return createUpdatedContainerInfoList(results);
@@ -113,14 +108,14 @@ public class UpdatedContainerInfoClusterJ
   }
 
   private List<UpdatedContainerInfoDTO> findByRMNodeInt(
-          String rmnodeid) throws StorageException {
+      String rmnodeid) throws StorageException {
     LOG.debug("HOP :: ClusterJ UpdatedContainerInfo.findByRMNode - START:"
-            + rmnodeid);
-    HopsSession session = connector.obtainSession();
+        + rmnodeid);
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<UpdatedContainerInfoDTO> dobj = qb.
-            createQueryDefinition(UpdatedContainerInfoDTO.class);
+        createQueryDefinition(UpdatedContainerInfoDTO.class);
     HopsPredicate pred1 = dobj.get(RMNODEID).equal(dobj.param(RMNODEID));
     dobj.where(pred1);
 
@@ -128,19 +123,19 @@ public class UpdatedContainerInfoClusterJ
     query.setParameter(RMNODEID, rmnodeid);
     List<UpdatedContainerInfoDTO> results = query.getResultList();
     LOG.debug("HOP :: ClusterJ UpdatedContainerInfo.findByRMNode - FINISH:"
-            + rmnodeid);
+        + rmnodeid);
     return results;
   }
 
   @Override
   public Map<String, Map<Integer, List<UpdatedContainerInfo>>> getAll()
-          throws StorageException {
+      throws StorageException {
     LOG.debug("HOP :: ClusterJ UpdatedContainerInfo.findByRMNode - START");
-    HopsSession session = connector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
     HopsQueryDomainType<UpdatedContainerInfoDTO> dobj = qb.
-            createQueryDefinition(UpdatedContainerInfoDTO.class);
+        createQueryDefinition(UpdatedContainerInfoDTO.class);
     HopsQuery<UpdatedContainerInfoDTO> query = session.createQuery(dobj);
 
     List<UpdatedContainerInfoDTO> results = query.getResultList();
@@ -150,10 +145,10 @@ public class UpdatedContainerInfoClusterJ
 
   @Override
   public void addAll(Collection<UpdatedContainerInfo> containers)
-          throws StorageException {
-    HopsSession session = connector.obtainSession();
+      throws StorageException {
+    HopsSession session = getConnector().obtainSession();
     List<UpdatedContainerInfoDTO> toModify =
-        new ArrayList<UpdatedContainerInfoDTO>();
+        new ArrayList<>();
     for (UpdatedContainerInfo entry : containers) {
       toModify.add(createPersistable(entry, session));
     }
@@ -163,10 +158,10 @@ public class UpdatedContainerInfoClusterJ
 
   @Override
   public void removeAll(Collection<UpdatedContainerInfo> containers)
-          throws StorageException {
-    HopsSession session = connector.obtainSession();
+      throws StorageException {
+    HopsSession session = getConnector().obtainSession();
     List<UpdatedContainerInfoDTO> toRemove =
-        new ArrayList<UpdatedContainerInfoDTO>();
+        new ArrayList<>();
     for (UpdatedContainerInfo entry : containers) {
       toRemove.add(createPersistable(entry, session));
     }
@@ -175,7 +170,7 @@ public class UpdatedContainerInfoClusterJ
   }
 
   private UpdatedContainerInfoDTO createPersistable(UpdatedContainerInfo hop,
-          HopsSession session) throws StorageException {
+                                                    HopsSession session) throws StorageException {
     UpdatedContainerInfoDTO dto =
         session.newInstance(UpdatedContainerInfoDTO.class);
     dto.setrmnodeid(hop.getRmnodeid());
@@ -187,58 +182,55 @@ public class UpdatedContainerInfoClusterJ
 
   /**
    * Transforms a DTO to Hop object.
-   *
-   * @param rmDTO
-   * @return HopRMNode
    */
   private UpdatedContainerInfo createHopUpdatedContainerInfo(
-          UpdatedContainerInfoDTO dto) {
+      UpdatedContainerInfoDTO dto) {
     return new UpdatedContainerInfo(dto.getrmnodeid(), dto.getcontainerid(),
-            dto.getupdatedcontainerinfoid(), dto.getpendingeventid());
+        dto.getupdatedcontainerinfoid(), dto.getpendingeventid());
   }
 
   private Map<Integer, List<UpdatedContainerInfo>> createUpdatedContainerInfoMap(
-          List<UpdatedContainerInfoDTO> list) {
+      List<UpdatedContainerInfoDTO> list) {
     Map<Integer, List<UpdatedContainerInfo>> updatedContainerInfos =
         new HashMap<Integer, List<UpdatedContainerInfo>>();
     for (UpdatedContainerInfoDTO persistable : list) {
       if (!updatedContainerInfos.containsKey(persistable.
-              getupdatedcontainerinfoid())) {
+          getupdatedcontainerinfoid())) {
         updatedContainerInfos.put(persistable.getupdatedcontainerinfoid(),
-                new ArrayList<UpdatedContainerInfo>());
+            new ArrayList<UpdatedContainerInfo>());
       }
       updatedContainerInfos.get(persistable.getupdatedcontainerinfoid())
-              .add(createHopUpdatedContainerInfo(persistable));
+          .add(createHopUpdatedContainerInfo(persistable));
     }
     return updatedContainerInfos;
   }
 
   private List<UpdatedContainerInfo> createUpdatedContainerInfoList(
-          List<UpdatedContainerInfoDTO> list) {
+      List<UpdatedContainerInfoDTO> list) {
     List<UpdatedContainerInfo> updatedContainerInfos
-            = new ArrayList<UpdatedContainerInfo>();
+        = new ArrayList<UpdatedContainerInfo>();
     for (UpdatedContainerInfoDTO persistable : list) {
 
       updatedContainerInfos.add(
-              createHopUpdatedContainerInfo(persistable));
+          createHopUpdatedContainerInfo(persistable));
     }
     return updatedContainerInfos;
   }
 
   private Map<String, Map<Integer, List<UpdatedContainerInfo>>> createMap(
-          List<UpdatedContainerInfoDTO> results) {
+      List<UpdatedContainerInfoDTO> results) {
     Map<String, Map<Integer, List<UpdatedContainerInfo>>> map =
         new HashMap<String, Map<Integer, List<UpdatedContainerInfo>>>();
     for (UpdatedContainerInfoDTO persistable : results) {
       UpdatedContainerInfo hop = createHopUpdatedContainerInfo(persistable);
       if (map.get(hop.getRmnodeid()) == null) {
         map.put(hop.getRmnodeid(),
-                new HashMap<Integer, List<UpdatedContainerInfo>>());
+            new HashMap<Integer, List<UpdatedContainerInfo>>());
       }
       if (map.get(hop.getRmnodeid()).get(hop.getUpdatedContainerInfoId()) ==
           null) {
         map.get(hop.getRmnodeid()).put(hop.getUpdatedContainerInfoId(),
-                new ArrayList<UpdatedContainerInfo>());
+            new ArrayList<UpdatedContainerInfo>());
       }
       map.get(hop.getRmnodeid()).get(hop.getUpdatedContainerInfoId()).add(hop);
     }

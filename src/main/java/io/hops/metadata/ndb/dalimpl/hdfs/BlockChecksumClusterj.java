@@ -26,13 +26,9 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.BlockChecksumDataAccess;
 import io.hops.metadata.hdfs.entity.BlockChecksum;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.dalimpl.ClusterjDataAccess;
 import io.hops.metadata.ndb.mysqlserver.HopsSQLExceptionHelper;
-import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
-import io.hops.metadata.ndb.wrapper.HopsPredicate;
-import io.hops.metadata.ndb.wrapper.HopsQuery;
-import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
-import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
-import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.metadata.ndb.wrapper.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -43,14 +39,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class BlockChecksumClusterj
+public class BlockChecksumClusterj extends ClusterjDataAccess
     implements TablesDef.BlockChecksumTableDef, BlockChecksumDataAccess<BlockChecksum> {
 
   static final Log LOG = LogFactory.getLog(BlockChecksumClusterj.class);
 
-  private ClusterjConnector clusterjConnector = ClusterjConnector.getInstance();
-  private MysqlServerConnector mysqlConnector =
-      MysqlServerConnector.getInstance();
+  public BlockChecksumClusterj(ClusterjConnector connector) {
+    super(connector);
+  }
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface BlockChecksumDto {
@@ -75,10 +71,10 @@ public class BlockChecksumClusterj
 
   @Override
   public void add(BlockChecksum blockChecksum) throws StorageException {
-    if(LOG.isInfoEnabled()) {
+    if (LOG.isInfoEnabled()) {
       LOG.info("ADD " + blockChecksum.toString());
     }
-    HopsSession session = clusterjConnector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     BlockChecksumDto dto = session.newInstance(BlockChecksumDto.class);
     copyState(blockChecksum, dto);
     session.makePersistent(dto);
@@ -87,10 +83,10 @@ public class BlockChecksumClusterj
 
   @Override
   public void update(BlockChecksum blockChecksum) throws StorageException {
-    if(LOG.isInfoEnabled()) {
+    if (LOG.isInfoEnabled()) {
       LOG.info("UPDATE " + blockChecksum.toString());
     }
-    HopsSession session = clusterjConnector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     BlockChecksumDto dto = session.newInstance(BlockChecksumDto.class);
     copyState(blockChecksum, dto);
     session.updatePersistent(dto);
@@ -99,10 +95,10 @@ public class BlockChecksumClusterj
 
   @Override
   public void delete(BlockChecksum blockChecksum) throws StorageException {
-    if(LOG.isInfoEnabled()) {
+    if (LOG.isInfoEnabled()) {
       LOG.info("DELETE " + blockChecksum.toString());
     }
-    HopsSession session = clusterjConnector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     BlockChecksumDto dto = session.newInstance(BlockChecksumDto.class);
     copyState(blockChecksum, dto);
     session.deletePersistent(dto);
@@ -112,13 +108,13 @@ public class BlockChecksumClusterj
   @Override
   public BlockChecksum find(int inodeId, int blockIndex)
       throws StorageException {
-    HopsSession session = clusterjConnector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     BlockChecksumDto dto =
         session.find(BlockChecksumDto.class, new Object[]{inodeId, blockIndex});
     if (dto == null) {
       return null;
     }
-    
+
     BlockChecksum bcs = createBlockChecksum(dto);
     session.release(dto);
     return bcs;
@@ -127,7 +123,7 @@ public class BlockChecksumClusterj
   @Override
   public Collection<BlockChecksum> findAll(int inodeId)
       throws StorageException {
-    HopsSession session = clusterjConnector.obtainSession();
+    HopsSession session = getConnector().obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<BlockChecksumDto> dobj =
         qb.createQueryDefinition(BlockChecksumDto.class);
@@ -145,14 +141,14 @@ public class BlockChecksumClusterj
   public void deleteAll(int inodeId) throws StorageException {
     final String query =
         String.format("DELETE FROM block_checksum WHERE %s=%d");
+    Connection conn = getMysqlConnector().obtainSession();
     try {
-      Connection conn = mysqlConnector.obtainSession();
       PreparedStatement s = conn.prepareStatement(query);
       s.executeQuery();
     } catch (SQLException ex) {
       throw HopsSQLExceptionHelper.wrap(ex);
     } finally {
-      mysqlConnector.closeSession();
+      getMysqlConnector().closeSession();
     }
   }
 
