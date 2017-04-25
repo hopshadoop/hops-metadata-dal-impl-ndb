@@ -18,10 +18,14 @@
  */
 package io.hops.metadata.ndb.mysqlserver;
 
+import com.mysql.jdbc.MysqlErrorNumbers;
 import io.hops.exception.StorageException;
 import io.hops.exception.TransientStorageException;
 
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
+import java.sql.SQLRecoverableException;
+import java.sql.SQLTransientException;
 
 public class HopsSQLExceptionHelper {
   public static StorageException wrap(SQLException e) {
@@ -33,7 +37,16 @@ public class HopsSQLExceptionHelper {
   }
 
   private static boolean isTransient(SQLException e) {
-    // TODO identify transient exceptions
+    if (e instanceof SQLTransientException) {
+      return true;
+    } else if (e instanceof SQLRecoverableException) {
+      return true;
+    } else if (e instanceof SQLNonTransientException) {
+      return false;
+    } else if (e.getErrorCode() == MysqlErrorNumbers.ER_LOCK_WAIT_TIMEOUT) {
+      //Lock wait timeout exceeded; try restarting transaction
+      return true;
+    }
     return false;
   }
 }
