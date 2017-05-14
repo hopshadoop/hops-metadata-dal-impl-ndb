@@ -385,23 +385,6 @@ CREATE TABLE `hdfs_inode_dataset_lookup` (
 
 delimiter $$
 
-CREATE TABLE `hdfs_access_log` (
-  `inode_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `access_time` bigint(20) NOT NULL,
-  PRIMARY KEY (`inode_id` , `user_id` , `access_time`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
-
-delimiter $$
-
-CREATE TABLE `hdfs_size_log` (
-  `inode_id` int(11) NOT NULL,
-  `size` bigint(20) NOT NULL,
-  PRIMARY KEY (`inode_id` , `size`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
-
-delimiter $$
-
 CREATE TABLE `yarn_rmnode` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `hostname` VARCHAR(255) NULL,
