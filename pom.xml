@@ -90,7 +90,7 @@
                 <exec command="cp classes/libhopsyarn.so classes/libhopsyarn-1.0.so" dir="${project.build.directory}" failonerror="true">
                 </exec>
                 <exec command="mvn install:install-file -Dfile=target/classes/libhopsyarn.so -DgroupId=io.hops.streaming 
-                            -DartifactId=libhopsyarn -Dversion=1.0 -Dpackaging=so -DlocalRepositoryPath=${maven.repo.local}" 
+                            -DartifactId=libhopsyarn -Dversion=1.0 -Dpackaging=so -DlocalRepositoryPath=${settings.localRepository}" 
                               dir="${project.build.directory}/.." failonerror="true">
                 </exec>
               </target>
