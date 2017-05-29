@@ -76,10 +76,7 @@ public class UserClusterj implements TablesDef.UsersTableDef, UserDataAccess<Use
     HopsSession session = connector.obtainSession();
     User user = getUser(session, userName);
     if(user == null){
-      UserDTO dto = session.newInstance(UserDTO.class);
-      dto.setName(userName);
-      session.makePersistent(dto);
-      session.release(dto);
+      addUser(session, userName);
       session.flush();
       user = getUser(session, userName);
     }
@@ -89,9 +86,25 @@ public class UserClusterj implements TablesDef.UsersTableDef, UserDataAccess<Use
   @Override
   public void removeUser(int userId) throws StorageException {
     HopsSession session = connector.obtainSession();
-    UserDTO dto = session.newInstance(UserDTO.class, userId);
-    session.deletePersistent(dto);
-    session.release(dto);
+    UserDTO dto = null;
+    try {
+      dto = session.newInstance(UserDTO.class, userId);
+      session.deletePersistent(dto);
+    }finally {
+      session.release(dto);
+    }
+  }
+
+  private void addUser(HopsSession session, final String userName)
+      throws StorageException {
+    UserDTO dto = null;
+    try {
+      dto = session.newInstance(UserDTO.class);
+      dto.setName(userName);
+      session.makePersistent(dto);
+    }finally {
+      session.release(dto);
+    }
   }
 
   private User getUser(HopsSession session, final String userName) throws

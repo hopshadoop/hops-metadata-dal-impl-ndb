@@ -175,36 +175,37 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     HopsSession session = connector.obtainSession();
     List<InodeDTO> changes = new ArrayList<InodeDTO>();
     List<InodeDTO> deletions = new ArrayList<InodeDTO>();
-    for (INode inode : removed) {
-      Object[] pk = new Object[3];
-      pk[0] = inode.getPartitionId();
-      pk[1] = inode.getParentId();
-      pk[2] = inode.getName();
-      InodeDTO persistable = session.newInstance(InodeDTO.class, pk);
-      deletions.add(persistable);
-    }
+    try {
+      for (INode inode : removed) {
+        Object[] pk = new Object[3];
+        pk[0] = inode.getPartitionId();
+        pk[1] = inode.getParentId();
+        pk[2] = inode.getName();
+        InodeDTO persistable = session.newInstance(InodeDTO.class, pk);
+        deletions.add(persistable);
+      }
 
-    for (INode inode : newEntries) {
-      InodeDTO persistable = session.newInstance(InodeDTO.class);
-      createPersistable(inode, persistable);
-      changes.add(persistable);
-    }
+      for (INode inode : newEntries) {
+        InodeDTO persistable = session.newInstance(InodeDTO.class);
+        createPersistable(inode, persistable);
+        changes.add(persistable);
+      }
 
-    for (INode inode : modified) {
-      InodeDTO persistable = session.newInstance(InodeDTO.class);
-      createPersistable(inode, persistable);
-      changes.add(persistable);
+      for (INode inode : modified) {
+        InodeDTO persistable = session.newInstance(InodeDTO.class);
+        createPersistable(inode, persistable);
+        changes.add(persistable);
+      }
+      session.deletePersistentAll(deletions);
+      session.savePersistentAll(changes);
+    }finally {
+      session.release(deletions);
+      session.release(changes);
     }
-    session.deletePersistentAll(deletions);
-    session.savePersistentAll(changes);
-    
-    session.release(deletions);
-    session.release(changes);
   }
 
   @Override
   public INode findInodeByIdFTIS(int inodeId) throws StorageException {
-    //System.out.println("*** pruneScanfindInodeById, Id "+inodeId);
     HopsSession session = connector.obtainSession();
 
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -216,18 +217,22 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     HopsQuery<InodeDTO> query = session.createQuery(dobj);
     query.setParameter("idParam", inodeId);
 
-    List<InodeDTO> results = query.getResultList();
+    List<InodeDTO> results = null;
 
-    if (results.size() > 1) {
-      throw new StorageException("Fetching inode by id:"+inodeId+". Only one record was expected. Found: "+results.size());
-    }
-    
-    if (results.size() == 1) {
-      INode inode = convert(results.get(0));
+    try {
+      results = query.getResultList();
+      if (results.size() > 1) {
+        throw new StorageException("Fetching inode by id:" + inodeId + ". Only one record was expected. Found: " + results.size());
+      }
+
+      if (results.size() == 1) {
+        INode inode = convert(results.get(0));
+        return inode;
+      } else {
+        return null;
+      }
+    }finally {
       session.release(results);
-      return inode;
-    } else {
-      return null;
     }
   }
 
@@ -246,10 +251,14 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     HopsQuery<InodeDTO> query = session.createQuery(dobj);
     query.setParameter("parentIDParam", parentId);
 
-    List<InodeDTO> results = query.getResultList();
-    List<INode> inodeList = convert(results);
-    session.release(results);
-    return inodeList;
+    List<InodeDTO> results = null;
+    try {
+      results = query.getResultList();
+      List<INode> inodeList = convert(results);
+      return inodeList;
+    }finally {
+      session.release(results);
+    }
   }
 
   @Override
@@ -267,18 +276,21 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     query.setParameter("partitionIDParam", partitionId);
     query.setParameter("parentIDParam", parentId);
 
-    explain(query);
-
-    List<InodeDTO> results = query.getResultList();
-    List<INode> inodeList = convert(results);
-    session.release(results);
-    return inodeList;
+    List<InodeDTO> results = null;
+    try {
+      results = query.getResultList();
+      List<INode> inodeList = convert(results);
+      return inodeList;
+    }finally{
+      session.release(results);
+    }
   }
 
   @Override
   public List<ProjectedINode> findInodesForSubtreeOperationsWithWriteLockFTIS(
       int parentId) throws StorageException {
     HopsSession session = connector.obtainSession();
+    List<InodeDTO> results = null;
     try {
       session.currentTransaction().begin();
       session.setLockMode(LockMode.EXCLUSIVE);
@@ -291,16 +303,17 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
       query.setParameter("parentIDParam", parentId);
 
       ArrayList<ProjectedINode> resultList = new ArrayList<ProjectedINode>();
-      List<InodeDTO> results = query.getResultList();
+      results = query.getResultList();
       for (InodeDTO inode : results) {
         resultList.add(createProjectedINode(inode));
       }
-      session.release(results);
       session.currentTransaction().commit();
       return resultList;
     }catch(StorageException e){
       session.currentTransaction().rollback();
       throw e;
+    } finally {
+      session.release(results);
     }
   }
 
@@ -364,6 +377,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   public List<ProjectedINode> findInodesForSubtreeOperationsWithWriteLockPPIS(
           int parentId, int partitionId) throws StorageException {
     HopsSession session = connector.obtainSession();
+    List<InodeDTO>  results = null;
     try {
       session.currentTransaction().begin();
       session.setLockMode(LockMode.EXCLUSIVE);
@@ -378,16 +392,17 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
       query.setParameter("parentIDParam", parentId);
 
       ArrayList<ProjectedINode> resultList = new ArrayList<ProjectedINode>();
-      List<InodeDTO> results = query.getResultList();
+      results = query.getResultList();
       for (InodeDTO inode : results) {
         resultList.add(createProjectedINode(inode));
       }
-      session.release(results);
       session.currentTransaction().commit();
       return resultList;
     }catch(StorageException e){
       session.currentTransaction().rollback();
       throw e;
+    } finally {
+      session.release(results);
     }
   }
 //  public List<ProjectedINode> findInodesForSubtreeOperationsWithWriteLockPPIS(
@@ -454,17 +469,20 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     HopsSession session = connector.obtainSession();
 
     List<InodeDTO> dtos = new ArrayList<InodeDTO>();
-    for (int i =  0; i < names.length; i++) {
-      InodeDTO dto = session
-          .newInstance(InodeDTO.class, new Object[]{partitionIds[i], parentIds[i],names[i]});
-      dto.setId(NOT_FOUND_ROW);
-      dto = session.load(dto);
-      dtos.add(dto);
+    try {
+      for (int i = 0; i < names.length; i++) {
+        InodeDTO dto = session
+                .newInstance(InodeDTO.class, new Object[]{partitionIds[i], parentIds[i], names[i]});
+        dto.setId(NOT_FOUND_ROW);
+        dto = session.load(dto);
+        dtos.add(dto);
+      }
+      session.flush();
+      List<INode> inodeList = convert(dtos);
+      return inodeList;
+    } finally {
+      session.release(dtos);
     }
-    session.flush();
-    List<INode> inodeList = convert(dtos);
-    session.release(dtos);
-    return inodeList;
   }
 
   private boolean isRoot(INode inode){
@@ -538,7 +556,10 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQuery<InodeDTO> query =
         session.createQuery(qb.createQueryDefinition(InodeDTO.class));
-    return convert(query.getResultList());
+    List<InodeDTO> dtos = query.getResultList();
+    List<INode> list = convert(dtos);
+    session.release(dtos);
+    return list;
   }
   
   @Override

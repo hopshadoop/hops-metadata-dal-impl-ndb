@@ -70,17 +70,25 @@ public class RepairJobsClusterj implements TablesDef.RepairJobsTableDef,
   @Override
   public void add(RepairJob repairJob) throws StorageException {
     HopsSession session = connector.obtainSession();
-    RepairJobDto dto = createPersistable(repairJob);
-    session.makePersistent(dto);
-    session.release(dto);
+    RepairJobDto dto = null;
+    try {
+      dto = createPersistable(repairJob);
+      session.makePersistent(dto);
+    }finally {
+      session.release(dto);
+    }
   }
 
   @Override
   public void delete(RepairJob encodingJob) throws StorageException {
     HopsSession session = connector.obtainSession();
-    RepairJobDto dto = createPersistable(encodingJob);
-    session.deletePersistent(dto);
-    session.release(dto);
+    RepairJobDto dto = null;
+    try {
+      dto = createPersistable(encodingJob);
+      session.deletePersistent(dto);
+    }finally {
+      session.release(dto);
+    }
   }
 
   @Override

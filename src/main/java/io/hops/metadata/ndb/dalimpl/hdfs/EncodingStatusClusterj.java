@@ -128,31 +128,43 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   @Override
   public void add(EncodingStatus status) throws StorageException {
     LOG.info("ADD " + status.toString());
+    EncodingStatusDto dto = null;
     HopsSession session = clusterjConnector.obtainSession();
-    EncodingStatusDto dto = session.newInstance(EncodingStatusDto.class);
-    copyState(status, dto);
-    session.savePersistent(dto);
-    session.release(dto);
+    try {
+      dto = session.newInstance(EncodingStatusDto.class);
+      copyState(status, dto);
+      session.savePersistent(dto);
+    } finally {
+      session.release(dto);
+    }
   }
 
   @Override
   public void update(EncodingStatus status) throws StorageException {
     LOG.info("UPDATE " + status.toString());
     HopsSession session = clusterjConnector.obtainSession();
-    EncodingStatusDto dto = session.newInstance(EncodingStatusDto.class);
-    copyState(status, dto);
-    session.savePersistent(dto);
-    session.release(dto);
+    EncodingStatusDto dto = null;
+    try {
+      dto = session.newInstance(EncodingStatusDto.class);
+      copyState(status, dto);
+      session.savePersistent(dto);
+    }finally {
+      session.release(dto);
+    }
   }
 
   @Override
   public void delete(EncodingStatus status) throws StorageException {
     HopsSession session = clusterjConnector.obtainSession();
-    EncodingStatusDto dto = session.newInstance(EncodingStatusDto.class);
-    copyState(status, dto);
-    LOG.info("Delte " + status);
-    session.deletePersistent(dto);
-    session.release(dto);
+    EncodingStatusDto dto = null;
+    try {
+      dto = session.newInstance(EncodingStatusDto.class);
+      copyState(status, dto);
+      LOG.info("Delete " + status);
+      session.deletePersistent(dto);
+    } finally {
+      session.release(dto);
+    }
   }
 
   private void copyState(EncodingStatus status, EncodingStatusDto dto) {

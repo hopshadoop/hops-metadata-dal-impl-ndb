@@ -55,20 +55,26 @@ public class VariableClusterj
   @Override
   public Variable getVariable(Variable.Finder varType) throws StorageException {
     HopsSession session = connector.obtainSession();
-    VariableDTO var = session.find(VariableDTO.class, varType.getId());
-    if (var == null) {
+    VariableDTO vd = session.find(VariableDTO.class, varType.getId());
+    if (vd == null) {
       throw new StorageException(
           "There is no variable entry with id " + varType.getId());
     }
-    return Variable.initVariable(varType, var.getValue());
+    Variable var = Variable.initVariable(varType, vd.getValue());
+    session.release(vd);
+    return var;
   }
 
   @Override
   public void setVariable(Variable var) throws StorageException {
     HopsSession session = connector.obtainSession();
-    VariableDTO vd = createVariableDTO(session, var);
-    session.savePersistent(vd);
-    session.release(vd);
+    VariableDTO vd = null;
+    try {
+      vd = createVariableDTO(session, var);
+      session.savePersistent(vd);
+    }finally {
+      session.release(vd);
+    }
   }
 
   @Override
@@ -85,24 +91,30 @@ public class VariableClusterj
       throws StorageException {
     if (vars != null) {
       List<VariableDTO> removed = new ArrayList<VariableDTO>();
-      for (Variable var : vars) {
-        VariableDTO vd =
-            session.newInstance(VariableDTO.class, var.getType().getId());
-        removed.add(vd);
+      try {
+        for (Variable var : vars) {
+          VariableDTO vd =
+              session.newInstance(VariableDTO.class, var.getType().getId());
+          removed.add(vd);
+        }
+        session.deletePersistentAll(removed);
+      }finally {
+        session.release(removed);
       }
-      session.deletePersistentAll(removed);
-      session.release(removed);
     }
   }
 
   private void updateVariables(HopsSession session, Collection<Variable> vars)
       throws StorageException {
     List<VariableDTO> changes = new ArrayList<VariableDTO>();
-    for (Variable var : vars) {
-      changes.add(createVariableDTO(session, var));
+    try {
+      for (Variable var : vars) {
+        changes.add(createVariableDTO(session, var));
+      }
+      session.savePersistentAll(changes);
+    }finally {
+      session.release(changes);
     }
-    session.savePersistentAll(changes);
-    session.release(changes);
   }
 
   private VariableDTO createVariableDTO(HopsSession session, Variable var)

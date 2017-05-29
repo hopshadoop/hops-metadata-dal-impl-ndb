@@ -47,28 +47,32 @@ public class MisReplicatedRangeQueueClusterj
 
   @Override
   public void insert(long start, long end) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    MisReplicatedRangeQueueDTO dto = null;
     try {
-      HopsSession session = connector.obtainSession();
-      MisReplicatedRangeQueueDTO dto = session
-          .newInstance(MisReplicatedRangeQueueDTO.class, getRange(start, end));
+      dto = session.newInstance(MisReplicatedRangeQueueDTO.class, getRange
+          (start, end));
       session.savePersistent(dto);
-      session.release(dto);
     } catch (Exception e) {
       throw new StorageException(e);
+    } finally {
+      session.release(dto);
     }
 
   }
 
   @Override
   public void remove(long start, long end) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    MisReplicatedRangeQueueDTO oldR = null;
     try {
-      HopsSession session = connector.obtainSession();
-      MisReplicatedRangeQueueDTO oldR = session
-          .newInstance(MisReplicatedRangeQueueDTO.class, getRange(start, end));
+      oldR = session.newInstance(MisReplicatedRangeQueueDTO.class, getRange
+          (start, end));
       session.deletePersistent(oldR);
-      session.release(oldR);
     } catch (Exception e) {
       throw new StorageException(e);
+    }finally {
+      session.release(oldR);
     }
   }
 

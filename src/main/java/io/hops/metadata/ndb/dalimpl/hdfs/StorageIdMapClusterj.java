@@ -57,11 +57,15 @@ public class StorageIdMapClusterj
   @Override
   public void add(StorageId s) throws StorageException {
     HopsSession session = connector.obtainSession();
-    StorageIdDTO sdto = session.newInstance(StorageIdDTO.class);
-    sdto.setSId(s.getsId());
-    sdto.setStorageId(s.getStorageId());
-    session.savePersistent(sdto);
-    session.release(sdto);
+    StorageIdDTO sdto = null;
+    try {
+      sdto = session.newInstance(StorageIdDTO.class);
+      sdto.setSId(s.getsId());
+      sdto.setStorageId(s.getStorageId());
+      session.savePersistent(sdto);
+    }finally {
+      session.release(sdto);
+    }
   }
 
   @Override

@@ -132,6 +132,7 @@ public class ReplicaClusterj
     for(ReplicaDTO dto : res){
       map.put(dto.getBlockId(), dto.getINodeId() );
     }
+    session.release(res);
     return map;
   }
 
@@ -142,28 +143,30 @@ public class ReplicaClusterj
     List<ReplicaDTO> changes = new ArrayList<ReplicaDTO>();
     List<ReplicaDTO> deletions = new ArrayList<ReplicaDTO>();
     HopsSession session = connector.obtainSession();
-    for (Replica replica : removed) {
-      ReplicaDTO newInstance = session.newInstance(ReplicaDTO.class);
-      createPersistable(replica, newInstance);
-      deletions.add(newInstance);
-    }
+    try {
+      for (Replica replica : removed) {
+        ReplicaDTO newInstance = session.newInstance(ReplicaDTO.class);
+        createPersistable(replica, newInstance);
+        deletions.add(newInstance);
+      }
 
-    for (Replica replica : newed) {
-      ReplicaDTO newInstance = session.newInstance(ReplicaDTO.class);
-      createPersistable(replica, newInstance);
-      changes.add(newInstance);
-    }
+      for (Replica replica : newed) {
+        ReplicaDTO newInstance = session.newInstance(ReplicaDTO.class);
+        createPersistable(replica, newInstance);
+        changes.add(newInstance);
+      }
 
-    for (Replica replica : modified) {
-      ReplicaDTO newInstance = session.newInstance(ReplicaDTO.class);
-      createPersistable(replica, newInstance);
-      changes.add(newInstance);
+      for (Replica replica : modified) {
+        ReplicaDTO newInstance = session.newInstance(ReplicaDTO.class);
+        createPersistable(replica, newInstance);
+        changes.add(newInstance);
+      }
+      session.deletePersistentAll(deletions);
+      session.savePersistentAll(changes);
+    }finally {
+      session.release(deletions);
+      session.release(changes);
     }
-    session.deletePersistentAll(deletions);
-    session.savePersistentAll(changes);
-
-    session.release(deletions);
-    session.release(changes);
   }
 
   @Override

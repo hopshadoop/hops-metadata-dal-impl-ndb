@@ -82,10 +82,7 @@ public class GroupClusterj implements TablesDef.GroupsTableDef, GroupDataAccess<
     HopsSession session = connector.obtainSession();
     Group group = getGroup(session, groupName);
     if(group == null){
-      GroupDTO dto = session.newInstance(GroupDTO.class);
-      dto.setName(groupName);
-      session.makePersistent(dto);
-      session.release(dto);
+      addGroup(session, groupName);
       session.flush();
       group = getGroup(session, groupName);
     }
@@ -95,20 +92,35 @@ public class GroupClusterj implements TablesDef.GroupsTableDef, GroupDataAccess<
   @Override
   public void removeGroup(int groupId) throws StorageException {
     HopsSession session = connector.obtainSession();
-    GroupDTO dto = session.newInstance(GroupDTO.class, groupId);
-    session.deletePersistent(dto);
-    session.release(dto);
+    GroupDTO dto = null;
+    try {
+      dto = session.newInstance(GroupDTO.class, groupId);
+      session.deletePersistent(dto);
+    }finally {
+      session.release(dto);
+    }
   }
 
-  static List<Group> convertAndRelease(HopsSession session, Collection<GroupDTO>
+  static List<Group> convert(HopsSession session, Collection<GroupDTO>
       dtos)
       throws StorageException {
     List<Group> groups = Lists.newArrayListWithExpectedSize(dtos.size());
     for(GroupDTO dto : dtos){
       groups.add(new Group(dto.getId(), dto.getName()));
-      session.release(dto);
     }
     return groups;
+  }
+
+  private void addGroup(HopsSession session, String groupName)
+      throws StorageException {
+    GroupDTO dto = null;
+    try {
+      dto = session.newInstance(GroupDTO.class);
+      dto.setName(groupName);
+      session.makePersistent(dto);
+    }finally {
+      session.release(dto);
+    }
   }
 
   private Group getGroup(HopsSession session, final String groupName) throws

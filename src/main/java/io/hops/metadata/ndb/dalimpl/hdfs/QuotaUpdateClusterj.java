@@ -82,23 +82,25 @@ public class QuotaUpdateClusterj
     HopsSession session = connector.obtainSession();
     List<QuotaUpdateDTO> changes = new ArrayList<QuotaUpdateDTO>();
     List<QuotaUpdateDTO> deletions = new ArrayList<QuotaUpdateDTO>();
-    if (removed != null) {
-      for (QuotaUpdate update : removed) {
-        QuotaUpdateDTO persistable = createPersistable(update, session);
-        deletions.add(persistable);
+    try {
+      if (removed != null) {
+        for (QuotaUpdate update : removed) {
+          QuotaUpdateDTO persistable = createPersistable(update, session);
+          deletions.add(persistable);
+        }
       }
-    }
-    if (added != null) {
-      for (QuotaUpdate update : added) {
-        QuotaUpdateDTO persistable = createPersistable(update, session);
-        changes.add(persistable);
+      if (added != null) {
+        for (QuotaUpdate update : added) {
+          QuotaUpdateDTO persistable = createPersistable(update, session);
+          changes.add(persistable);
+        }
       }
+      session.deletePersistentAll(deletions);
+      session.savePersistentAll(changes);
+    }finally {
+      session.release(deletions);
+      session.release(changes);
     }
-    session.deletePersistentAll(deletions);
-    session.savePersistentAll(changes);
-
-    session.release(deletions);
-    session.release(changes);
   }
 
   private static final String FIND_QUERY =
