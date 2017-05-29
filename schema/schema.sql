@@ -113,7 +113,7 @@ BEGIN
 		select "The LogFile undo_log_0.log has already been created" as "";
 	END IF;
 
-	
+
 	SELECT count(TABLESPACE_NAME) INTO tc FROM INFORMATION_SCHEMA.FILES where TABLESPACE_NAME="ts_1";
 	IF (tc = 0) THEN
 		CREATE TABLESPACE ts_1 ADD datafile 'data_file_0.dat' use LOGFILE GROUP lg_1 INITIAL_SIZE = 2048M  ENGINE ndbcluster;
@@ -124,7 +124,7 @@ END$$
 
 delimiter $$
 
-CALL simpleproc$$ 
+CALL simpleproc$$
 
 delimiter $$
 
@@ -151,7 +151,7 @@ delimiter $$
   `data` blob NOT NULL,
   PRIMARY KEY (`inode_id`)
 ) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
-/*!50100 PARTITION BY KEY (inode_id) */$$ 
+/*!50100 PARTITION BY KEY (inode_id) */$$
 
 delimiter $$
 
@@ -297,6 +297,7 @@ CREATE TABLE `hdfs_replica_under_constructions` (
   `block_id` bigint(20) NOT NULL,
   `storage_id` int(11) NOT NULL,
   `state` int(11) DEFAULT NULL,
+  `bucket_id` int(11) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
@@ -308,8 +309,10 @@ CREATE TABLE `hdfs_replicas` (
   `inode_id` int(11) NOT NULL,
   `block_id` bigint(20) NOT NULL,
   `storage_id` int(11) NOT NULL,
+  `hash_bucket` int(11) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`),
-  KEY `storage_idx` (`storage_id`)
+  KEY `storage_idx` (`storage_id`),
+  KEY `hash_bucket_idx` (`hash_bucket`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
@@ -364,6 +367,16 @@ CREATE TABLE `hdfs_quota_update` (
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
+delimiter $$
+
+CREATE TABLE `hdfs_hash_buckets` (
+  `bucket_id` int(11) NOT NULL,
+  `storage_id` int(11) NOT NULL,
+  `hash` bigint NOT NULL,
+  PRIMARY KEY (`bucket_id`,`storage_id`),
+  KEY `storage_idx` (`storage_id`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs
+/*!50100 PARTITION BY KEY (storage_id) */$$
 
 delimiter $$
 

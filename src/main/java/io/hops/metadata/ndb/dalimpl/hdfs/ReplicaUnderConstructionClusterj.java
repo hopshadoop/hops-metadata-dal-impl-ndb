@@ -68,6 +68,10 @@ public class ReplicaUnderConstructionClusterj
     int getState();
 
     void setState(int state);
+    
+    @Column(name = BUCKET_ID)
+    int getBucketId();
+    void setBucketId(int bucketId);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -150,7 +154,7 @@ public class ReplicaUnderConstructionClusterj
         new ArrayList<>(replicaUc.size());
     for (ReplicaUcDTO t : replicaUc) {
       replicas.add(new ReplicaUnderConstruction(t.getState(), t.getStorageId(),
-          t.getBlockId(), t.getINodeId()));
+          t.getBlockId(), t.getINodeId(), t.getBucketId()));
       session.release(t);
     }
     return replicas;
@@ -162,5 +166,6 @@ public class ReplicaUnderConstructionClusterj
     newInstance.setStorageId(replica.getStorageId());
     newInstance.setState(replica.getState());
     newInstance.setINodeId(replica.getInodeId());
+    newInstance.setBucketId(replica.getBucketId());
   }
 }
