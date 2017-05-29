@@ -92,23 +92,26 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     HopsSession dbSession = connector.obtainSession();
     List<CorruptReplicaDTO> changes = new ArrayList<CorruptReplicaDTO>();
     List<CorruptReplicaDTO> deletions = new ArrayList<CorruptReplicaDTO>();
-    for (CorruptReplica corruptReplica : removed) {
-      CorruptReplicaDTO newInstance =
-          dbSession.newInstance(CorruptReplicaDTO.class);
-      createPersistable(corruptReplica, newInstance);
-      deletions.add(newInstance);
-    }
+    try {
+      for (CorruptReplica corruptReplica : removed) {
+        CorruptReplicaDTO newInstance =
+                dbSession.newInstance(CorruptReplicaDTO.class);
+        createPersistable(corruptReplica, newInstance);
+        deletions.add(newInstance);
+      }
 
-    for (CorruptReplica corruptReplica : newed) {
-      CorruptReplicaDTO newInstance =
-          dbSession.newInstance(CorruptReplicaDTO.class);
-      createPersistable(corruptReplica, newInstance);
-      changes.add(newInstance);
+      for (CorruptReplica corruptReplica : newed) {
+        CorruptReplicaDTO newInstance =
+                dbSession.newInstance(CorruptReplicaDTO.class);
+        createPersistable(corruptReplica, newInstance);
+        changes.add(newInstance);
+      }
+      dbSession.deletePersistentAll(deletions);
+      dbSession.savePersistentAll(changes);
+    }finally {
+      dbSession.release(deletions);
+      dbSession.release(changes);
     }
-    dbSession.deletePersistentAll(deletions);
-    dbSession.savePersistentAll(changes);
-    dbSession.release(deletions);
-    dbSession.release(changes);
   }
 
   @Override

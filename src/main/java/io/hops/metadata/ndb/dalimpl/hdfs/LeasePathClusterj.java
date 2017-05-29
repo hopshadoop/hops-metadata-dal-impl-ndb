@@ -25,7 +25,6 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
-import static io.hops.metadata.hdfs.TablesDef.LeasePathTableDef.HOLDER_ID;
 import io.hops.metadata.hdfs.dal.LeasePathDataAccess;
 import io.hops.metadata.hdfs.entity.LeasePath;
 import io.hops.metadata.ndb.ClusterjConnector;
@@ -75,29 +74,32 @@ public class LeasePathClusterj
     List<LeasePathsDTO> changes = new ArrayList<LeasePathsDTO>();
     List<LeasePathsDTO> deletions = new ArrayList<LeasePathsDTO>();
     HopsSession dbSession = connector.obtainSession();
-    for (LeasePath lp : newed) {
-      LeasePathsDTO lTable = dbSession.newInstance(LeasePathsDTO.class);
-      createPersistableLeasePathInstance(lp, lTable);
-      changes.add(lTable);
-    }
+    try {
+      for (LeasePath lp : newed) {
+        LeasePathsDTO lTable = dbSession.newInstance(LeasePathsDTO.class);
+        createPersistableLeasePathInstance(lp, lTable);
+        changes.add(lTable);
+      }
 
-    for (LeasePath lp : modified) {
-      LeasePathsDTO lTable = dbSession.newInstance(LeasePathsDTO.class);
-      createPersistableLeasePathInstance(lp, lTable);
-      changes.add(lTable);
-    }
+      for (LeasePath lp : modified) {
+        LeasePathsDTO lTable = dbSession.newInstance(LeasePathsDTO.class);
+        createPersistableLeasePathInstance(lp, lTable);
+        changes.add(lTable);
+      }
 
-    for (LeasePath lp : removed) {
-      Object[] key = new Object[2];
-      key[0] = lp.getHolderId();
-      key[1] = lp.getPath();
-      LeasePathsDTO lTable = dbSession.newInstance(LeasePathsDTO.class, key);
-      deletions.add(lTable);
+      for (LeasePath lp : removed) {
+        Object[] key = new Object[2];
+        key[0] = lp.getHolderId();
+        key[1] = lp.getPath();
+        LeasePathsDTO lTable = dbSession.newInstance(LeasePathsDTO.class, key);
+        deletions.add(lTable);
+      }
+      dbSession.deletePersistentAll(deletions);
+      dbSession.savePersistentAll(changes);
+    }finally {
+      dbSession.release(deletions);
+      dbSession.release(changes);
     }
-    dbSession.deletePersistentAll(deletions);
-    dbSession.savePersistentAll(changes);
-    dbSession.release(deletions);
-    dbSession.release(changes);
   }
 
   @Override
@@ -128,15 +130,20 @@ public class LeasePathClusterj
     dobj.where(pred1);
     HopsQuery<LeasePathsDTO> query = dbSession.createQuery(dobj);
     query.setParameter("param1", path);
-    
-    List<LeasePathsDTO> dtos = query.getResultList();
-    if(dtos == null || dtos.size() == 0){
+
+    List<LeasePathsDTO> dtos = null;
+    try {
+      dtos = query.getResultList();
+      if (dtos == null || dtos.isEmpty()) {
         return null;
-    }else if(dtos.size() == 1){
+      } else if (dtos.size() == 1) {
         LeasePath lp = createLeasePath(dtos.get(0));
         return lp;
-    } else {
-        throw new StorageException("Found more than one paths");
+      } else {
+        throw new StorageException("Found more than one path");
+      }
+    }finally {
+      dbSession.release(dtos);
     }
   }
 

@@ -79,22 +79,24 @@ public class ReplicaUnderConstructionClusterj
     HopsSession session = connector.obtainSession();
     List<ReplicaUcDTO> changes = new ArrayList<ReplicaUcDTO>();
     List<ReplicaUcDTO> deletions = new ArrayList<ReplicaUcDTO>();
-    for (ReplicaUnderConstruction replica : removed) {
-      ReplicaUcDTO newInstance = session.newInstance(ReplicaUcDTO.class);
-      createPersistable(replica, newInstance);
-      deletions.add(newInstance);
-    }
+    try {
+      for (ReplicaUnderConstruction replica : removed) {
+        ReplicaUcDTO newInstance = session.newInstance(ReplicaUcDTO.class);
+        createPersistable(replica, newInstance);
+        deletions.add(newInstance);
+      }
 
-    for (ReplicaUnderConstruction replica : newed) {
-      ReplicaUcDTO newInstance = session.newInstance(ReplicaUcDTO.class);
-      createPersistable(replica, newInstance);
-      changes.add(newInstance);
+      for (ReplicaUnderConstruction replica : newed) {
+        ReplicaUcDTO newInstance = session.newInstance(ReplicaUcDTO.class);
+        createPersistable(replica, newInstance);
+        changes.add(newInstance);
+      }
+      session.deletePersistentAll(deletions);
+      session.savePersistentAll(changes);
+    }finally {
+      session.release(deletions);
+      session.release(changes);
     }
-    session.deletePersistentAll(deletions);
-    session.savePersistentAll(changes);
-
-    session.release(deletions);
-    session.release(changes);
   }
 
   @Override

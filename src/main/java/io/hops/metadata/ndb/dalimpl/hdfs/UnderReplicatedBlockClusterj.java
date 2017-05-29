@@ -112,31 +112,33 @@ public class UnderReplicatedBlockClusterj
         new ArrayList<UnderReplicatedBlocksDTO>();
     List<UnderReplicatedBlocksDTO> deletions =
         new ArrayList<UnderReplicatedBlocksDTO>();
-    for (UnderReplicatedBlock urBlock : removed) {
-      UnderReplicatedBlocksDTO newInstance =
-          session.newInstance(UnderReplicatedBlocksDTO.class);
-      createPersistable(urBlock, newInstance);
-      deletions.add(newInstance);
-    }
+    try {
+      for (UnderReplicatedBlock urBlock : removed) {
+        UnderReplicatedBlocksDTO newInstance =
+            session.newInstance(UnderReplicatedBlocksDTO.class);
+        createPersistable(urBlock, newInstance);
+        deletions.add(newInstance);
+      }
 
-    for (UnderReplicatedBlock urBlock : newed) {
-      UnderReplicatedBlocksDTO newInstance =
-          session.newInstance(UnderReplicatedBlocksDTO.class);
-      createPersistable(urBlock, newInstance);
-      changes.add(newInstance);
-    }
+      for (UnderReplicatedBlock urBlock : newed) {
+        UnderReplicatedBlocksDTO newInstance =
+            session.newInstance(UnderReplicatedBlocksDTO.class);
+        createPersistable(urBlock, newInstance);
+        changes.add(newInstance);
+      }
 
-    for (UnderReplicatedBlock urBlock : modified) {
-      UnderReplicatedBlocksDTO newInstance =
-          session.newInstance(UnderReplicatedBlocksDTO.class);
-      createPersistable(urBlock, newInstance);
-      changes.add(newInstance);
+      for (UnderReplicatedBlock urBlock : modified) {
+        UnderReplicatedBlocksDTO newInstance =
+            session.newInstance(UnderReplicatedBlocksDTO.class);
+        createPersistable(urBlock, newInstance);
+        changes.add(newInstance);
+      }
+      session.deletePersistentAll(deletions);
+      session.savePersistentAll(changes);
+    }finally {
+      session.release(deletions);
+      session.release(changes);
     }
-    session.deletePersistentAll(deletions);
-    session.savePersistentAll(changes);
-
-    session.release(deletions);
-    session.release(changes);
   }
 
   private void createPersistable(UnderReplicatedBlock block,

@@ -73,31 +73,37 @@ public class OnGoingSubTreeOpsClusterj
     List<OnGoingSubTreeOpsDTO> changes = new ArrayList<OnGoingSubTreeOpsDTO>();
     List<OnGoingSubTreeOpsDTO> deletions = new ArrayList<OnGoingSubTreeOpsDTO>();
     HopsSession dbSession = connector.obtainSession();
-    for (SubTreeOperation ops : newed) {
-      OnGoingSubTreeOpsDTO lTable = dbSession.newInstance(OnGoingSubTreeOpsDTO.class);
-      createPersistableSubTreeOp(ops, lTable);
-      changes.add(lTable);
-    }
+    try {
+      for (SubTreeOperation ops : newed) {
+        OnGoingSubTreeOpsDTO lTable =
+            dbSession.newInstance(OnGoingSubTreeOpsDTO.class);
+        createPersistableSubTreeOp(ops, lTable);
+        changes.add(lTable);
+      }
 
-    for (SubTreeOperation ops : modified) {
-      OnGoingSubTreeOpsDTO lTable = dbSession.newInstance(OnGoingSubTreeOpsDTO.class);
-      createPersistableSubTreeOp(ops, lTable);
-      changes.add(lTable);
-    }
+      for (SubTreeOperation ops : modified) {
+        OnGoingSubTreeOpsDTO lTable =
+            dbSession.newInstance(OnGoingSubTreeOpsDTO.class);
+        createPersistableSubTreeOp(ops, lTable);
+        changes.add(lTable);
+      }
 
-    for (SubTreeOperation ops : removed) {
-      Object[] key = new Object[2];
-      key[0] = getHash(ops.getPath());
-      key[1] = ops.getPath();
-      OnGoingSubTreeOpsDTO opsTable = dbSession.newInstance(OnGoingSubTreeOpsDTO.class, key);
-      deletions.add(opsTable);
-    }
-    if(!deletions.isEmpty()){
-      dbSession.deletePersistentAll(deletions);
+      for (SubTreeOperation ops : removed) {
+        Object[] key = new Object[2];
+        key[0] = getHash(ops.getPath());
+        key[1] = ops.getPath();
+        OnGoingSubTreeOpsDTO opsTable =
+            dbSession.newInstance(OnGoingSubTreeOpsDTO.class, key);
+        deletions.add(opsTable);
+      }
+      if (!deletions.isEmpty()) {
+        dbSession.deletePersistentAll(deletions);
+      }
+      if (!changes.isEmpty()) {
+        dbSession.savePersistentAll(changes);
+      }
+    }finally {
       dbSession.release(deletions);
-    }
-    if(!changes.isEmpty()){
-      dbSession.savePersistentAll(changes);
       dbSession.release(changes);
     }
   }

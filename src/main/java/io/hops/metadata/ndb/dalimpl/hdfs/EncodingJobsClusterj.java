@@ -65,17 +65,25 @@ public class EncodingJobsClusterj implements TablesDef.EncodingJobsTableDef,
   @Override
   public void add(EncodingJob encodingJob) throws StorageException {
     HopsSession session = connector.obtainSession();
-    EncodingJobDto dto = createPersistable(encodingJob);
-    session.makePersistent(dto);
-    session.release(dto);
+    EncodingJobDto dto = null;
+    try {
+      dto = createPersistable(encodingJob);
+      session.makePersistent(dto);
+    } finally {
+      session.release(dto);
+    }
   }
 
   @Override
   public void delete(EncodingJob encodingJob) throws StorageException {
     HopsSession session = connector.obtainSession();
-    EncodingJobDto dto = createPersistable(encodingJob);
-    session.deletePersistent(dto);
-    session.release(dto);
+    EncodingJobDto dto = null;
+    try {
+      dto = createPersistable(encodingJob);
+      session.deletePersistent(dto);
+    }finally {
+      session.release(dto);
+    }
   }
 
   @Override

@@ -90,22 +90,26 @@ public class INodeAttributesClusterj implements
         new ArrayList<INodeAttributes>();
     List<INodeAttributesDTO> inodeAttributesBatchRequest =
         new ArrayList<INodeAttributesDTO>();
-    for (INodeCandidatePrimaryKey pk : inodePks) {
-      INodeAttributesDTO dto = session.newInstance(INodeAttributesDTO.class);
-      dto.setId(pk.getInodeId());
-      inodeAttributesBatchRequest.add(dto);
-      session.load(dto);
-    }
 
-    session.flush();
+    try {
+      for (INodeCandidatePrimaryKey pk : inodePks) {
+        INodeAttributesDTO dto = session.newInstance(INodeAttributesDTO.class);
+        dto.setId(pk.getInodeId());
+        inodeAttributesBatchRequest.add(dto);
+        session.load(dto);
+      }
 
-    for (int i = 0; i < inodeAttributesBatchRequest.size(); i++) {
-      inodeAttributesBatchResponse
-          .add(makeINodeAttributes(inodeAttributesBatchRequest.get(i)));
+      session.flush();
+
+      for (int i = 0; i < inodeAttributesBatchRequest.size(); i++) {
+        inodeAttributesBatchResponse
+                .add(makeINodeAttributes(inodeAttributesBatchRequest.get(i)));
+      }
+
+      return inodeAttributesBatchResponse;
+    } finally {
+      session.release(inodeAttributesBatchRequest);
     }
-    
-    session.release(inodeAttributesBatchRequest);
-    return inodeAttributesBatchResponse;
   }
 
   @Override
@@ -114,23 +118,26 @@ public class INodeAttributesClusterj implements
     HopsSession session = connector.obtainSession();
     List<INodeAttributesDTO> changes = new ArrayList<INodeAttributesDTO>();
     List<INodeAttributesDTO> deletions = new ArrayList<INodeAttributesDTO>();
-    if (removed != null) {
-      for (INodeAttributes attr : removed) {
-        INodeAttributesDTO persistable =
-            session.newInstance(INodeAttributesDTO.class, attr.getInodeId());
-        deletions.add(persistable);
+    try {
+      if (removed != null) {
+        for (INodeAttributes attr : removed) {
+          INodeAttributesDTO persistable =
+                  session.newInstance(INodeAttributesDTO.class, attr.getInodeId());
+          deletions.add(persistable);
+        }
       }
-    }
-    if (modified != null) {
-      for (INodeAttributes attr : modified) {
-        INodeAttributesDTO persistable = createPersistable(attr, session);
-        changes.add(persistable);
+      if (modified != null) {
+        for (INodeAttributes attr : modified) {
+          INodeAttributesDTO persistable = createPersistable(attr, session);
+          changes.add(persistable);
+        }
       }
+      session.deletePersistentAll(deletions);
+      session.savePersistentAll(changes);
+    } finally {
+      session.release(deletions);
+      session.release(changes);
     }
-    session.deletePersistentAll(deletions);
-    session.savePersistentAll(changes);
-    session.release(deletions);
-    session.release(changes);
   }
 
   private INodeAttributesDTO createPersistable(INodeAttributes attribute,

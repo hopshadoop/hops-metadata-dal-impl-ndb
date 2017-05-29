@@ -78,11 +78,15 @@ public class BlockChecksumClusterj
     if(LOG.isInfoEnabled()) {
       LOG.info("ADD " + blockChecksum.toString());
     }
+    BlockChecksumDto dto = null;
     HopsSession session = clusterjConnector.obtainSession();
-    BlockChecksumDto dto = session.newInstance(BlockChecksumDto.class);
-    copyState(blockChecksum, dto);
-    session.makePersistent(dto);
-    session.release(dto);
+    try {
+      dto = session.newInstance(BlockChecksumDto.class);
+      copyState(blockChecksum, dto);
+      session.makePersistent(dto);
+    }finally {
+      session.release(dto);
+    }
   }
 
   @Override
@@ -91,10 +95,14 @@ public class BlockChecksumClusterj
       LOG.info("UPDATE " + blockChecksum.toString());
     }
     HopsSession session = clusterjConnector.obtainSession();
-    BlockChecksumDto dto = session.newInstance(BlockChecksumDto.class);
-    copyState(blockChecksum, dto);
-    session.updatePersistent(dto);
-    session.release(dto);
+    BlockChecksumDto dto = null;
+    try {
+      dto = session.newInstance(BlockChecksumDto.class);
+      copyState(blockChecksum, dto);
+      session.updatePersistent(dto);
+    }finally {
+      session.release(dto);
+    }
   }
 
   @Override
@@ -103,10 +111,14 @@ public class BlockChecksumClusterj
       LOG.info("DELETE " + blockChecksum.toString());
     }
     HopsSession session = clusterjConnector.obtainSession();
-    BlockChecksumDto dto = session.newInstance(BlockChecksumDto.class);
-    copyState(blockChecksum, dto);
-    session.deletePersistent(dto);
-    session.release(dto);
+    BlockChecksumDto dto = null;
+    try {
+      dto = session.newInstance(BlockChecksumDto.class);
+      copyState(blockChecksum, dto);
+      session.deletePersistent(dto);
+    }finally {
+      session.release(dto);
+    }
   }
 
   @Override

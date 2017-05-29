@@ -82,23 +82,26 @@ public class ExcessReplicaClusterj
     HopsSession session = connector.obtainSession();
     List<ExcessReplicaDTO> changes = new ArrayList<ExcessReplicaDTO>();
     List<ExcessReplicaDTO> deletions = new ArrayList<ExcessReplicaDTO>();
-    for (ExcessReplica exReplica : newed) {
-      ExcessReplicaDTO newInstance =
-          session.newInstance(ExcessReplicaDTO.class);
-      createPersistable(exReplica, newInstance);
-      changes.add(newInstance);
-    }
+    try {
+      for (ExcessReplica exReplica : newed) {
+        ExcessReplicaDTO newInstance =
+                session.newInstance(ExcessReplicaDTO.class);
+        createPersistable(exReplica, newInstance);
+        changes.add(newInstance);
+      }
 
-    for (ExcessReplica exReplica : removed) {
-      ExcessReplicaDTO newInstance =
-          session.newInstance(ExcessReplicaDTO.class);
-      createPersistable(exReplica, newInstance);
-      deletions.add(newInstance);
+      for (ExcessReplica exReplica : removed) {
+        ExcessReplicaDTO newInstance =
+                session.newInstance(ExcessReplicaDTO.class);
+        createPersistable(exReplica, newInstance);
+        deletions.add(newInstance);
+      }
+      session.deletePersistentAll(deletions);
+      session.savePersistentAll(changes);
+    }finally {
+      session.release(deletions);
+      session.release(changes);
     }
-    session.deletePersistentAll(deletions);
-    session.savePersistentAll(changes);
-    session.release(deletions);
-    session.release(changes);
   }
 
   @Override

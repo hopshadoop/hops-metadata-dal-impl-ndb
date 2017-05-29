@@ -105,40 +105,48 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
         logEntries.size());
     ArrayList<DatasetINodeLookupDTO> newLookupDTOS = new
         ArrayList<DatasetINodeLookupDTO>(logEntries.size());
-    for (MetadataLogEntry logEntry : logEntries) {
-      added.add(createPersistable(logEntry));
-      DatasetINodeLookupDTO lookupDTO = createLookupPersistable(logEntry);
-      if(logEntry.getOperation() == MetadataLogEntry.Operation.ADD){
-        newLookupDTOS.add(lookupDTO);
-      }else if(logEntry.getOperation() == MetadataLogEntry.Operation.DELETE){
-        session.deletePersistent(lookupDTO);
-        session.release(lookupDTO);
+    try {
+      for (MetadataLogEntry logEntry : logEntries) {
+        added.add(createPersistable(logEntry));
+        DatasetINodeLookupDTO lookupDTO = createLookupPersistable(logEntry);
+        if (logEntry.getOperation() == MetadataLogEntry.Operation.ADD) {
+          newLookupDTOS.add(lookupDTO);
+        } else if (logEntry.getOperation() ==
+            MetadataLogEntry.Operation.DELETE) {
+          session.deletePersistent(lookupDTO);
+          session.release(lookupDTO);
+        }
       }
+
+      session.makePersistentAll(added);
+      session.savePersistentAll(newLookupDTOS);
+    }finally {
+      session.release(added);
+      session.release(newLookupDTOS);
     }
-
-    session.makePersistentAll(added);
-    session.savePersistentAll(newLookupDTOS);
-
-    session.release(added);
-    session.release(newLookupDTOS);
   }
 
   @Override
   public void add(MetadataLogEntry metadataLogEntry) throws StorageException {
     HopsSession session = connector.obtainSession();
-    MetadataLogEntryDto dto = createPersistable(metadataLogEntry);
-    DatasetINodeLookupDTO lookupDTO = createLookupPersistable(metadataLogEntry);
+    MetadataLogEntryDto dto = null;
+    DatasetINodeLookupDTO lookupDTO = null;
+    try {
+      dto = createPersistable(metadataLogEntry);
+      lookupDTO = createLookupPersistable(metadataLogEntry);
 
-    session.makePersistent(dto);
+      session.makePersistent(dto);
 
-    if(metadataLogEntry.getOperation() == MetadataLogEntry.Operation.ADD){
-      session.savePersistent(lookupDTO);
-    }else if(metadataLogEntry.getOperation() == MetadataLogEntry.Operation.DELETE){
-      session.deletePersistent(lookupDTO);
+      if (metadataLogEntry.getOperation() == MetadataLogEntry.Operation.ADD) {
+        session.savePersistent(lookupDTO);
+      } else if (metadataLogEntry.getOperation() ==
+          MetadataLogEntry.Operation.DELETE) {
+        session.deletePersistent(lookupDTO);
+      }
+    }finally {
+      session.release(dto);
+      session.release(lookupDTO);
     }
-
-    session.release(dto);
-    session.release(lookupDTO);
   }
 
   private MetadataLogEntryDto createPersistable(MetadataLogEntry logEntry)
@@ -209,17 +217,21 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     HopsSession session = connector.obtainSession();
     final ArrayList<MetadataLogEntryDto> dtos =
         new ArrayList<MetadataLogEntryDto>();
-    for (MetadataLogEntry logEntry : logEntries) {
-      Object[] pk = new Object[]{logEntry.getDatasetId(), logEntry.getInodeId(),
-          logEntry.getTimestamp()};
-      MetadataLogEntryDto dto =
-          session.newInstance(MetadataLogEntryDto.class, pk);
-      dto = session.load(dto);
-      dtos.add(dto);
+    try {
+      for (MetadataLogEntry logEntry : logEntries) {
+        Object[] pk =
+            new Object[]{logEntry.getDatasetId(), logEntry.getInodeId(),
+                logEntry.getTimestamp()};
+        MetadataLogEntryDto dto =
+            session.newInstance(MetadataLogEntryDto.class, pk);
+        dto = session.load(dto);
+        dtos.add(dto);
+      }
+      session.flush();
+      Collection<MetadataLogEntry> mlel = createCollection(dtos);
+      return mlel;
+    }finally {
+      session.release(dtos);
     }
-    session.flush();
-    Collection<MetadataLogEntry> mlel = createCollection(dtos);
-    session.release(dtos);
-    return mlel;
   }
 }

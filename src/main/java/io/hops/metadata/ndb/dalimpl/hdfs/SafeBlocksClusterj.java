@@ -55,20 +55,27 @@ public class SafeBlocksClusterj
     final List<SafeBlockDTO> dtos =
         new ArrayList<SafeBlockDTO>(safeBlocks.size());
     final HopsSession session = connector.obtainSession();
-    for (Long blk : safeBlocks) {
-      SafeBlockDTO dto = create(session, blk);
-      dtos.add(dto);
+    try {
+      for (Long blk : safeBlocks) {
+        SafeBlockDTO dto = create(session, blk);
+        dtos.add(dto);
+      }
+      session.savePersistentAll(dtos);
+    }finally {
+      session.release(dtos);
     }
-    session.savePersistentAll(dtos);
-    session.release(dtos);
   }
   
   @Override
   public void remove(Long safeBlock) throws StorageException {
     HopsSession session = connector.obtainSession();
-    SafeBlockDTO dto = create(session, safeBlock);
-    session.deletePersistent(dto);
-    session.release(dto);
+    SafeBlockDTO dto = null;
+    try {
+      dto = create(session, safeBlock);
+      session.deletePersistent(dto);
+    }finally {
+      session.release(dto);
+    }
   }
 
 

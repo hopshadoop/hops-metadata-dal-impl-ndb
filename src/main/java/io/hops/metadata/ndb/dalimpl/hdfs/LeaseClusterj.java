@@ -154,29 +154,32 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
     HopsSession session = connector.obtainSession();
     List<LeaseDTO> changes = new ArrayList<LeaseDTO>();
     List<LeaseDTO> deletions = new ArrayList<LeaseDTO>();
-    for (Lease l : newed) {
-      LeaseDTO lTable = session.newInstance(LeaseDTO.class);
-      createPersistableLeaseInstance(l, lTable);
-      changes.add(lTable);
-    }
+    try {
+      for (Lease l : newed) {
+        LeaseDTO lTable = session.newInstance(LeaseDTO.class);
+        createPersistableLeaseInstance(l, lTable);
+        changes.add(lTable);
+      }
 
-    for (Lease l : modified) {
-      LeaseDTO lTable = session.newInstance(LeaseDTO.class);
-      createPersistableLeaseInstance(l, lTable);
-      changes.add(lTable);
-    }
+      for (Lease l : modified) {
+        LeaseDTO lTable = session.newInstance(LeaseDTO.class);
+        createPersistableLeaseInstance(l, lTable);
+        changes.add(lTable);
+      }
 
-    for (Lease l : removed) {
-      Object[] key = new Object[2];
-      key[0] = l.getHolderId();
-      key[1] = l.getHolder();
-      LeaseDTO lTable = session.newInstance(LeaseDTO.class, key);
-      deletions.add(lTable);
+      for (Lease l : removed) {
+        Object[] key = new Object[2];
+        key[0] = l.getHolderId();
+        key[1] = l.getHolder();
+        LeaseDTO lTable = session.newInstance(LeaseDTO.class, key);
+        deletions.add(lTable);
+      }
+      session.deletePersistentAll(deletions);
+      session.savePersistentAll(changes);
+    }finally {
+      session.release(deletions);
+      session.release(changes);
     }
-    session.deletePersistentAll(deletions);
-    session.savePersistentAll(changes);
-    session.release(deletions);
-    session.release(changes);
   }
 
   private Collection<Lease> createList(List<LeaseDTO> list) {

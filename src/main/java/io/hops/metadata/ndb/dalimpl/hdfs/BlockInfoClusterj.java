@@ -119,59 +119,62 @@ public class BlockInfoClusterj
             new ArrayList<BlockLookUpClusterj.BlockLookUpDTO>();
     List<BlockLookUpClusterj.BlockLookUpDTO> luDeletions =
             new ArrayList<BlockLookUpClusterj.BlockLookUpDTO>();
+
     HopsSession session = connector.obtainSession();
-    for (BlockInfo block : removed) {
-      Object[] pk = new Object[2];
-      pk[0] = block.getInodeId();
-      pk[1] = block.getBlockId();
+    try {
+      for (BlockInfo block : removed) {
+        Object[] pk = new Object[2];
+        pk[0] = block.getInodeId();
+        pk[1] = block.getBlockId();
 
-      BlockInfoClusterj.BlockInfoDTO bTable =
-              session.newInstance(BlockInfoClusterj.BlockInfoDTO.class, pk);
-      blkDeletions.add(bTable);
+        BlockInfoClusterj.BlockInfoDTO bTable =
+                session.newInstance(BlockInfoClusterj.BlockInfoDTO.class, pk);
+        blkDeletions.add(bTable);
 
-      //delete the row from persistance table
-      BlockLookUpClusterj.BlockLookUpDTO lookupDTO = session
-              .newInstance(BlockLookUpClusterj.BlockLookUpDTO.class,
-              block.getBlockId());
-      luDeletions.add(lookupDTO);
+        //delete the row from persistance table
+        BlockLookUpClusterj.BlockLookUpDTO lookupDTO = session
+                .newInstance(BlockLookUpClusterj.BlockLookUpDTO.class,
+                        block.getBlockId());
+        luDeletions.add(lookupDTO);
+      }
+
+      for (BlockInfo block : news) {
+        BlockInfoClusterj.BlockInfoDTO bTable =
+                session.newInstance(BlockInfoClusterj.BlockInfoDTO.class);
+        createPersistable(block, bTable);
+        blkChanges.add(bTable);
+
+        //save a new row in the lookup table
+        BlockLookUpClusterj.BlockLookUpDTO lookupDTO =
+                session.newInstance(BlockLookUpClusterj.BlockLookUpDTO.class);
+        BlockLookUpClusterj.createPersistable(
+                new BlockLookUp(block.getBlockId(), block.getInodeId()), lookupDTO);
+        luChanges.add(lookupDTO);
+      }
+
+      for (BlockInfo block : modified) {
+        BlockInfoClusterj.BlockInfoDTO bTable =
+                session.newInstance(BlockInfoClusterj.BlockInfoDTO.class);
+        createPersistable(block, bTable);
+        blkChanges.add(bTable);
+
+        //save a new row in the lookup table
+        BlockLookUpClusterj.BlockLookUpDTO lookupDTO =
+                session.newInstance(BlockLookUpClusterj.BlockLookUpDTO.class);
+        BlockLookUpClusterj.createPersistable(
+                new BlockLookUp(block.getBlockId(), block.getInodeId()), lookupDTO);
+        luChanges.add(lookupDTO);
+      }
+      session.deletePersistentAll(blkDeletions);
+      session.deletePersistentAll(luDeletions);
+      session.savePersistentAll(blkChanges);
+      session.savePersistentAll(luChanges);
+    }finally {
+      session.release(blkDeletions);
+      session.release(luDeletions);
+      session.release(blkChanges);
+      session.release(luChanges);
     }
-
-    for (BlockInfo block : news) {
-      BlockInfoClusterj.BlockInfoDTO bTable =
-              session.newInstance(BlockInfoClusterj.BlockInfoDTO.class);
-      createPersistable(block, bTable);
-      blkChanges.add(bTable);
-
-      //save a new row in the lookup table
-      BlockLookUpClusterj.BlockLookUpDTO lookupDTO =
-              session.newInstance(BlockLookUpClusterj.BlockLookUpDTO.class);
-      BlockLookUpClusterj.createPersistable(
-              new BlockLookUp(block.getBlockId(), block.getInodeId()), lookupDTO);
-      luChanges.add(lookupDTO);
-    }
-
-    for (BlockInfo block : modified) {
-      BlockInfoClusterj.BlockInfoDTO bTable =
-              session.newInstance(BlockInfoClusterj.BlockInfoDTO.class);
-      createPersistable(block, bTable);
-      blkChanges.add(bTable);
-
-      //save a new row in the lookup table
-      BlockLookUpClusterj.BlockLookUpDTO lookupDTO =
-              session.newInstance(BlockLookUpClusterj.BlockLookUpDTO.class);
-      BlockLookUpClusterj.createPersistable(
-              new BlockLookUp(block.getBlockId(), block.getInodeId()), lookupDTO);
-      luChanges.add(lookupDTO);
-    }
-    session.deletePersistentAll(blkDeletions);
-    session.deletePersistentAll(luDeletions);
-    session.savePersistentAll(blkChanges);
-    session.savePersistentAll(luChanges);
-
-    session.release(blkDeletions);
-    session.release(luDeletions);
-    session.release(blkChanges);
-    session.release(luChanges);
   }
 
   @Override
@@ -291,18 +294,21 @@ public class BlockInfoClusterj
           final int[] inodeIds, final long[] blockIds) throws StorageException {
     final List<BlockInfoClusterj.BlockInfoDTO> bdtos =
             new ArrayList<BlockInfoDTO>();
-    for (int i = 0; i < blockIds.length; i++) {
-      Object[] pk = new Object[]{inodeIds[i], blockIds[i]};
-      BlockInfoClusterj.BlockInfoDTO bdto =
-              session.newInstance(BlockInfoClusterj.BlockInfoDTO.class, pk);
-      bdto.setBlockIndex(NOT_FOUND_ROW);
-      bdto = session.load(bdto);
-      bdtos.add(bdto);
+    try {
+      for (int i = 0; i < blockIds.length; i++) {
+        Object[] pk = new Object[]{inodeIds[i], blockIds[i]};
+        BlockInfoClusterj.BlockInfoDTO bdto =
+                session.newInstance(BlockInfoClusterj.BlockInfoDTO.class, pk);
+        bdto.setBlockIndex(NOT_FOUND_ROW);
+        bdto = session.load(bdto);
+        bdtos.add(bdto);
+      }
+      session.flush();
+      List<BlockInfo> lbis = createBlockInfoList(bdtos);
+      return lbis;
+    }finally{
+      session.release(bdtos);
     }
-    session.flush();
-    List<BlockInfo> lbis = createBlockInfoList(bdtos);
-    session.release(bdtos);
-    return lbis;
   }
 
   private List<BlockInfo> createBlockInfoList(
