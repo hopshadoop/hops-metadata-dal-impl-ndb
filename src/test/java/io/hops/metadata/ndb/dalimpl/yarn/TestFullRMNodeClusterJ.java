@@ -81,7 +81,7 @@ public class TestFullRMNodeClusterJ {
                     "life is good ", -10L, "relax", "hayarn", 0);
     final Resource hopResourceOrigin
             = new Resource("70", 1,
-                    100, 0);
+                    100, 100, 0);
 
     final List<UpdatedContainerInfo> hopUpdatedContainers
             = new ArrayList<UpdatedContainerInfo>();
