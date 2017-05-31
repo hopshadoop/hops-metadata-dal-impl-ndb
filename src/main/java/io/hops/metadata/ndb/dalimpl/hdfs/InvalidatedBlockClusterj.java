@@ -246,18 +246,21 @@ public class InvalidatedBlockClusterj implements
     final List<InvalidateBlocksDTO> invBlocks =
         new ArrayList<InvalidateBlocksDTO>();
     HopsSession session = connector.obtainSession();
-    for (int i = 0; i < blockIds.length; i++) {
-      InvalidateBlocksDTO invTable = session
-          .newInstance(InvalidateBlocksDTO.class,
-              new Object[]{inodesIds[i], blockIds[i], storageIds[i]});
-      invTable.setGenerationStamp(NOT_FOUND_ROW);
-      invTable = session.load(invTable);
-      invBlocks.add(invTable);
+    try {
+      for (int i = 0; i < blockIds.length; i++) {
+        InvalidateBlocksDTO invTable = session
+            .newInstance(InvalidateBlocksDTO.class,
+                new Object[]{inodesIds[i], blockIds[i], storageIds[i]});
+        invTable.setGenerationStamp(NOT_FOUND_ROW);
+        invTable = session.load(invTable);
+        invBlocks.add(invTable);
+      }
+      session.flush();
+      List<InvalidatedBlock> ivbl = createList(invBlocks);
+      return ivbl;
+    }finally {
+      session.release(invBlocks);
     }
-    session.flush();
-    List<InvalidatedBlock> ivbl = createList(invBlocks);
-    session.release(invBlocks);
-    return ivbl;
   }
 
   @Override
@@ -267,27 +270,30 @@ public class InvalidatedBlockClusterj implements
     HopsSession session = connector.obtainSession();
     List<InvalidateBlocksDTO> changes = new ArrayList<InvalidateBlocksDTO>();
     List<InvalidateBlocksDTO> deletions = new ArrayList<InvalidateBlocksDTO>();
-    for (InvalidatedBlock invBlock : newed) {
-      InvalidateBlocksDTO newInstance =
-          session.newInstance(InvalidateBlocksDTO.class);
-      createPersistable(invBlock, newInstance);
-      changes.add(newInstance);
-    }
+    try {
+      for (InvalidatedBlock invBlock : newed) {
+        InvalidateBlocksDTO newInstance =
+            session.newInstance(InvalidateBlocksDTO.class);
+        createPersistable(invBlock, newInstance);
+        changes.add(newInstance);
+      }
 
-    for (InvalidatedBlock invBlock : removed) {
-      InvalidateBlocksDTO newInstance =
-          session.newInstance(InvalidateBlocksDTO.class);
-      createPersistable(invBlock, newInstance);
-      deletions.add(newInstance);
-    }
+      for (InvalidatedBlock invBlock : removed) {
+        InvalidateBlocksDTO newInstance =
+            session.newInstance(InvalidateBlocksDTO.class);
+        createPersistable(invBlock, newInstance);
+        deletions.add(newInstance);
+      }
 
-    if (!modified.isEmpty()) {
-      throw new UnsupportedOperationException("Not yet Implemented");
+      if (!modified.isEmpty()) {
+        throw new UnsupportedOperationException("Not yet Implemented");
+      }
+      session.deletePersistentAll(deletions);
+      session.savePersistentAll(changes);
+    }finally {
+      session.release(deletions);
+      session.release(changes);
     }
-    session.deletePersistentAll(deletions);
-    session.savePersistentAll(changes);
-    session.release(deletions);
-    session.release(changes);
   }
 
   @Override

@@ -74,14 +74,17 @@ public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
     HopsSession session = connector.obtainSession();
     List<UserGroupDTO> dtos = Lists.newArrayListWithExpectedSize(groupIds
         .size());
-    for(int groupId : groupIds){
-      UserGroupDTO dto = session.newInstance(UserGroupDTO.class);
-      dto.setUserId(userId);
-      dto.setGroupId(groupId);
-      dtos.add(dto);
+    try {
+      for (int groupId : groupIds) {
+        UserGroupDTO dto = session.newInstance(UserGroupDTO.class);
+        dto.setUserId(userId);
+        dto.setGroupId(groupId);
+        dtos.add(dto);
+      }
+      session.savePersistentAll(dtos);
+    }finally {
+      session.release(dtos);
     }
-    session.savePersistentAll(dtos);
-    session.release(dtos);
   }
 
   @Override
@@ -94,24 +97,32 @@ public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
       throws StorageException {
     HopsSession session = connector.obtainSession();
 
-    HopsQueryBuilder qb = session.getQueryBuilder();
-    HopsQueryDomainType<UserGroupDTO> dobj =  qb.createQueryDefinition
-        (UserGroupDTO.class);
-    dobj.where(dobj.get("userId").equal(dobj.param("param")));
-    HopsQuery<UserGroupDTO> query = session.createQuery(dobj);
-    query.setParameter("param", userId);
-    List<UserGroupDTO> res =  query.getResultList();
+    List<UserGroupDTO> userGroupDTOs = null;
+    List<GroupClusterj.GroupDTO> groupDTOs = null;
 
-    List<GroupClusterj.GroupDTO> groupDTOs = Lists.newArrayList();
-    for(UserGroupDTO ug : res){
-      GroupClusterj.GroupDTO groupDTO = session.newInstance(GroupClusterj
-          .GroupDTO.class, ug.getGroupId());
-      session.load(groupDTO);
-      groupDTOs.add(groupDTO);
+    try {
+      HopsQueryBuilder qb = session.getQueryBuilder();
+      HopsQueryDomainType<UserGroupDTO> dobj = qb.createQueryDefinition
+          (UserGroupDTO.class);
+      dobj.where(dobj.get("userId").equal(dobj.param("param")));
+      HopsQuery<UserGroupDTO> query = session.createQuery(dobj);
+      query.setParameter("param", userId);
+      userGroupDTOs = query.getResultList();
+
+      groupDTOs = Lists.newArrayList();
+      for (UserGroupDTO ug : userGroupDTOs) {
+        GroupClusterj.GroupDTO groupDTO = session.newInstance(GroupClusterj
+            .GroupDTO.class, ug.getGroupId());
+        session.load(groupDTO);
+        groupDTOs.add(groupDTO);
+      }
+      session.flush();
+
+      return GroupClusterj.convert(session, groupDTOs);
+    }finally {
+      session.release(userGroupDTOs);
+      session.release(groupDTOs);
     }
-    session.flush();
-
-   return GroupClusterj.convertAndRelease(session, groupDTOs);
   }
 
 }

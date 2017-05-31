@@ -121,27 +121,29 @@ public class PendingBlockClusterj
     HopsSession session = connector.obtainSession();
     List<PendingBlockDTO> changes = new ArrayList<PendingBlockDTO>();
     List<PendingBlockDTO> deletions = new ArrayList<PendingBlockDTO>();
-    for (PendingBlockInfo p : newed) {
-      PendingBlockDTO pTable = session.newInstance(PendingBlockDTO.class);
-      createPersistableHopPendingBlockInfo(p, pTable);
-      changes.add(pTable);
-    }
-    for (PendingBlockInfo p : modified) {
-      PendingBlockDTO pTable = session.newInstance(PendingBlockDTO.class);
-      createPersistableHopPendingBlockInfo(p, pTable);
-      changes.add(pTable);
-    }
+    try {
+      for (PendingBlockInfo p : newed) {
+        PendingBlockDTO pTable = session.newInstance(PendingBlockDTO.class);
+        createPersistableHopPendingBlockInfo(p, pTable);
+        changes.add(pTable);
+      }
+      for (PendingBlockInfo p : modified) {
+        PendingBlockDTO pTable = session.newInstance(PendingBlockDTO.class);
+        createPersistableHopPendingBlockInfo(p, pTable);
+        changes.add(pTable);
+      }
 
-    for (PendingBlockInfo p : removed) {
-      PendingBlockDTO pTable = session.newInstance(PendingBlockDTO.class);
-      createPersistableHopPendingBlockInfo(p, pTable);
-      deletions.add(pTable);
+      for (PendingBlockInfo p : removed) {
+        PendingBlockDTO pTable = session.newInstance(PendingBlockDTO.class);
+        createPersistableHopPendingBlockInfo(p, pTable);
+        deletions.add(pTable);
+      }
+      session.deletePersistentAll(deletions);
+      session.savePersistentAll(changes);
+    }finally {
+      session.release(deletions);
+      session.release(changes);
     }
-    session.deletePersistentAll(deletions);
-    session.savePersistentAll(changes);
-
-    session.release(deletions);
-    session.release(changes);
   }
 
   @Override
