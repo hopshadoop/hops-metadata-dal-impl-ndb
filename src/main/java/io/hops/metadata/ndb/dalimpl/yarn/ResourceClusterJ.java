@@ -62,6 +62,11 @@ public class ResourceClusterJ
     int getVirtualcores();
 
     void setVirtualcores(int virtualcores);
+
+    @Column(name = GPUS)
+    int getGPUs();
+
+    void setGPUs(int gpus);
     
     @Column(name = PENDING_EVENT_ID)
     int getpendingeventid();
@@ -145,7 +150,7 @@ public class ResourceClusterJ
 
     }
     return new Resource(resourceDTO.getId(), resourceDTO.getMemory(), resourceDTO.
-        getVirtualcores(),resourceDTO.getpendingeventid());
+        getVirtualcores(), resourceDTO.getGPUs(), resourceDTO.getpendingeventid());
   }
 
   private ResourceDTO createPersistable(Resource resource, HopsSession session)
@@ -154,6 +159,7 @@ public class ResourceClusterJ
     resourceDTO.setId(resource.getId());
     resourceDTO.setMemory(resource.getMemory());
     resourceDTO.setVirtualcores(resource.getVirtualCores());
+    resourceDTO.setGPUs(resource.getGPUs());
     resourceDTO.setpendingeventid(resource.getPendingEventId());
     return resourceDTO;
   }

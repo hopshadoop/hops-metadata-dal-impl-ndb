@@ -27,11 +27,12 @@
 using namespace Utils::NdbC;
 
 const string _resource_table= "yarn_resource";
-const int _resource_noCols= 4;
+const int _resource_noCols= 5;
 const string _resource_cols[_resource_noCols]=
     {"id",
      "memory",
      "virtualcores",
+     "gpus",
      "pendingeventid"
     };
 
@@ -46,7 +47,8 @@ const WatchTable ResourceTableTailer::TABLE = {_resource_table, _resource_cols, 
 const int ID = 0;
 const int MEMORY = 1;
 const int VIRTUALCORES = 2;
-const int PENDING_EVENT_ID = 3;
+const int GPUS = 3;
+const int PENDING_EVENT_ID = 4;
 
 
 ResourceTableTailer::ResourceTableTailer(Ndb* ndb, const int poll_maxTimeToWait,JavaVM* jvm) 
@@ -64,16 +66,17 @@ void ResourceTableTailer::handleEvent(NdbDictionary::Event::TableEvent eventType
     jmethodID midInit = env->GetMethodID( cls, "<init>", "()V");
     resourceEventReceiver = env->NewObject( cls, midInit);
   
-    midCreateAndAddToQueue = env->GetMethodID(cls, "createAndAddToQueue","(Ljava/lang/String;III)V");
+    midCreateAndAddToQueue = env->GetMethodID(cls, "createAndAddToQueue","(Ljava/lang/String;IIII)V");
     attached = true;
   }
   //get the values
   jstring id = env->NewStringUTF(get_string(value[ID]).c_str());
   int memory = value[MEMORY]->int32_value();
   int virtualcores = value[VIRTUALCORES]->int32_value();
+  int gpus = value[GPUS]->int32_value();
   int pendingEventId = value[PENDING_EVENT_ID]->int32_value();
   //create the rmnode object and put it in the event queue
-  env->CallVoidMethod(resourceEventReceiver,midCreateAndAddToQueue,id,memory,virtualcores,pendingEventId);
+  env->CallVoidMethod(resourceEventReceiver,midCreateAndAddToQueue,id,memory,virtualcores,gpus,pendingEventId);
   env->DeleteLocalRef(id);   
 }
 
