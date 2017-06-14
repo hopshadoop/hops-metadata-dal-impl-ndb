@@ -144,7 +144,7 @@ public class SessionFactoryImpl implements SessionFactory, Constants {
             // if not using connection pooling, create a new session factory
             result = new SessionFactoryImpl(props);
         }
-        System.out.println("HopsFS created a ClusterJ 7.5.3 sesseion factory with disabled logging and partition key fix");
+        System.out.println("HopsFS created a ClusterJ 7.5.6 sesseion factory.");
         return result;
     }
 

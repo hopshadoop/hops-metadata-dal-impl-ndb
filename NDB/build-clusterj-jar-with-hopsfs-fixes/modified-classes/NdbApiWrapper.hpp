@@ -3517,12 +3517,12 @@ struct NdbApiWrapper {
     Ndb_cluster_connection__set_name
     ( Ndb_cluster_connection & obj, const char * p0 )
     {
-        fprintf(stderr,"\n\nLogical Clocks AB. Hops custom libndbclient.so\n");
+        fprintf(stderr,"\n\nLogical Clocks AB. Hops custom libndbclient.so v7.5.6\n");
         fprintf(stderr,"Set name called. Setting Name to: %s \n",p0);
         obj.set_name(p0);
-        obj.set_recv_thread_activation_threshold(0);
-        int th = obj.get_recv_thread_activation_threshold();
-        fprintf(stderr,"Recv thread activation threshold is %d\n",th);
+        //obj.set_recv_thread_activation_threshold(0);
+        //int th = obj.get_recv_thread_activation_threshold();
+        //fprintf(stderr,"Recv thread activation threshold is %d\n",th);
         Uint16 cpu_array[1] = {0};
         obj.set_recv_thread_cpu(cpu_array,1,0);
         fprintf(stderr,"Set the cpu affinity for recv thread to CPU 0\n\n");
