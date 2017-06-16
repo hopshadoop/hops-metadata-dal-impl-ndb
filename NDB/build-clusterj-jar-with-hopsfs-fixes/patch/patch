@@ -1,0 +1,219 @@
+diff --git a/storage/ndb/clusterj/clusterj-api/src/main/java/com/mysql/clusterj/DynamicObject.java b/storage/ndb/clusterj/clusterj-api/src/main/java/com/mysql/clusterj/DynamicObject.java
+index 6f2abce..c03898c 100644
+--- a/storage/ndb/clusterj/clusterj-api/src/main/java/com/mysql/clusterj/DynamicObject.java
++++ b/storage/ndb/clusterj/clusterj-api/src/main/java/com/mysql/clusterj/DynamicObject.java
+@@ -49,13 +49,13 @@ public abstract class DynamicObject {
+         return delegate.found();
+     }
+ 
+-    protected void finalize() throws Throwable {
+-        try {
+-            if (delegate != null) {
+-                delegate.release();
+-            }
+-        } finally {
+-            super.finalize();
+-        }
+-    }
++//   protected void finalize() throws Throwable {
++//       try {
++//           if (delegate != null) {
++//               delegate.release();
++//           }
++//       } finally {
++//           super.finalize();
++//       }
++//   }
+ }
+diff --git a/storage/ndb/clusterj/clusterj-core/src/main/java/com/mysql/clusterj/core/SessionFactoryImpl.java b/storage/ndb/clusterj/clusterj-core/src/main/java/com/mysql/clusterj/core/SessionFactoryImpl.java
+index ccc0646..9a14752 100644
+--- a/storage/ndb/clusterj/clusterj-core/src/main/java/com/mysql/clusterj/core/SessionFactoryImpl.java
++++ b/storage/ndb/clusterj/clusterj-core/src/main/java/com/mysql/clusterj/core/SessionFactoryImpl.java
+@@ -144,6 +144,7 @@ public class SessionFactoryImpl implements SessionFactory, Constants {
+             // if not using connection pooling, create a new session factory
+             result = new SessionFactoryImpl(props);
+         }
++        System.out.println("HopsFS created a ClusterJ 7.5.6 sesseion factory.");
+         return result;
+     }
+ 
+diff --git a/storage/ndb/clusterj/clusterj-core/src/main/java/com/mysql/clusterj/core/metadata/DomainTypeHandlerImpl.java b/storage/ndb/clusterj/clusterj-core/src/main/java/com/mysql/clusterj/core/metadata/DomainTypeHandlerImpl.java
+index ddc926a..70c0698 100644
+--- a/storage/ndb/clusterj/clusterj-core/src/main/java/com/mysql/clusterj/core/metadata/DomainTypeHandlerImpl.java
++++ b/storage/ndb/clusterj/clusterj-core/src/main/java/com/mysql/clusterj/core/metadata/DomainTypeHandlerImpl.java
+@@ -60,9 +60,9 @@ import java.util.Map;
+  */
+ public class DomainTypeHandlerImpl<T> extends AbstractDomainTypeHandlerImpl<T> {
+ 
+-    protected interface Finalizable {
+-        void finalize() throws Throwable;
+-    }
++//    protected interface Finalizable {
++//        void finalize() throws Throwable;
++//    }
+ 
+     /** The domain class. */
+     Class<T> cls;
+@@ -124,7 +124,7 @@ public class DomainTypeHandlerImpl<T> extends AbstractDomainTypeHandlerImpl<T> {
+             // Create a proxy class for the domain class
+             // Invoke the handler's finalizer method when the proxy is finalized
+             proxyClass = (Class<T>)Proxy.getProxyClass(
+-                    cls.getClassLoader(), new Class[]{cls, Finalizable.class});
++                    cls.getClassLoader(), new Class[]{cls});
+             ctor = getConstructorForInvocationHandler (proxyClass);
+             persistenceCapable = cls.getAnnotation(PersistenceCapable.class);
+             if (persistenceCapable == null) {
+diff --git a/storage/ndb/clusterj/clusterj-core/src/main/java/com/mysql/clusterj/core/util/JDK14LoggerImpl.java b/storage/ndb/clusterj/clusterj-core/src/main/java/com/mysql/clusterj/core/util/JDK14LoggerImpl.java
+index 833acfa..a26e0a3 100644
+--- a/storage/ndb/clusterj/clusterj-core/src/main/java/com/mysql/clusterj/core/util/JDK14LoggerImpl.java
++++ b/storage/ndb/clusterj/clusterj-core/src/main/java/com/mysql/clusterj/core/util/JDK14LoggerImpl.java
+@@ -46,39 +46,15 @@ public class JDK14LoggerImpl implements Logger {
+     }
+ 
+     public void detail(String message) {
+-        Throwable t = new Throwable();
+-        StackTraceElement[] stack = t.getStackTrace();
+-        StackTraceElement element = stack[1];
+-        String className = element.getClassName();
+-        String methodName = element.getMethodName();
+-        delegate.logp(Level.FINEST, className, methodName, message);
+     }
+ 
+     public void debug(String message) {
+-        Throwable t = new Throwable();
+-        StackTraceElement[] stack = t.getStackTrace();
+-        StackTraceElement element = stack[1];
+-        String className = element.getClassName();
+-        String methodName = element.getMethodName();
+-        delegate.logp(Level.FINER, className, methodName, message);
+     }
+ 
+     public void trace(String message) {
+-        Throwable t = new Throwable();
+-        StackTraceElement[] stack = t.getStackTrace();
+-        StackTraceElement element = stack[1];
+-        String className = element.getClassName();
+-        String methodName = element.getMethodName();
+-        delegate.logp(Level.FINE, className, methodName, message);
+     }
+ 
+     public void info(String message) {
+-        Throwable t = new Throwable();
+-        StackTraceElement[] stack = t.getStackTrace();
+-        StackTraceElement element = stack[1];
+-        String className = element.getClassName();
+-        String methodName = element.getMethodName();
+-        delegate.logp(Level.INFO, className, methodName, message);
+     }
+ 
+     public void warn(String message) {
+diff --git a/storage/ndb/clusterj/clusterj-tie/src/main/java/com/mysql/clusterj/tie/ClusterConnectionImpl.java b/storage/ndb/clusterj/clusterj-tie/src/main/java/com/mysql/clusterj/tie/ClusterConnectionImpl.java
+index 0062a04..18b2c50 100644
+--- a/storage/ndb/clusterj/clusterj-tie/src/main/java/com/mysql/clusterj/tie/ClusterConnectionImpl.java
++++ b/storage/ndb/clusterj/clusterj-tie/src/main/java/com/mysql/clusterj/tie/ClusterConnectionImpl.java
+@@ -17,6 +17,9 @@
+ 
+ package com.mysql.clusterj.tie;
+ 
++import java.net.InetAddress;
++import java.net.UnknownHostException; 
++
+ import java.util.IdentityHashMap;
+ import java.util.Iterator;
+ import java.util.Map;
+@@ -128,6 +131,11 @@ public class ClusterConnectionImpl
+         byteBufferPoolForPartitionKey =
+                 new FixedByteBufferPoolImpl(PARTITION_KEY_BUFFER_SIZE, "PartitionKeyBufferPool");
+         clusterConnection = Ndb_cluster_connection.create(connectString, nodeId);
++        try {
++            clusterConnection.set_name(InetAddress.getLocalHost().getHostName());
++        } catch (UnknownHostException e) {
++            e.printStackTrace();
++        }
+         handleError(clusterConnection, connectString, nodeId);
+         int timeoutError = clusterConnection.set_timeout(connectTimeoutMgm);
+         handleError(timeoutError, connectString, nodeId, connectTimeoutMgm);
+diff --git a/storage/ndb/clusterj/clusterj-tie/src/main/java/com/mysql/clusterj/tie/ClusterTransactionImpl.java b/storage/ndb/clusterj/clusterj-tie/src/main/java/com/mysql/clusterj/tie/ClusterTransactionImpl.java
+index ff69445..d2c5f2d 100644
+--- a/storage/ndb/clusterj/clusterj-tie/src/main/java/com/mysql/clusterj/tie/ClusterTransactionImpl.java
++++ b/storage/ndb/clusterj/clusterj-tie/src/main/java/com/mysql/clusterj/tie/ClusterTransactionImpl.java
+@@ -119,6 +119,9 @@ class ClusterTransactionImpl implements ClusterTransaction {
+ 
+     private List<Operation> operationsToCheck = new ArrayList<Operation>();
+ 
++
++    private boolean isPartitionKeySet  = false;
++    private final boolean HOPS_PK_FIX = true;
+     public ClusterTransactionImpl(ClusterConnectionImpl clusterConnectionImpl,
+             DbImpl db, Dictionary ndbDictionary, String joinTransactionId) {
+         this.db = db;
+@@ -136,6 +139,7 @@ class ClusterTransactionImpl implements ClusterTransaction {
+         if (ndbTransaction != null) {
+             ndbTransaction.close();
+             ndbTransaction = null;
++            isPartitionKeySet = false;
+         }
+     }
+ 
+@@ -641,7 +645,14 @@ class ClusterTransactionImpl implements ClusterTransaction {
+             throw new ClusterJFatalInternalException(
+                     local.message("ERR_Partition_Key_Null"));
+         }
++        if (HOPS_PK_FIX) {
++            if (!isPartitionKeySet) {
+         this.partitionKey = (PartitionKeyImpl)partitionKey;
++                isPartitionKeySet = true;
++            }
++        } else {
++            this.partitionKey = (PartitionKeyImpl) partitionKey;
++        }
+     }
+ 
+     public String getCoordinatedTransactionId() {
+diff --git a/storage/ndb/clusterj/clusterj-tie/src/main/java/com/mysql/clusterj/tie/NdbRecordSmartValueHandlerImpl.java b/storage/ndb/clusterj/clusterj-tie/src/main/java/com/mysql/clusterj/tie/NdbRecordSmartValueHandlerImpl.java
+index 84e8f5f..38c520c 100644
+--- a/storage/ndb/clusterj/clusterj-tie/src/main/java/com/mysql/clusterj/tie/NdbRecordSmartValueHandlerImpl.java
++++ b/storage/ndb/clusterj/clusterj-tie/src/main/java/com/mysql/clusterj/tie/NdbRecordSmartValueHandlerImpl.java
+@@ -76,14 +76,14 @@ public class NdbRecordSmartValueHandlerImpl implements SmartValueHandler {
+     /** Finalize this object. This method is called by the garbage collector
+      * when the proxy that delegates to this object is no longer reachable.
+      */
+-    protected void finalize() throws Throwable {
+-        if (logger.isDetailEnabled()) logger.detail("NdbRecordSmartValueHandler.finalize");
+-        try {
+-            release();
+-        } finally {
+-            super.finalize();
+-        }
+-    }
++//   protected void finalize() throws Throwable {
++//       if (logger.isDetailEnabled()) logger.detail("NdbRecordSmartValueHandler.finalize");
++//       try {
++//           release();
++//       } finally {
++//           super.finalize();
++//       }
++//   }
+ 
+     /** Release any resources associated with this object.
+      * This method is called by the owner of this object.
+diff --git a/storage/ndb/src/ndbjtie/NdbApiWrapper.hpp b/storage/ndb/src/ndbjtie/NdbApiWrapper.hpp
+index 063dea2..60a2243 100644
+--- a/storage/ndb/src/ndbjtie/NdbApiWrapper.hpp
++++ b/storage/ndb/src/ndbjtie/NdbApiWrapper.hpp
+@@ -3517,7 +3517,15 @@ struct NdbApiWrapper {
+     Ndb_cluster_connection__set_name
+     ( Ndb_cluster_connection & obj, const char * p0 )
+     {
++        fprintf(stderr,"\n\nLogical Clocks AB. Hops custom libndbclient.so v7.5.6\n");
++        fprintf(stderr,"Set name called. Setting Name to: %s \n",p0);
+         obj.set_name(p0);
++        //obj.set_recv_thread_activation_threshold(0);
++        //int th = obj.get_recv_thread_activation_threshold();
++        //fprintf(stderr,"Recv thread activation threshold is %d\n",th);
++        Uint16 cpu_array[1] = {0};
++        obj.set_recv_thread_cpu(cpu_array,1,0);
++        fprintf(stderr,"Set the cpu affinity for recv thread to CPU 0\n\n");
+     }
+ 
+     static int

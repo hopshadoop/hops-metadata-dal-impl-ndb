@@ -119,6 +119,7 @@ class ClusterTransactionImpl implements ClusterTransaction {
 
     private List<Operation> operationsToCheck = new ArrayList<Operation>();
 
+
     private boolean isPartitionKeySet  = false;
     private final boolean HOPS_PK_FIX = true;
     public ClusterTransactionImpl(ClusterConnectionImpl clusterConnectionImpl,
