@@ -25,10 +25,12 @@ import com.mysql.clusterj.annotation.Index;
 import com.mysql.clusterj.annotation.PartitionKey;
 import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
+import io.hops.exception.HopsUserDoesNotExist;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.INodeDataAccess;
 import io.hops.metadata.hdfs.entity.INode;
+import io.hops.metadata.hdfs.entity.INodeBase;
 import io.hops.metadata.hdfs.entity.INodeIdentifier;
 import io.hops.metadata.hdfs.entity.ProjectedINode;
 import io.hops.metadata.ndb.ClusterjConnector;
@@ -41,6 +43,7 @@ import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.util.ByteArray;
 import org.apache.log4j.Logger;
 
 import java.sql.Connection;
@@ -162,6 +165,10 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     @Column(name = SIZE)
     long getSize();
     void setSize(long size);
+
+    @Column(name = FILE_STORED_IN_DB)
+    byte getFileStoredInDd();
+    void setFileStoredInDd(byte isFileStoredInDB);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -604,7 +611,6 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     return inodes;
   }
 
-
   protected static INode convert(InodeDTO persistable) {
     INode node = new INode(persistable.getId(), persistable.getName(),
         persistable.getParentId(), persistable.getPartitionId(),
@@ -619,7 +625,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         NdbBoolean.convert(persistable.getSubtreeLocked()),
         persistable.getSubtreeLockOwner(),
         NdbBoolean.convert(persistable.getMetaEnabled()),
-        persistable.getSize());
+        persistable.getSize(), NdbBoolean.convert(persistable.getFileStoredInDd()));
     return node;
   }
 
@@ -644,6 +650,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setSubtreeLockOwner(inode.getSubtreeLockOwner());
     persistable.setMetaEnabled(NdbBoolean.convert(inode.isMetaEnabled()));
     persistable.setSize(inode.getFileSize());
+    persistable.setFileStoredInDd(NdbBoolean.convert(inode.isFileStoredInDB()));
     persistable.setIsDir(NdbBoolean.convert(inode.isDirectory()));
     persistable.setPartitionId(inode.getPartitionId());
   }
@@ -660,5 +667,6 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 //      e.printStackTrace();
 //    }
   }
+
 
 }

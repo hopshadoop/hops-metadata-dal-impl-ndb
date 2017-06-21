@@ -19,4 +19,5 @@ cd storage/ndb/clusterj
 mvn install:install-file -Dfile=clusterj-X.X.X.jar -DgroupId=com.mysql.ndb -DartifactId=clusterj-hops-fix -Dversion=X.X.X -Dpackaging=jar
 
 
-
+# libndbclient.so lib
+cd storage/ndb/src/ the libndbclient.so to LD_LIBRARY_PATH
