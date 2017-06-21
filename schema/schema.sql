@@ -86,6 +86,7 @@ CREATE TABLE `hdfs_inodes` (
   `is_dir` tinyint NOT NULL,
   `under_construction` tinyint NOT NULL,
   `subtree_locked` tinyint DEFAULT NULL,
+  `file_stored_in_db` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`partition_id`,`parent_id`,`name`),
   KEY `pidex` (`parent_id`),
   KEY `inode_idx` (`id`),
@@ -93,6 +94,73 @@ CREATE TABLE `hdfs_inodes` (
   KEY `c2` (`partition_id`,`parent_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (partition_id) */  $$
+
+delimiter $$
+
+drop procedure if exists simpleproc$$
+
+delimiter $$
+
+CREATE PROCEDURE simpleproc ()
+BEGIN
+	DECLARE lc INTEGER;
+	DECLARE tc INTEGER;
+
+	SELECT count(LOGFILE_GROUP_NAME) INTO lc FROM INFORMATION_SCHEMA.FILES where LOGFILE_GROUP_NAME="lg_1";
+	IF (lc = 0) THEN
+	    CREATE LOGFILE GROUP lg_1 ADD UNDOFILE 'undo_log_0.log' INITIAL_SIZE = 2048M ENGINE ndbcluster;
+	ELSE
+		select "The LogFile undo_log_0.log has already been created" as "";
+	END IF;
+
+	
+	SELECT count(TABLESPACE_NAME) INTO tc FROM INFORMATION_SCHEMA.FILES where TABLESPACE_NAME="ts_1";
+	IF (tc = 0) THEN
+		CREATE TABLESPACE ts_1 ADD datafile 'data_file_0.dat' use LOGFILE GROUP lg_1 INITIAL_SIZE = 2048M  ENGINE ndbcluster;
+	ELSE
+		select "The DataFile  data_file_0.dat has already been created" as "";
+	END IF;
+END$$
+
+delimiter $$
+
+CALL simpleproc$$ 
+
+delimiter $$
+
+CREATE TABLE `hdfs_ondisk_small_file_inode_data` (
+	  `inode_id` int(11) NOT NULL,
+	  `data` blob NOT NULL,
+	  PRIMARY KEY (`inode_id`)
+) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+/*!50100 PARTITION BY KEY (inode_id) */$$
+
+delimiter $$
+
+CREATE TABLE `hdfs_ondisk_medium_file_inode_data` (
+  `inode_id` int(11) NOT NULL,
+  `data` blob NOT NULL,
+  PRIMARY KEY (`inode_id`)
+) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+/*!50100 PARTITION BY KEY (inode_id) */$$
+
+delimiter $$
+
+ CREATE TABLE `hdfs_ondisk_large_file_inode_data` (
+  `inode_id` int(11) NOT NULL,
+  `data` blob NOT NULL,
+  PRIMARY KEY (`inode_id`)
+) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+/*!50100 PARTITION BY KEY (inode_id) */$$ 
+
+delimiter $$
+
+CREATE TABLE `hdfs_inmemory_file_inode_data` (
+  `inode_id` int(11) NOT NULL,
+  `data` varbinary(1024) NOT NULL,
+  PRIMARY KEY (`inode_id`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+/*!50100 PARTITION BY KEY (inode_id) */  $$
 
 delimiter $$
 
