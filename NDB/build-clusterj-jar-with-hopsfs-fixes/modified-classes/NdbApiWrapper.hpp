@@ -3517,15 +3517,21 @@ struct NdbApiWrapper {
     Ndb_cluster_connection__set_name
     ( Ndb_cluster_connection & obj, const char * p0 )
     {
-        fprintf(stderr,"\n\nLogical Clocks AB. Hops custom libndbclient.so v7.5.6\n");
-        fprintf(stderr,"Set name called. Setting Name to: %s \n",p0);
+        fprintf(stderr,"\n\nCustom libndbclient.so (7.5.6) by Logical Clocks AB.\n");
+        fprintf(stderr,"Setting connection namenode to: %s \n",p0);
         obj.set_name(p0);
-        //obj.set_recv_thread_activation_threshold(0);
-        //int th = obj.get_recv_thread_activation_threshold();
-        //fprintf(stderr,"Recv thread activation threshold is %d\n",th);
+
+        // setting the recv thread activation threshold in 7.5.6
+        // causes problems in making the connection
+        // it could be because of NDB bug 22705935
+        /*
+        obj.set_recv_thread_activation_threshold(0);
+        int th = obj.get_recv_thread_activation_threshold();
+        fprintf(stderr,"Recv thread activation threshold is %d\n",th);*/
+        
         Uint16 cpu_array[1] = {0};
         obj.set_recv_thread_cpu(cpu_array,1,0);
-        fprintf(stderr,"Set the cpu affinity for recv thread to CPU 0\n\n");
+        fprintf(stderr,"CPU affinity for recv thread is set to CPU 0\n\n");
     }
 
     static int
