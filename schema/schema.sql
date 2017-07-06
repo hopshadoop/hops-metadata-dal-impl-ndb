@@ -11,7 +11,7 @@ CREATE TABLE `hdfs_block_infos` (
   `primary_node_index` int(11) DEFAULT NULL,
   `block_recovery_id` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`inode_id`,`block_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -21,7 +21,7 @@ CREATE TABLE `hdfs_block_lookup_table` (
   `block_id` bigint(20) NOT NULL,
   `inode_id` int(11) NOT NULL,
   PRIMARY KEY (`block_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'$$
 
 
 delimiter $$
@@ -33,7 +33,7 @@ CREATE TABLE `hdfs_corrupt_replicas` (
   `timestamp` bigint(20) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`),
   KEY `timestamp` (`timestamp`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -45,7 +45,7 @@ CREATE TABLE `hdfs_excess_replicas` (
   `storage_id` int(11) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`),
   KEY `storage_idx` (`storage_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -58,7 +58,7 @@ CREATE TABLE `hdfs_inode_attributes` (
   `nscount` bigint(20) DEFAULT NULL,
   `diskspace` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`inodeId`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'$$
 
 
 delimiter $$
@@ -92,7 +92,7 @@ CREATE TABLE `hdfs_inodes` (
   KEY `inode_idx` (`id`),
   KEY `c1` (`parent_id`,`partition_id`),
   KEY `c2` (`partition_id`,`parent_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (partition_id) */  $$
 
 delimiter $$
@@ -132,7 +132,7 @@ CREATE TABLE `hdfs_ondisk_small_file_inode_data` (
 	  `inode_id` int(11) NOT NULL,
 	  `data` blob NOT NULL,
 	  PRIMARY KEY (`inode_id`)
-) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 delimiter $$
@@ -141,7 +141,7 @@ CREATE TABLE `hdfs_ondisk_medium_file_inode_data` (
   `inode_id` int(11) NOT NULL,
   `data` blob NOT NULL,
   PRIMARY KEY (`inode_id`)
-) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 delimiter $$
@@ -150,7 +150,7 @@ delimiter $$
   `inode_id` int(11) NOT NULL,
   `data` blob NOT NULL,
   PRIMARY KEY (`inode_id`)
-) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$ 
 
 delimiter $$
@@ -159,7 +159,7 @@ CREATE TABLE `hdfs_inmemory_file_inode_data` (
   `inode_id` int(11) NOT NULL,
   `data` varbinary(1024) NOT NULL,
   PRIMARY KEY (`inode_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */  $$
 
 delimiter $$
@@ -169,7 +169,7 @@ CREATE TABLE `hdfs_users` (
   `name` varchar(100) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY (`name`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$
 
@@ -178,7 +178,7 @@ CREATE TABLE `hdfs_groups` (
   `name` varchar(100) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY (`name`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$
 
@@ -196,7 +196,7 @@ CREATE TABLE `hdfs_users_groups` (
     REFERENCES `hdfs_groups` (`id`)
     ON DELETE CASCADE
     ON UPDATE NO ACTION
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$
 
@@ -208,7 +208,7 @@ CREATE TABLE `hdfs_invalidated_blocks` (
   `num_bytes` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`),
   KEY `storage_idx` (`storage_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -222,7 +222,7 @@ CREATE TABLE `hdfs_le_descriptors` (
   `partition_val` int(11) NOT NULL DEFAULT '0',
 PRIMARY KEY (`id`,`partition_val`),
 KEY `part` (`partition_val`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs
 /*!50100 PARTITION BY KEY (partition_val) */$$
 
 delimiter $$
@@ -235,7 +235,7 @@ CREATE TABLE `yarn_le_descriptors` (
   `partition_val` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`partition_val`),
   KEY `part` (`partition_val`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs
 /*!50100 PARTITION BY KEY (partition_val) */$$
 
 delimiter $$
@@ -247,7 +247,7 @@ CREATE TABLE `hdfs_lease_paths` (
   `penultimate_block_id` bigint(20) DEFAULT -1,
   PRIMARY KEY (`holder_id`,`path`),
   KEY `path_idx` (`path`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (holder_id) */$$
 
 delimiter $$
@@ -258,7 +258,7 @@ CREATE TABLE `hdfs_leases` (
   `last_update` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`holder_id`,`holder`),
   KEY `update_idx` (`last_update`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (holder_id) */$$
 
 delimiter $$
@@ -266,7 +266,7 @@ delimiter $$
 CREATE TABLE `hdfs_misreplicated_range_queue` (
   `range` varchar(120) NOT NULL,
   PRIMARY KEY (`range`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 
 delimiter $$
@@ -275,7 +275,7 @@ CREATE TABLE `hdfs_path_memcached` (
   `path` varchar(128) NOT NULL,
   `inodeids` varbinary(13500) NOT NULL,
   PRIMARY KEY (`path`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 
 delimiter $$
@@ -286,7 +286,7 @@ CREATE TABLE `hdfs_pending_blocks` (
   `time_stamp` bigint(20) NOT NULL,
   `num_replicas_in_progress` int(11) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -298,7 +298,7 @@ CREATE TABLE `hdfs_replica_under_constructions` (
   `storage_id` int(11) NOT NULL,
   `state` int(11) DEFAULT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -310,7 +310,7 @@ CREATE TABLE `hdfs_replicas` (
   `storage_id` int(11) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`),
   KEY `storage_idx` (`storage_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -319,7 +319,7 @@ delimiter $$
 CREATE TABLE `hdfs_safe_blocks` (
   `id` bigint(20) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 
 delimiter $$
@@ -328,7 +328,7 @@ CREATE TABLE `hdfs_storage_id_map` (
   `storage_id` varchar(128) NOT NULL,
   `sid` int(11) NOT NULL,
   PRIMARY KEY (`storage_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 
 delimiter $$
@@ -340,7 +340,7 @@ CREATE TABLE `hdfs_under_replicated_blocks` (
   `timestamp` bigint(20) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_id`),
   KEY `level` (`level`,`timestamp`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -350,7 +350,7 @@ CREATE TABLE `hdfs_variables` (
   `id` int(11) NOT NULL,
   `value` varbinary(500) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 
 delimiter $$
@@ -361,7 +361,7 @@ CREATE TABLE `hdfs_quota_update` (
   `namespace_delta` bigint(20) DEFAULT NULL,
   `diskspace_delta` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`inode_id`,`id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 
@@ -382,7 +382,7 @@ CREATE TABLE `hdfs_encoding_status` (
   `revoked` tinyint DEFAULT 0,
   PRIMARY KEY (`inode_id`),
   UNIQUE KEY `parity_inode_id` (`parity_inode_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$
 
@@ -391,7 +391,7 @@ CREATE TABLE `hdfs_block_checksum` (
   `block_index` int(11) NOT NULL,
   `checksum` bigint(20) NOT NULL,
   PRIMARY KEY (`inode_id`,`block_index`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 delimiter $$
@@ -404,7 +404,7 @@ CREATE TABLE `hdfs_on_going_sub_tree_ops` (
   PRIMARY KEY (`partition_id`,`path`),                                     
   KEY `partindex` (`partition_id`),                                        
   KEY `nameidx` (`path`)                                                   
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (partition_id) */$$                              
 
 delimiter $$
@@ -415,7 +415,7 @@ CREATE TABLE `hdfs_encoding_jobs` (
   `path` varchar(3000) NOT NULL,
   `job_dir` varchar(200) NOT NULL,
   PRIMARY KEY (`jt_identifier`,`job_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$
 
@@ -426,7 +426,7 @@ CREATE TABLE `hdfs_repair_jobs` (
   `in_dir` varchar(3000) NOT NULL,
   `out_dir` varchar(3000) NOT NULL,
   PRIMARY KEY (`jt_identifier`,`job_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$
 
@@ -440,7 +440,7 @@ CREATE TABLE `hdfs_metadata_log` (
   `operation` smallint(11) NOT NULL,
   PRIMARY KEY (`dataset_id` ,`inode_id` , `timestamp`),
   KEY `timestamp` (`timestamp`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$
 
@@ -449,7 +449,7 @@ CREATE TABLE `hdfs_inode_dataset_lookup` (
   `dataset_id` int(11) NOT NULL,
   KEY(`dataset_id`),
   PRIMARY KEY (`inode_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$
 
@@ -464,7 +464,7 @@ CREATE TABLE `yarn_rmnode` (
   `nodemanager_version` VARCHAR(45) NULL,
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`))
-ENGINE = ndbcluster DEFAULT CHARSET=latin1
+ENGINE = ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs
 PACK_KEYS = DEFAULT PARTITION BY KEY(rmnodeid)$$
 
 
@@ -478,7 +478,7 @@ CREATE TABLE `yarn_resource` (
   `pendingeventid` INT,
   PRIMARY KEY (`id`),
   INDEX `id` (`id` ASC)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(id)$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(id)$$
 
 delimiter $$
 
@@ -489,7 +489,7 @@ CREATE TABLE `yarn_updatedcontainerinfo` (
   `pendingeventid` INT,
   PRIMARY KEY (`rmnodeid`, `containerid`, `updatedcontainerinfoid`),
   INDEX `containerid` (`containerid` ASC)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`rmnodeid`)$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(`rmnodeid`)$$
 
 delimiter $$
 
@@ -503,7 +503,7 @@ CREATE TABLE `yarn_containerstatus` (
   `pendingeventid` INT,
   PRIMARY KEY (`containerid`, `rmnodeid`, uciid),
   INDEX `rmnodeid_idx` (`rmnodeid` ASC)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`rmnodeid`)$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(`rmnodeid`)$$
 
 delimiter $$
 
@@ -512,7 +512,7 @@ CREATE TABLE `yarn_containerid_toclean` (
   `containerid` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`rmnodeid`, `containerid`),
   INDEX `rmnodeId` (`containerid` ASC)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(rmnodeid) $$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(rmnodeid) $$
 
 delimiter $$
 
@@ -521,7 +521,7 @@ CREATE TABLE `yarn_rmnode_finishedapplications` (
   `applicationid` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`rmnodeid`, `applicationid`),
   INDEX `index2` (`rmnodeid` ASC)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(applicationid) $$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(applicationid) $$
 
 delimiter $$
 
@@ -529,7 +529,7 @@ CREATE TABLE `yarn_rms_load` (
   `rmhostname` VARCHAR(100) NOT NULL,
   `load` BIGINT NULL,
 PRIMARY KEY (`rmhostname`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$
 
@@ -537,7 +537,7 @@ CREATE TABLE `yarn_nextheartbeat` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `nextheartbeat` INT NULL,
   PRIMARY KEY (`rmnodeid`)
-)ENGINE = ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(rmnodeid)$$
+)ENGINE = ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(rmnodeid)$$
 
 delimiter $$
 
@@ -548,7 +548,7 @@ CREATE TABLE `yarn_pendingevents` (
   `status` VARCHAR(255) NULL,
   `contains` INT NULL,
   PRIMARY KEY (`id`, `rmnodeid`))
-ENGINE = ndbcluster DEFAULT CHARSET=latin1$$
+ENGINE = ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$
 
@@ -559,7 +559,7 @@ CREATE TABLE `yarn_applicationstate` (
   `appname` VARCHAR(200) NULL,
   `appsmstate` VARCHAR(45) NULL,
 PRIMARY KEY (`applicationid`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`applicationid`)$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(`applicationid`)$$
 
 delimiter $$
 
@@ -567,7 +567,7 @@ CREATE TABLE `yarn_delegation_token` (
   `seq_number` INT NOT NULL,
   `rmdt_identifier` VARBINARY(13500) NULL,
 PRIMARY KEY (`seq_number`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$
 
@@ -575,7 +575,7 @@ CREATE TABLE `yarn_delegation_key` (
   `key` INT NOT NULL,
   `delegationkey` VARBINARY(13500) NULL,
 PRIMARY KEY (`key`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$
 
@@ -591,7 +591,7 @@ CREATE TABLE `yarn_applicationattemptstate` (
   REFERENCES `yarn_applicationstate` (`applicationid`)
   ON DELETE CASCADE
   ON UPDATE NO ACTION
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 PARTITION BY KEY(`applicationid`)$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(`applicationid`)$$
 
 delimiter $$
 
