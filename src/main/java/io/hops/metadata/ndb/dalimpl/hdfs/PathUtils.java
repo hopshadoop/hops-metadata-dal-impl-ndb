@@ -24,7 +24,7 @@ public class PathUtils {
         if (str.isEmpty()) {
             return new String[]{""};
         }
-        ArrayList<String> strList = new ArrayList<String>();
+        ArrayList<String> strList = new ArrayList<>();
         int startIndex = 0;
         int nextIndex = 0;
         while ((nextIndex = str.indexOf(separator, startIndex)) != -1) {

@@ -116,7 +116,7 @@ public class ContainerIdToCleanClusterJ implements
       throws StorageException {
     HopsSession session = connector.obtainSession();
     List<ContainerIdToCleanDTO> toModify =
-        new ArrayList<ContainerIdToCleanDTO>();
+        new ArrayList<>();
     for (ContainerId hop : containers) {
       toModify.add(createPersistable(hop, session));
     }
@@ -139,7 +139,7 @@ public class ContainerIdToCleanClusterJ implements
       throws StorageException {
     HopsSession session = connector.obtainSession();
     List<ContainerIdToCleanDTO> toRemove =
-        new ArrayList<ContainerIdToCleanDTO>();
+        new ArrayList<>();
     for (ContainerId hop : containers) {
       toRemove.add(createPersistable(hop, session));
     }
@@ -166,7 +166,7 @@ public class ContainerIdToCleanClusterJ implements
 
   private List<ContainerId> createContainersToCleanList(
       List<ContainerIdToCleanDTO> results) {
-    List<ContainerId> containersToClean = new ArrayList<ContainerId>();
+    List<ContainerId> containersToClean = new ArrayList<>();
     for (ContainerIdToCleanDTO persistable : results) {
       containersToClean.add(createHopContainerIdToClean(persistable));
     }
@@ -175,7 +175,7 @@ public class ContainerIdToCleanClusterJ implements
 
   private Map<String, Set<ContainerId>> createMap(
       List<ContainerIdToCleanDTO> results) {
-    Map<String, Set<ContainerId>> map = new HashMap<String, Set<ContainerId>>();
+    Map<String, Set<ContainerId>> map = new HashMap<>();
     for (ContainerIdToCleanDTO dto : results) {
       ContainerId hop = createHopContainerIdToClean(dto);
       if (map.get(hop.getRmnodeid()) == null) {

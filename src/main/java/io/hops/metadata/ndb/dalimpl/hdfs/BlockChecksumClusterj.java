@@ -176,7 +176,7 @@ public class BlockChecksumClusterj
 
   private List<BlockChecksum> createBlockChecksumList(
       List<BlockChecksumDto> dtoList) {
-    List<BlockChecksum> list = new ArrayList<BlockChecksum>();
+    List<BlockChecksum> list = new ArrayList<>();
     for (BlockChecksumDto dto : dtoList) {
       list.add(createBlockChecksum(dto));
     }

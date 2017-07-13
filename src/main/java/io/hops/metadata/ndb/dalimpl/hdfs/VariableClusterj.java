@@ -90,7 +90,7 @@ public class VariableClusterj
   private void removeVariables(HopsSession session, Collection<Variable> vars)
       throws StorageException {
     if (vars != null) {
-      List<VariableDTO> removed = new ArrayList<VariableDTO>();
+      List<VariableDTO> removed = new ArrayList<>();
       try {
         for (Variable var : vars) {
           VariableDTO vd =
@@ -106,7 +106,7 @@ public class VariableClusterj
 
   private void updateVariables(HopsSession session, Collection<Variable> vars)
       throws StorageException {
-    List<VariableDTO> changes = new ArrayList<VariableDTO>();
+    List<VariableDTO> changes = new ArrayList<>();
     try {
       for (Variable var : vars) {
         changes.add(createVariableDTO(session, var));

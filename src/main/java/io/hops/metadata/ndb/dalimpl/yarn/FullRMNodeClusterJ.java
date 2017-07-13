@@ -60,7 +60,7 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
 
     List<FinishedApplications> hopFinishedApplications = finishedApplicationsDA.
             findByRMNode(nodeId);
-    List<RMNodeComponentDTO> components = new ArrayList<RMNodeComponentDTO>();
+    List<RMNodeComponentDTO> components = new ArrayList<>();
 
     RMNodeClusterJ.RMNodeDTO rmnodeDTO =
         session.newInstance(RMNodeClusterJ.RMNodeDTO.class, nodeId);
@@ -73,7 +73,7 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
     components.add(nextHBDTO);
  
     List<ContainerStatusClusterJ.ContainerStatusDTO> containerStatusDTOs =
-        new ArrayList<ContainerStatusClusterJ.ContainerStatusDTO>();
+        new ArrayList<>();
 
     if (hopUpdatedContainerInfo != null) {
       

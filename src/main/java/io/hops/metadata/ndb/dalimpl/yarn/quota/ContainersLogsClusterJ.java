@@ -90,7 +90,7 @@ public class ContainersLogsClusterJ implements
   public void addAll(Collection<ContainerLog> containersLogs) throws
           StorageException {
     HopsSession session = connector.obtainSession();
-    List<ContainerLogDTO> toAdd = new ArrayList<ContainerLogDTO>();
+    List<ContainerLogDTO> toAdd = new ArrayList<>();
 
     for (ContainerLog entry : containersLogs) {
       toAdd.add(createPersistable(entry, session));
@@ -104,7 +104,7 @@ public class ContainersLogsClusterJ implements
   public void removeAll(Collection<ContainerLog> containersLogs) throws
           StorageException {
     HopsSession session = connector.obtainSession();
-    List<ContainerLogDTO> toRemove = new ArrayList<ContainerLogDTO>();
+    List<ContainerLogDTO> toRemove = new ArrayList<>();
 
     for (ContainerLog entry : containersLogs) {
       toRemove.add(createPersistable(entry, session));
@@ -147,7 +147,7 @@ public class ContainersLogsClusterJ implements
 
   private static Map<String, ContainerLog> createMap(
           List<ContainerLogDTO> results) {
-    Map<String, ContainerLog> map = new HashMap<String, ContainerLog>();
+    Map<String, ContainerLog> map = new HashMap<>();
     for (ContainerLogDTO persistable : results) {
       ContainerLog hop = createHopContainerLog(persistable);
       map.put(hop.getContainerid(), hop);

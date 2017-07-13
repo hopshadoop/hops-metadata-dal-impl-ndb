@@ -80,8 +80,8 @@ public class QuotaUpdateClusterj
   public void prepare(Collection<QuotaUpdate> added,
       Collection<QuotaUpdate> removed) throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<QuotaUpdateDTO> changes = new ArrayList<QuotaUpdateDTO>();
-    List<QuotaUpdateDTO> deletions = new ArrayList<QuotaUpdateDTO>();
+    List<QuotaUpdateDTO> changes = new ArrayList<>();
+    List<QuotaUpdateDTO> deletions = new ArrayList<>();
     try {
       if (removed != null) {
         for (QuotaUpdate update : removed) {
@@ -113,7 +113,7 @@ public class QuotaUpdateClusterj
       Connection conn = mysqlConnector.obtainSession();
       PreparedStatement s = conn.prepareStatement(FIND_QUERY + limit);
       ResultSet result = s.executeQuery();
-      resultList = new ArrayList<QuotaUpdate>();
+      resultList = new ArrayList<>();
 
       while (result.next()) {
         int id = result.getInt(ID);
@@ -143,7 +143,7 @@ public class QuotaUpdateClusterj
 
   private List<QuotaUpdate> convertAndRelease(HopsSession session,
       List<QuotaUpdateDTO> list) throws StorageException {
-    List<QuotaUpdate> result = new ArrayList<QuotaUpdate>();
+    List<QuotaUpdate> result = new ArrayList<>();
     for (QuotaUpdateDTO dto : list) {
       result.add(new QuotaUpdate(dto.getId(), dto.getInodeId(),
           dto.getNamespaceDelta(), dto.getDiskspaceDelta()));

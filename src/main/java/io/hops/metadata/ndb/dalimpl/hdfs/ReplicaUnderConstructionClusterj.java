@@ -77,8 +77,8 @@ public class ReplicaUnderConstructionClusterj
       Collection<ReplicaUnderConstruction> newed,
       Collection<ReplicaUnderConstruction> modified) throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<ReplicaUcDTO> changes = new ArrayList<ReplicaUcDTO>();
-    List<ReplicaUcDTO> deletions = new ArrayList<ReplicaUcDTO>();
+    List<ReplicaUcDTO> changes = new ArrayList<>();
+    List<ReplicaUcDTO> deletions = new ArrayList<>();
     try {
       for (ReplicaUnderConstruction replica : removed) {
         ReplicaUcDTO newInstance = session.newInstance(ReplicaUcDTO.class);
@@ -147,7 +147,7 @@ public class ReplicaUnderConstructionClusterj
   private List<ReplicaUnderConstruction> convertAndRelease(HopsSession session,
       List<ReplicaUcDTO> replicaUc) throws StorageException {
     List<ReplicaUnderConstruction> replicas =
-        new ArrayList<ReplicaUnderConstruction>(replicaUc.size());
+        new ArrayList<>(replicaUc.size());
     for (ReplicaUcDTO t : replicaUc) {
       replicas.add(new ReplicaUnderConstruction(t.getState(), t.getStorageId(),
           t.getBlockId(), t.getINodeId()));

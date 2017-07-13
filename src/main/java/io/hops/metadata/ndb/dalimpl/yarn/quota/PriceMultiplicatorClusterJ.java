@@ -87,7 +87,7 @@ public class PriceMultiplicatorClusterJ implements
   public static Map<PriceMultiplicator.MultiplicatorType, PriceMultiplicator> createMap(
           List<PriceMultiplicatorClusterJ.PriceMultiplicatorDTO> results) {
     Map<PriceMultiplicator.MultiplicatorType, PriceMultiplicator> map
-            = new HashMap<PriceMultiplicator.MultiplicatorType, PriceMultiplicator>();
+            = new HashMap<>();
     for (PriceMultiplicatorClusterJ.PriceMultiplicatorDTO persistable : results) {
       PriceMultiplicator hop = createHopPriceMultiplicator(persistable);
       map.put(hop.getId(), hop);

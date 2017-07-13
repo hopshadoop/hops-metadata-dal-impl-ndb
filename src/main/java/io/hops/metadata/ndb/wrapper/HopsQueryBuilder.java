@@ -35,7 +35,7 @@ public class HopsQueryBuilder {
     try {
       QueryDomainType<T> queryDomainType =
           queryBuilder.createQueryDefinition(aClass);
-      return new HopsQueryDomainType<T>(queryDomainType);
+      return new HopsQueryDomainType<>(queryDomainType);
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);
     }

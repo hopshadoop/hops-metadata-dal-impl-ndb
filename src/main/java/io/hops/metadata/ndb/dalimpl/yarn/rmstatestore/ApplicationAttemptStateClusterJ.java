@@ -98,7 +98,7 @@ public class ApplicationAttemptStateClusterJ
       throws StorageException {
     HopsSession session = connector.obtainSession();
     List<ApplicationAttemptStateDTO> toRemove =
-        new ArrayList<ApplicationAttemptStateDTO>();
+        new ArrayList<>();
     for (ApplicationAttemptState hop : removed) {
       Object[] objarr = new Object[2];
       objarr[0] = hop.getApplicationId();
@@ -124,9 +124,7 @@ public class ApplicationAttemptStateClusterJ
           entry.getapplicationattemptid(),
           CompressionUtils.decompress(entry.getapplicationattemptstate()),
           entry.gettrakingurl());
-    } catch (IOException e) {
-      throw new StorageException(e);
-    } catch (DataFormatException e) {
+    } catch (IOException | DataFormatException e) {
       throw new StorageException(e);
     }
   }
@@ -155,7 +153,7 @@ public class ApplicationAttemptStateClusterJ
   private Map<String, List<ApplicationAttemptState>> createMap(
       List<ApplicationAttemptStateDTO> results) throws StorageException {
     Map<String, List<ApplicationAttemptState>> map =
-        new HashMap<String, List<ApplicationAttemptState>>();
+        new HashMap<>();
     for (ApplicationAttemptStateDTO persistable : results) {
       ApplicationAttemptState hop =
           createHopApplicationAttemptState(persistable);

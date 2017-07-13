@@ -134,9 +134,7 @@ public class ApplicationStateClusterJ implements
             CompressionUtils.decompress(appStateDTO.getappstate()), appStateDTO.
             getappuser(), appStateDTO.getappname(),
             appStateDTO.getappsmstate());
-      } catch (IOException e) {
-        throw new StorageException(e);
-      } catch (DataFormatException e) {
+      } catch (IOException | DataFormatException e) {
         throw new StorageException(e);
       }
       return state;
@@ -147,7 +145,7 @@ public class ApplicationStateClusterJ implements
 
   private List<ApplicationState> createHopApplicationStateList(
       List<ApplicationStateDTO> list) throws StorageException {
-    List<ApplicationState> hopList = new ArrayList<ApplicationState>();
+    List<ApplicationState> hopList = new ArrayList<>();
     for (ApplicationStateDTO dto : list) {
       hopList.add(createHopApplicationState(dto));
     }

@@ -140,7 +140,7 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
     HopsPredicate lessThan = propertyPredicate.lessThan(propertyLimit);
     dobj.where(lessThan);
     HopsQuery query = session.createQuery(dobj);
-    query.setParameter(param, new Long(timeLimit));
+    query.setParameter(param, timeLimit);
     
     List<LeaseDTO> dtos = query.getResultList();
     Collection<Lease> ll = createList(dtos);
@@ -152,8 +152,8 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
   public void prepare(Collection<Lease> removed, Collection<Lease> newed,
       Collection<Lease> modified) throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<LeaseDTO> changes = new ArrayList<LeaseDTO>();
-    List<LeaseDTO> deletions = new ArrayList<LeaseDTO>();
+    List<LeaseDTO> changes = new ArrayList<>();
+    List<LeaseDTO> deletions = new ArrayList<>();
     try {
       for (Lease l : newed) {
         LeaseDTO lTable = session.newInstance(LeaseDTO.class);
@@ -183,7 +183,7 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
   }
 
   private Collection<Lease> createList(List<LeaseDTO> list) {
-    Collection<Lease> finalSet = new ArrayList<Lease>();
+    Collection<Lease> finalSet = new ArrayList<>();
     for (LeaseDTO dto : list) {
       finalSet.add(createLease(dto));
     }

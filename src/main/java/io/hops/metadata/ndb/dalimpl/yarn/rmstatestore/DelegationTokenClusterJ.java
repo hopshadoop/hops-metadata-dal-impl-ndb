@@ -101,9 +101,7 @@ public class DelegationTokenClusterJ implements
     try {
       return new DelegationToken(delegationTokenDTO.getseqnumber(),
           CompressionUtils.decompress(delegationTokenDTO.getrmdtidentifier()));
-    } catch (IOException e) {
-      throw new StorageException(e);
-    } catch (DataFormatException e) {
+    } catch (IOException | DataFormatException e) {
       throw new StorageException(e);
     }
   }
@@ -111,7 +109,7 @@ public class DelegationTokenClusterJ implements
   private List<DelegationToken> createHopDelegationTokenList(
       List<DelegationTokenClusterJ.DelegationTokenDTO> list)
       throws StorageException {
-    List<DelegationToken> hopList = new ArrayList<DelegationToken>();
+    List<DelegationToken> hopList = new ArrayList<>();
     for (DelegationTokenClusterJ.DelegationTokenDTO dto : list) {
       hopList.add(createHopDelegationToken(dto));
     }

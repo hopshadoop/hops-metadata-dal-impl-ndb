@@ -136,7 +136,7 @@ public class ContainerStatusClusterJ implements
   public void addAll(Collection<ContainerStatus> containersStatus)
       throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<ContainerStatusDTO> toAdd = new ArrayList<ContainerStatusDTO>();
+    List<ContainerStatusDTO> toAdd = new ArrayList<>();
     for (ContainerStatus containerStatus : containersStatus) {
       toAdd.add(createPersistable(containerStatus, session));
     }
@@ -149,7 +149,7 @@ public class ContainerStatusClusterJ implements
   public void removeAll(Collection<ContainerStatus> containersStatus)
       throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<ContainerStatusDTO> toRemove = new ArrayList<ContainerStatusDTO>();
+    List<ContainerStatusDTO> toRemove = new ArrayList<>();
     for (ContainerStatus containerStatus : containersStatus) {
       toRemove.add(createPersistable(containerStatus, session));
     }
@@ -182,7 +182,7 @@ public class ContainerStatusClusterJ implements
 
   public static Map<String, ContainerStatus> createMap(
       List<ContainerStatusDTO> results) {
-    Map<String, ContainerStatus> map = new HashMap<String, ContainerStatus>();
+    Map<String, ContainerStatus> map = new HashMap<>();
     for (ContainerStatusDTO persistable : results) {
       ContainerStatus hop = createHopContainerStatus(persistable);
       map.put(hop.getContainerid(), hop);
@@ -193,7 +193,7 @@ public class ContainerStatusClusterJ implements
   public static List<ContainerStatus> createList(
           List<ContainerStatusDTO> results) {
     List<ContainerStatus> list
-            = new ArrayList<ContainerStatus>();
+            = new ArrayList<>();
     for (ContainerStatusDTO persistable : results) {
       ContainerStatus hop = createHopContainerStatus(persistable);
       list.add(hop);
