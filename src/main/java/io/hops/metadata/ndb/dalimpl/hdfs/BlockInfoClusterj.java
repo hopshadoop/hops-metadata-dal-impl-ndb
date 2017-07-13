@@ -113,12 +113,12 @@ public class BlockInfoClusterj
   @Override
   public void prepare(Collection<BlockInfo> removed, Collection<BlockInfo> news,
           Collection<BlockInfo> modified) throws StorageException {
-    List<BlockInfoDTO> blkChanges = new ArrayList<BlockInfoDTO>();
-    List<BlockInfoDTO> blkDeletions = new ArrayList<BlockInfoDTO>();
+    List<BlockInfoDTO> blkChanges = new ArrayList<>();
+    List<BlockInfoDTO> blkDeletions = new ArrayList<>();
     List<BlockLookUpClusterj.BlockLookUpDTO> luChanges =
-            new ArrayList<BlockLookUpClusterj.BlockLookUpDTO>();
+        new ArrayList<>();
     List<BlockLookUpClusterj.BlockLookUpDTO> luDeletions =
-            new ArrayList<BlockLookUpClusterj.BlockLookUpDTO>();
+        new ArrayList<>();
 
     HopsSession session = connector.obtainSession();
     try {
@@ -293,7 +293,7 @@ public class BlockInfoClusterj
   private List<BlockInfo> readBlockInfoBatch(final HopsSession session,
           final int[] inodeIds, final long[] blockIds) throws StorageException {
     final List<BlockInfoClusterj.BlockInfoDTO> bdtos =
-            new ArrayList<BlockInfoDTO>();
+        new ArrayList<>();
     try {
       for (int i = 0; i < blockIds.length; i++) {
         Object[] pk = new Object[]{inodeIds[i], blockIds[i]};
@@ -313,7 +313,7 @@ public class BlockInfoClusterj
 
   private List<BlockInfo> createBlockInfoList(
           List<BlockInfoClusterj.BlockInfoDTO> bitList) {
-    List<BlockInfo> list = new ArrayList<BlockInfo>();
+    List<BlockInfo> list = new ArrayList<>();
     if (bitList != null) {
       for (BlockInfoClusterj.BlockInfoDTO blockInfoDTO : bitList) {
         if (blockInfoDTO.getBlockIndex() != NOT_FOUND_ROW) {

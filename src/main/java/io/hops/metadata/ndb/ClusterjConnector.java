@@ -63,7 +63,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   private final static ClusterjConnector instance = new ClusterjConnector();
   private static boolean isInitialized = false;
   private DBSessionProvider dbSessionProvider = null;
-  static ThreadLocal<DBSession> sessions = new ThreadLocal<DBSession>();
+  static ThreadLocal<DBSession> sessions = new ThreadLocal<>();
   static final Log LOG = LogFactory.getLog(ClusterjConnector.class);
   private String clusterConnectString;
   private String databaseName;

@@ -48,7 +48,7 @@ public class HopsQueryDomainType<E> {
   public HopsQueryDefinition<E> where(HopsPredicate predicate)
       throws StorageException {
     try {
-      return new HopsQueryDefinition<E>(
+      return new HopsQueryDefinition<>(
           queryDomainType.where(predicate.getPredicate()));
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);

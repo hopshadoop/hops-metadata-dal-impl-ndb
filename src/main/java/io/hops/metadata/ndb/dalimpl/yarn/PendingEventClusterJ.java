@@ -104,7 +104,7 @@ public class PendingEventClusterJ
           throws StorageException {
     HopsSession session = connector.obtainSession();
     List<PendingEventClusterJ.PendingEventDTO> toPersist
-            = new ArrayList<PendingEventClusterJ.PendingEventDTO>();
+            = new ArrayList<>();
     for (PendingEvent pendEvent : toAddPendingEvent) {
       PendingEventClusterJ.PendingEventDTO pendingEventDTO = createPersistable(
               new PendingEvent(pendEvent.getId().getNodeId(), pendEvent.
@@ -137,7 +137,7 @@ public class PendingEventClusterJ
           throws StorageException {
     HopsSession session = connector.obtainSession();
     List<PendingEventClusterJ.PendingEventDTO> toRemove
-            = new ArrayList<PendingEventClusterJ.PendingEventDTO>();
+            = new ArrayList<>();
     for (PendingEvent pendEvent : toRemovePendingEvents) {
       toRemove.add(createPersistable(pendEvent, session));
     }
@@ -230,7 +230,7 @@ public class PendingEventClusterJ
       List<PendingEventDTO> results) {
     List<PendingEvent> hopList = null;
     if (results != null && !results.isEmpty()) {
-      hopList = new ArrayList<PendingEvent>(results.size());
+      hopList = new ArrayList<>(results.size());
       for (PendingEventDTO DTO : results) {
         PendingEvent hop = new PendingEvent(DTO.getrmnodeid(), PendingEvent.Type.valueOf(DTO.
             getType()), PendingEvent.Status.valueOf(DTO.getStatus()), DTO.getId(),

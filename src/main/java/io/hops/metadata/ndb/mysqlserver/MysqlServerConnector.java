@@ -53,7 +53,7 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
    * @see MysqlServerConnector#getConnectionPool()
    */
   private static volatile HikariDataSource connectionPool;
-  private ThreadLocal<Connection> connection = new ThreadLocal<Connection>();
+  private ThreadLocal<Connection> connection = new ThreadLocal<>();
 
   public static MysqlServerConnector getInstance() {
     return instance;

@@ -102,9 +102,7 @@ public class DelegationKeyClusterJ
     try {
       return new DelegationKey(delegationKeyDTO.getkey(), CompressionUtils.
           decompress(delegationKeyDTO.getdelegationkey()));
-    } catch (IOException e) {
-      throw new StorageException(e);
-    } catch (DataFormatException e) {
+    } catch (IOException | DataFormatException e) {
       throw new StorageException(e);
     }
   }
@@ -112,7 +110,7 @@ public class DelegationKeyClusterJ
   private List<DelegationKey> createHopDelegationKeyList(
       List<DelegationKeyClusterJ.DelegationKeyDTO> list)
       throws StorageException {
-    List<DelegationKey> hopList = new ArrayList<DelegationKey>();
+    List<DelegationKey> hopList = new ArrayList<>();
     for (DelegationKeyClusterJ.DelegationKeyDTO dto : list) {
       hopList.add(createHopDelegationKey(dto));
     }

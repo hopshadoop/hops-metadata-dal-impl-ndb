@@ -262,7 +262,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
         EncodingStatus.Status.ENCODING_REQUESTED.ordinal(), limit);
     Collection<EncodingStatus> copyEncodings = findWithStatus(
         EncodingStatus.Status.COPY_ENCODING_REQUESTED.ordinal(), limit);
-    ArrayList<EncodingStatus> requests = new ArrayList<EncodingStatus>(limit);
+    ArrayList<EncodingStatus> requests = new ArrayList<>(limit);
     requests.addAll(normalEncodings);
     requests.addAll(copyEncodings);
     Collections.sort(requests, new Comparator<EncodingStatus>() {
@@ -421,7 +421,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
   private List<EncodingStatus> createHopEncodings(
       List<EncodingStatusDto> list) {
-    List<EncodingStatus> result = new ArrayList<EncodingStatus>(list.size());
+    List<EncodingStatus> result = new ArrayList<>(list.size());
     for (EncodingStatusDto dto : list) {
       result.add(createHopEncoding(dto));
     }
@@ -489,7 +489,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
       PreparedStatement s = conn.prepareStatement(query);
       ResultSet result = s.executeQuery();
 
-      resultList = new ArrayList<EncodingStatus>();
+      resultList = new ArrayList<>();
 
       while (result.next()) {
         Integer inodeId = result.getInt(INODE_ID);

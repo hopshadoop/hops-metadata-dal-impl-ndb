@@ -80,8 +80,8 @@ public class ExcessReplicaClusterj
       Collection<ExcessReplica> newed, Collection<ExcessReplica> modified)
       throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<ExcessReplicaDTO> changes = new ArrayList<ExcessReplicaDTO>();
-    List<ExcessReplicaDTO> deletions = new ArrayList<ExcessReplicaDTO>();
+    List<ExcessReplicaDTO> changes = new ArrayList<>();
+    List<ExcessReplicaDTO> deletions = new ArrayList<>();
     try {
       for (ExcessReplica exReplica : newed) {
         ExcessReplicaDTO newInstance =
@@ -201,7 +201,7 @@ public class ExcessReplicaClusterj
   }
 
   private List<ExcessReplica> createList(List<ExcessReplicaDTO> list) {
-    List<ExcessReplica> result = new ArrayList<ExcessReplica>();
+    List<ExcessReplica> result = new ArrayList<>();
     for (ExcessReplicaDTO item : list) {
       result.add(createReplica(item));
     }

@@ -70,8 +70,8 @@ public class OnGoingSubTreeOpsClusterj
       Collection<SubTreeOperation> newed, Collection<SubTreeOperation> modified)
           throws StorageException {
     
-    List<OnGoingSubTreeOpsDTO> changes = new ArrayList<OnGoingSubTreeOpsDTO>();
-    List<OnGoingSubTreeOpsDTO> deletions = new ArrayList<OnGoingSubTreeOpsDTO>();
+    List<OnGoingSubTreeOpsDTO> changes = new ArrayList<>();
+    List<OnGoingSubTreeOpsDTO> deletions = new ArrayList<>();
     HopsSession dbSession = connector.obtainSession();
     try {
       for (SubTreeOperation ops : newed) {
@@ -152,7 +152,7 @@ public class OnGoingSubTreeOpsClusterj
 
   private List<SubTreeOperation> convertAndRelease(HopsSession session,
       Collection<OnGoingSubTreeOpsDTO> dtos) throws StorageException {
-    List<SubTreeOperation> list = new ArrayList<SubTreeOperation>();
+    List<SubTreeOperation> list = new ArrayList<>();
     for (OnGoingSubTreeOpsDTO dto : dtos) {
       list.add(convertAndRelease(session, dto));
     }

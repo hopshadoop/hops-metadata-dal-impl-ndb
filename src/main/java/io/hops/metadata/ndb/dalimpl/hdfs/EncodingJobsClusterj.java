@@ -122,7 +122,7 @@ public class EncodingJobsClusterj implements TablesDef.EncodingJobsTableDef,
 
   private List<EncodingJob> createList(List<EncodingJobDto> dtos) {
     ArrayList<EncodingJob> list =
-        new ArrayList<EncodingJob>(dtos.size());
+        new ArrayList<>(dtos.size());
     for (EncodingJobDto dto : dtos) {
       list.add(create(dto));
     }

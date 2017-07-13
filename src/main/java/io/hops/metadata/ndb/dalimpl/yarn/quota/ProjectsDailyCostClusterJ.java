@@ -116,7 +116,7 @@ public class ProjectsDailyCostClusterJ implements
   public static Map<ProjectDailyId, ProjectDailyCost> createMap(
           List<ProjectDailyCostDTO> results) {
     Map<ProjectDailyId, ProjectDailyCost> map
-            = new HashMap<ProjectDailyId, ProjectDailyCost>();
+            = new HashMap<>();
     for (ProjectDailyCostDTO persistable
             : results) {
       ProjectDailyCost hop = createHopProjectDailyCost(persistable);
@@ -140,7 +140,7 @@ public class ProjectsDailyCostClusterJ implements
           throws StorageException {
     HopsSession session = connector.obtainSession();
     List<ProjectDailyCostDTO> toAdd
-            = new ArrayList<ProjectDailyCostDTO>();
+            = new ArrayList<>();
     for (ProjectDailyCost _yarnProjectDailyCost : yarnProjectDailyCost) {
       toAdd.add(createPersistable(_yarnProjectDailyCost, session));
     }

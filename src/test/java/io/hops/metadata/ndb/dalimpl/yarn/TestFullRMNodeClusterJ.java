@@ -84,23 +84,23 @@ public class TestFullRMNodeClusterJ {
                     100, 100, 0);
 
     final List<UpdatedContainerInfo> hopUpdatedContainers
-            = new ArrayList<UpdatedContainerInfo>();
+            = new ArrayList<>();
     hopUpdatedContainers.add(new UpdatedContainerInfo("70", "container3", 1,
             DEFAULT_PENDIND_ID));
     hopUpdatedContainers.add(new UpdatedContainerInfo("70", "container4", 2,
             DEFAULT_PENDIND_ID));
 
-    final List<ContainerId> hopContainerIds = new ArrayList<ContainerId>();
+    final List<ContainerId> hopContainerIds = new ArrayList<>();
     hopContainerIds.add(new ContainerId("70", "container5"));
     hopContainerIds.add(new ContainerId("70", "container6"));
 
     final List<FinishedApplications> hopFinishedApps
-            = new ArrayList<FinishedApplications>();
+            = new ArrayList<>();
     hopFinishedApps.add(new FinishedApplications("70", "app1"));
     hopFinishedApps.add(new FinishedApplications("70", "app2"));
 
     final List<ContainerStatus> hopContainersStatus
-            = new ArrayList<ContainerStatus>();
+            = new ArrayList<>();
     hopContainersStatus.add(
             new ContainerStatus("container1",
                     TablesDef.ContainerStatusTableDef.STATE_RUNNING,

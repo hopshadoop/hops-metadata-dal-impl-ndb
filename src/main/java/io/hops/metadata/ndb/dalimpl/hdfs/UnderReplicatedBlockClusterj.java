@@ -109,9 +109,9 @@ public class UnderReplicatedBlockClusterj
       Collection<UnderReplicatedBlock> modified) throws StorageException {
     HopsSession session = connector.obtainSession();
     List<UnderReplicatedBlocksDTO> changes =
-        new ArrayList<UnderReplicatedBlocksDTO>();
+        new ArrayList<>();
     List<UnderReplicatedBlocksDTO> deletions =
-        new ArrayList<UnderReplicatedBlocksDTO>();
+        new ArrayList<>();
     try {
       for (UnderReplicatedBlock urBlock : removed) {
         UnderReplicatedBlocksDTO newInstance =
@@ -160,7 +160,7 @@ public class UnderReplicatedBlockClusterj
 
   private List<UnderReplicatedBlock> convertAndRelease(HopsSession session,
       List<UnderReplicatedBlocksDTO> bitList) throws StorageException {
-    List<UnderReplicatedBlock> blocks = new ArrayList<UnderReplicatedBlock>();
+    List<UnderReplicatedBlock> blocks = new ArrayList<>();
     for (UnderReplicatedBlocksDTO bit : bitList) {
       blocks.add(convertAndRelease(session, bit));
     }

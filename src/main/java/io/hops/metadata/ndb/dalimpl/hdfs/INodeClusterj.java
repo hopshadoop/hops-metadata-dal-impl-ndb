@@ -180,8 +180,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   public void prepare(Collection<INode> removed, Collection<INode> newEntries,
       Collection<INode> modified) throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<InodeDTO> changes = new ArrayList<InodeDTO>();
-    List<InodeDTO> deletions = new ArrayList<InodeDTO>();
+    List<InodeDTO> changes = new ArrayList<>();
+    List<InodeDTO> deletions = new ArrayList<>();
     try {
       for (INode inode : removed) {
         Object[] pk = new Object[3];
@@ -309,7 +309,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
       HopsQuery<InodeDTO> query = session.createQuery(dobj);
       query.setParameter("parentIDParam", parentId);
 
-      ArrayList<ProjectedINode> resultList = new ArrayList<ProjectedINode>();
+      ArrayList<ProjectedINode> resultList = new ArrayList<>();
       results = query.getResultList();
       for (InodeDTO inode : results) {
         resultList.add(createProjectedINode(inode));
@@ -398,7 +398,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
       query.setParameter("partitionIDParam", partitionId);
       query.setParameter("parentIDParam", parentId);
 
-      ArrayList<ProjectedINode> resultList = new ArrayList<ProjectedINode>();
+      ArrayList<ProjectedINode> resultList = new ArrayList<>();
       results = query.getResultList();
       for (InodeDTO inode : results) {
         resultList.add(createProjectedINode(inode));
@@ -475,7 +475,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
       throws StorageException {
     HopsSession session = connector.obtainSession();
 
-    List<InodeDTO> dtos = new ArrayList<InodeDTO>();
+    List<InodeDTO> dtos = new ArrayList<>();
     try {
       for (int i = 0; i < names.length; i++) {
         InodeDTO dto = session
@@ -515,7 +515,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     query.setParameter("startId", (int) startId);
     query.setParameter("endId", (int) (endId - 1));
     List<InodeDTO> dtos = query.getResultList();
-    List<INodeIdentifier> res = new ArrayList<INodeIdentifier>();
+    List<INodeIdentifier> res = new ArrayList<>();
     for (InodeDTO dto : dtos) {
       res.add(
           new INodeIdentifier(dto.getId(), dto.getParentId(), dto.getName(), dto.getPartitionId()));
@@ -602,7 +602,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 
   
   private List<INode> convert(List<InodeDTO> list) throws StorageException {
-    List<INode> inodes = new ArrayList<INode>();
+    List<INode> inodes = new ArrayList<>();
     for (InodeDTO persistable : list) {
       if (persistable.getId() != NOT_FOUND_ROW) {
         inodes.add(convert(persistable));

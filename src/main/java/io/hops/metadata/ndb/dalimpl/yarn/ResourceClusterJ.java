@@ -114,7 +114,7 @@ public class ResourceClusterJ
   @Override
   public void addAll(Collection<Resource> toAdd) throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<ResourceDTO> toPersist = new ArrayList<ResourceDTO>();
+    List<ResourceDTO> toPersist = new ArrayList<>();
     for (Resource req : toAdd) {
       toPersist.add(createPersistable(req, session));
     }
@@ -126,7 +126,7 @@ public class ResourceClusterJ
   @Override
   public void removeAll(Collection<Resource> toRemove) throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<ResourceDTO> toPersist = new ArrayList<ResourceDTO>();
+    List<ResourceDTO> toPersist = new ArrayList<>();
     for (Resource req : toRemove) {
       Object[] pk = new Object[3];
       pk[0] = req.getId();
@@ -167,7 +167,7 @@ public class ResourceClusterJ
   private Map<String, Resource> createMap(
           List<ResourceDTO> results) {
     Map<String, Resource> map;
-    map = new HashMap<String, Resource>();
+    map = new HashMap<>();
     for (ResourceDTO dto : results) {
       Resource hop = createHopResource(dto);
       map.put(hop.getId(), hop);

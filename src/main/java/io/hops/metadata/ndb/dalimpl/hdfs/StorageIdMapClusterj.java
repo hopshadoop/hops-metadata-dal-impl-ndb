@@ -90,7 +90,7 @@ public class StorageIdMapClusterj
 
   private Collection<StorageId> convertAndRelease(HopsSession session,
       List<StorageIdDTO> dtos) throws StorageException {
-    List<StorageId> hopstorageId = new ArrayList<StorageId>();
+    List<StorageId> hopstorageId = new ArrayList<>();
     for (StorageIdDTO sdto : dtos) {
       hopstorageId.add(convertAndRelease(session, sdto));
     }

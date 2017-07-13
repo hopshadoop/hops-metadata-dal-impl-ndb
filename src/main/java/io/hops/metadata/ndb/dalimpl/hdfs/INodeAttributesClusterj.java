@@ -87,9 +87,9 @@ public class INodeAttributesClusterj implements
       List<INodeCandidatePrimaryKey> inodePks) throws StorageException {
     HopsSession session = connector.obtainSession();
     List<INodeAttributes> inodeAttributesBatchResponse =
-        new ArrayList<INodeAttributes>();
+        new ArrayList<>();
     List<INodeAttributesDTO> inodeAttributesBatchRequest =
-        new ArrayList<INodeAttributesDTO>();
+        new ArrayList<>();
 
     try {
       for (INodeCandidatePrimaryKey pk : inodePks) {
@@ -100,10 +100,10 @@ public class INodeAttributesClusterj implements
       }
 
       session.flush();
-
-      for (int i = 0; i < inodeAttributesBatchRequest.size(); i++) {
+  
+      for (INodeAttributesDTO anInodeAttributesBatchRequest : inodeAttributesBatchRequest) {
         inodeAttributesBatchResponse
-                .add(makeINodeAttributes(inodeAttributesBatchRequest.get(i)));
+            .add(makeINodeAttributes(anInodeAttributesBatchRequest));
       }
 
       return inodeAttributesBatchResponse;
@@ -116,8 +116,8 @@ public class INodeAttributesClusterj implements
   public void prepare(Collection<INodeAttributes> modified,
       Collection<INodeAttributes> removed) throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<INodeAttributesDTO> changes = new ArrayList<INodeAttributesDTO>();
-    List<INodeAttributesDTO> deletions = new ArrayList<INodeAttributesDTO>();
+    List<INodeAttributesDTO> changes = new ArrayList<>();
+    List<INodeAttributesDTO> deletions = new ArrayList<>();
     try {
       if (removed != null) {
         for (INodeAttributes attr : removed) {

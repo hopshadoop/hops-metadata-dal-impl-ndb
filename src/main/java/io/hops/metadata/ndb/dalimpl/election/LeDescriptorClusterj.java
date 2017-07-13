@@ -104,8 +104,8 @@ public abstract class LeDescriptorClusterj
       Collection<LeDescriptor> newed, Collection<LeDescriptor> modified)
       throws StorageException {
     HopsSession dbSession = connector.obtainSession();
-    List<LeaderDTO> changes = new ArrayList<LeaderDTO>();
-    List<LeaderDTO> deletions = new ArrayList<LeaderDTO>();
+    List<LeaderDTO> changes = new ArrayList<>();
+    List<LeaderDTO> deletions = new ArrayList<>();
     for (LeDescriptor l : newed) {
 
       LeaderDTO lTable = (LeaderDTO) dbSession.newInstance(dto);
@@ -129,7 +129,7 @@ public abstract class LeDescriptorClusterj
   }
 
   private Collection<LeDescriptor> createList(final List<LeaderDTO> list) {
-    Collection<LeDescriptor> listRet = new ArrayList<LeDescriptor>(list.size());
+    Collection<LeDescriptor> listRet = new ArrayList<>(list.size());
     for (LeaderDTO dto : list) {
       listRet.add(createDescriptor(dto));
     }
