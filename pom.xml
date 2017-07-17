@@ -100,6 +100,30 @@
       </plugin>
 
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>2.7</version>
+        <executions>
+          <execution>
+            <id>deploy-file</id>
+            <phase>deploy</phase>
+            <goals>
+              <goal>deploy-file</goal>
+            </goals>
+            <configuration>
+              <repositoryId>sics-release-repository</repositoryId>
+              <url>scpexe://kompics.i.sics.se/home/maven/repository</url>
+              <packaging>so</packaging>
+              <generatePom>true</generatePom>
+              <artifactId>libhopsyarn</artifactId>
+              <groupId>io.hops.streaming</groupId>
+              <version>${project.version}</version>
+              <file>target/classes/libhopsyarn.so</file>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <descriptorRefs>
