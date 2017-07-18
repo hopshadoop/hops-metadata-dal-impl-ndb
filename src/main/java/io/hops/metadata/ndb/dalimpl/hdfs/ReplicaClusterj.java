@@ -128,7 +128,7 @@ public class ReplicaClusterj
       throws StorageException {
     HopsSession session = connector.obtainSession();
     List<ReplicaDTO> res = getReplicas(session, storageId);
-    Map<Long,Integer> map = new HashMap<Long,Integer>();
+    Map<Long,Integer> map = new HashMap<>();
     for(ReplicaDTO dto : res){
       map.put(dto.getBlockId(), dto.getINodeId() );
     }
@@ -140,8 +140,8 @@ public class ReplicaClusterj
   public void prepare(Collection<Replica> removed,
       Collection<Replica> newed, Collection<Replica> modified)
       throws StorageException {
-    List<ReplicaDTO> changes = new ArrayList<ReplicaDTO>();
-    List<ReplicaDTO> deletions = new ArrayList<ReplicaDTO>();
+    List<ReplicaDTO> changes = new ArrayList<>();
+    List<ReplicaDTO> deletions = new ArrayList<>();
     HopsSession session = connector.obtainSession();
     try {
       for (Replica replica : removed) {
@@ -206,7 +206,7 @@ public class ReplicaClusterj
   private List<Replica> convertAndRelease(HopsSession session,
       List<ReplicaDTO> triplets) throws StorageException {
     List<Replica> replicas =
-        new ArrayList<Replica>(triplets.size());
+        new ArrayList<>(triplets.size());
     for (ReplicaDTO t : triplets) {
         replicas.add(
             new Replica(t.getStorageId(), t.getBlockId(), t.getINodeId()));

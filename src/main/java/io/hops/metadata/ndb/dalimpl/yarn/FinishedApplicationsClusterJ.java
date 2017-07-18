@@ -114,7 +114,7 @@ public class FinishedApplicationsClusterJ
       throws StorageException {
     HopsSession session = connector.obtainSession();
     List<FinishedApplicationsDTO> toModify =
-        new ArrayList<FinishedApplicationsDTO>();
+        new ArrayList<>();
     for (FinishedApplications entry : applications) {
       toModify.add(createPersistable(entry, session));
     }
@@ -137,7 +137,7 @@ public class FinishedApplicationsClusterJ
       throws StorageException {
     HopsSession session = connector.obtainSession();
     List<FinishedApplicationsDTO> toRemove =
-        new ArrayList<FinishedApplicationsDTO>();
+        new ArrayList<>();
     for (FinishedApplications entry : applications) {
       toRemove.add(createPersistable(entry, session));
     }
@@ -162,7 +162,7 @@ public class FinishedApplicationsClusterJ
   private List<FinishedApplications> createUpdatedContainerInfoList(
       List<FinishedApplicationsDTO> list) {
     List<FinishedApplications> finishedApps =
-        new ArrayList<FinishedApplications>();
+        new ArrayList<>();
     for (FinishedApplicationsDTO persistable : list) {
       finishedApps.add(createHopFinishedApplications(persistable));
     }
@@ -172,7 +172,7 @@ public class FinishedApplicationsClusterJ
   private Map<String, List<FinishedApplications>> createMap(
       List<FinishedApplicationsDTO> results) {
     Map<String, List<FinishedApplications>> map =
-        new HashMap<String, List<FinishedApplications>>();
+        new HashMap<>();
     for (FinishedApplicationsDTO dto : results) {
       FinishedApplications hop = createHopFinishedApplications(dto);
       if (map.get(hop.getRMNodeID()) == null) {

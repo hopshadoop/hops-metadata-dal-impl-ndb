@@ -39,9 +39,9 @@ public class DBSessionProvider implements Runnable {
   static final Log LOG = LogFactory.getLog(DBSessionProvider.class);
   static HopsSessionFactory sessionFactory;
   private ConcurrentLinkedQueue<DBSession> sessionPool =
-      new ConcurrentLinkedQueue<DBSession>();
+      new ConcurrentLinkedQueue<>();
   private ConcurrentLinkedQueue<DBSession> toGC =
-      new ConcurrentLinkedQueue<DBSession>();
+      new ConcurrentLinkedQueue<>();
   private final int MAX_REUSE_COUNT;
   private Properties conf;
   private final Random rand;
@@ -144,8 +144,8 @@ public class DBSessionProvider implements Runnable {
 
   public double getSessionCreationRollingAvg() {
     double avg = 0;
-    for (int i = 0; i < rollingAvg.length; i++) {
-      avg += rollingAvg[i];
+    for (long aRollingAvg : rollingAvg) {
+      avg += aRollingAvg;
     }
     avg = avg / rollingAvg.length;
     return avg;

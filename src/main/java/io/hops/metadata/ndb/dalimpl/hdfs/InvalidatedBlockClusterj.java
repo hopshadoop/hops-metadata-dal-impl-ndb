@@ -125,7 +125,7 @@ public class InvalidatedBlockClusterj implements
   @Override
   public Map<Long, Long> findInvalidatedBlockAndGenStampByStorageId(int storageId)
       throws StorageException {
-    Map<Long,Long> blockInodeMap = new HashMap<Long,Long>();
+    Map<Long,Long> blockInodeMap = new HashMap<>();
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<InvalidateBlocksDTO> qdt =
@@ -149,7 +149,7 @@ public class InvalidatedBlockClusterj implements
             + "FROM %s WHERE %s='%d'", BLOCK_ID, GENERATION_STAMP, TABLE_NAME, STORAGE_ID, storageId), new MySQLQueryHelper.ResultSetHandler<Map<Long,Long>>() {
       @Override
       public Map<Long,Long> handle(ResultSet result) throws SQLException {
-        Map<Long,Long> blockInodeMap = new HashMap<Long,Long>();
+        Map<Long,Long> blockInodeMap = new HashMap<>();
         while (result.next()) {
           blockInodeMap.put(result.getLong(BLOCK_ID),result.getLong(GENERATION_STAMP));
         }
@@ -239,12 +239,12 @@ public class InvalidatedBlockClusterj implements
       throws StorageException {
     int currentTableSize = countAll();
     if (currentTableSize == 0) {
-      return new ArrayList<InvalidatedBlock>();
+      return new ArrayList<>();
     } else if (currentTableSize < inodesIds.length) {
       return findAllInvalidatedBlocks();
     }
     final List<InvalidateBlocksDTO> invBlocks =
-        new ArrayList<InvalidateBlocksDTO>();
+        new ArrayList<>();
     HopsSession session = connector.obtainSession();
     try {
       for (int i = 0; i < blockIds.length; i++) {
@@ -268,8 +268,8 @@ public class InvalidatedBlockClusterj implements
       Collection<InvalidatedBlock> newed, Collection<InvalidatedBlock> modified)
       throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<InvalidateBlocksDTO> changes = new ArrayList<InvalidateBlocksDTO>();
-    List<InvalidateBlocksDTO> deletions = new ArrayList<InvalidateBlocksDTO>();
+    List<InvalidateBlocksDTO> changes = new ArrayList<>();
+    List<InvalidateBlocksDTO> deletions = new ArrayList<>();
     try {
       for (InvalidatedBlock invBlock : newed) {
         InvalidateBlocksDTO newInstance =
@@ -316,7 +316,7 @@ public class InvalidatedBlockClusterj implements
 
 
   private List<InvalidatedBlock> createList(List<InvalidateBlocksDTO> dtoList) {
-    List<InvalidatedBlock> list = new ArrayList<InvalidatedBlock>();
+    List<InvalidatedBlock> list = new ArrayList<>();
     for (InvalidateBlocksDTO dto : dtoList) {
       if (dto.getGenerationStamp() != NOT_FOUND_ROW) {
         list.add(createReplica(dto));

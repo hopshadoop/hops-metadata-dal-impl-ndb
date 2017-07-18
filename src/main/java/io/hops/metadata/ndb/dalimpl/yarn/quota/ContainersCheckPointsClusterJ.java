@@ -83,7 +83,7 @@ public class ContainersCheckPointsClusterJ implements
           StorageException {
     HopsSession session = connector.obtainSession();
     List<ContainerCheckPointDTO> toAdd
-            = new ArrayList<ContainerCheckPointDTO>();
+            = new ArrayList<>();
     for (ContainerCheckPoint checkPoint : containersCheckPoints) {
       toAdd.add(createPersistable(checkPoint, session));
     }
@@ -96,7 +96,7 @@ public class ContainersCheckPointsClusterJ implements
           StorageException {
     HopsSession session = connector.obtainSession();
     List<ContainerCheckPointDTO> toRemove
-            = new ArrayList<ContainerCheckPointDTO>();
+            = new ArrayList<>();
     for (ContainerCheckPoint checkPoint : containersCheckPoints) {
       toRemove.add(createPersistable(checkPoint, session));
     }
@@ -118,7 +118,7 @@ public class ContainersCheckPointsClusterJ implements
 
   public static Map<String, ContainerCheckPoint> createMap(
           List<ContainerCheckPointDTO> dtos) {
-    Map<String, ContainerCheckPoint> map = new HashMap<String, ContainerCheckPoint>();
+    Map<String, ContainerCheckPoint> map = new HashMap<>();
     for (ContainerCheckPointDTO dto : dtos) {
       map.put(dto.getContainerID(), new ContainerCheckPoint(dto.getContainerID()
                                                            ,dto.getCheckPoint(), 

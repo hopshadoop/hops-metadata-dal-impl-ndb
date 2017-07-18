@@ -93,8 +93,8 @@ public class NextHeartbeatClusterJ
   public void updateAll(Collection<NextHeartbeat> toUpdate)
           throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<NextHeartbeatDTO> toPersist = new ArrayList<NextHeartbeatDTO>();
-    List<NextHeartbeatDTO> toRemove = new ArrayList<NextHeartbeatDTO>();
+    List<NextHeartbeatDTO> toPersist = new ArrayList<>();
+    List<NextHeartbeatDTO> toRemove = new ArrayList<>();
 
     for (NextHeartbeat hb : toUpdate) {
       NextHeartbeatDTO hbDTO = createPersistable(hb,
@@ -144,7 +144,7 @@ public class NextHeartbeatClusterJ
   }
 
   private Map<String, Boolean> createMap(List<NextHeartbeatDTO> results) {
-    Map<String, Boolean> map = new HashMap<String, Boolean>();
+    Map<String, Boolean> map = new HashMap<>();
     for (NextHeartbeatDTO persistable : results) {
       map.put(persistable.getrmnodeid(), NextHeartbeat.intToBoolean(persistable.
               getNextheartbeat()));

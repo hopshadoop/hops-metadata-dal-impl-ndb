@@ -128,7 +128,7 @@ public class RepairJobsClusterj implements TablesDef.RepairJobsTableDef,
   private List<RepairJob> convertAndRelease(HopsSession session,
       List<RepairJobDto> dtos) throws StorageException {
     ArrayList<RepairJob> list =
-        new ArrayList<RepairJob>(dtos.size());
+        new ArrayList<>(dtos.size());
     for (RepairJobDto dto : dtos) {
       list.add(convertAndRelease(session, dto));
     }

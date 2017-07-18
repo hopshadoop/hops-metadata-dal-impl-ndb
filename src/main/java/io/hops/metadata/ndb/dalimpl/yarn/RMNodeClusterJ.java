@@ -134,7 +134,7 @@ public class RMNodeClusterJ
   @Override
   public void addAll(List<RMNode> toAdd) throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
+    List<RMNodeDTO> toPersist = new ArrayList<>();
     Collections.sort(toAdd);
     for (RMNode req : toAdd) {
       toPersist.add(createPersistable(req, session));
@@ -146,7 +146,7 @@ public class RMNodeClusterJ
   @Override
   public void removeAll(Collection<RMNode> toRemove) throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<RMNodeDTO> toPersist = new ArrayList<RMNodeDTO>();
+    List<RMNodeDTO> toPersist = new ArrayList<>();
     for (RMNode entry : toRemove) {
       toPersist.add(session.newInstance(RMNodeDTO.class, entry.
           getNodeId()));
@@ -164,7 +164,7 @@ public class RMNodeClusterJ
   }
 
   private Map<String, RMNode> createMap(List<RMNodeDTO> results) {
-    Map<String, RMNode> map = new HashMap<String, RMNode>();
+    Map<String, RMNode> map = new HashMap<>();
     for (RMNodeDTO persistable : results) {
       RMNode hop = createHopRMNode(persistable);
       map.put(hop.getNodeId(), hop);

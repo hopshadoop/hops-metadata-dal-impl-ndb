@@ -79,7 +79,7 @@ public class ProjectQuotaClusterJ implements TablesDef.ProjectQuotaTableDef,
 
   public static Map<String, ProjectQuota> createMap(
           List<ProjectQuotaDTO> results) {
-    Map<String, ProjectQuota> map = new HashMap<String, ProjectQuota>();
+    Map<String, ProjectQuota> map = new HashMap<>();
     for (ProjectQuotaDTO persistable : results) {
       ProjectQuota hop = createProjectQuota(persistable);
       map.put(hop.getProjectid(), hop);
@@ -97,7 +97,7 @@ public class ProjectQuotaClusterJ implements TablesDef.ProjectQuotaTableDef,
   public void addAll(Collection<ProjectQuota> projectsQuota) throws
           StorageException {
     HopsSession session = connector.obtainSession();
-    List<ProjectQuotaDTO> toAdd = new ArrayList<ProjectQuotaDTO>();
+    List<ProjectQuotaDTO> toAdd = new ArrayList<>();
     for (ProjectQuota projectQuota : projectsQuota) {
       toAdd.add(createPersistable(projectQuota, session));
     }

@@ -119,8 +119,8 @@ public class PendingBlockClusterj
       Collection<PendingBlockInfo> newed, Collection<PendingBlockInfo> modified)
       throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<PendingBlockDTO> changes = new ArrayList<PendingBlockDTO>();
-    List<PendingBlockDTO> deletions = new ArrayList<PendingBlockDTO>();
+    List<PendingBlockDTO> changes = new ArrayList<>();
+    List<PendingBlockDTO> deletions = new ArrayList<>();
     try {
       for (PendingBlockInfo p : newed) {
         PendingBlockDTO pTable = session.newInstance(PendingBlockDTO.class);
@@ -197,7 +197,7 @@ public class PendingBlockClusterj
 
   private List<PendingBlockInfo> convertAndRelease(HopsSession session,
       Collection<PendingBlockDTO> dtos) throws StorageException {
-    List<PendingBlockInfo> list = new ArrayList<PendingBlockInfo>();
+    List<PendingBlockInfo> list = new ArrayList<>();
     for (PendingBlockDTO dto : dtos) {
       list.add(convertAndRelease(session, dto));
     }

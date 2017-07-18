@@ -76,7 +76,7 @@ import java.util.Properties;
 public class NdbStorageFactory implements DalStorageFactory {
 
   private Map<Class, EntityDataAccess> dataAccessMap =
-      new HashMap<Class, EntityDataAccess>();
+      new HashMap<>();
 
   @Override
   public void setConfiguration(Properties conf)

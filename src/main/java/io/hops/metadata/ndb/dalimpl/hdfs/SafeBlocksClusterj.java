@@ -53,7 +53,7 @@ public class SafeBlocksClusterj
   @Override
   public void insert(Collection<Long> safeBlocks) throws StorageException {
     final List<SafeBlockDTO> dtos =
-        new ArrayList<SafeBlockDTO>(safeBlocks.size());
+        new ArrayList<>(safeBlocks.size());
     final HopsSession session = connector.obtainSession();
     try {
       for (Long blk : safeBlocks) {

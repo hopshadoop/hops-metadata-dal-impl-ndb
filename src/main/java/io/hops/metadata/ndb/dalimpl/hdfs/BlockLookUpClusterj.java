@@ -59,8 +59,8 @@ public class BlockLookUpClusterj
   public void prepare(Collection<BlockLookUp> modified,
       Collection<BlockLookUp> removed) throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<BlockLookUpDTO> changes = new ArrayList<BlockLookUpDTO>();
-    List<BlockLookUpDTO> deletions = new ArrayList<BlockLookUpDTO>();
+    List<BlockLookUpDTO> changes = new ArrayList<>();
+    List<BlockLookUpDTO> deletions = new ArrayList<>();
 
     try {
       for (BlockLookUp block_lookup : removed) {
@@ -107,24 +107,24 @@ public class BlockLookUpClusterj
 
   protected static int[] readINodeIdsByBlockIds(final HopsSession session,
       final long[] blockIds) throws StorageException {
-    final List<BlockLookUpDTO> bldtos = new ArrayList<BlockLookUpDTO>();
-    final List<Integer> inodeIds = new ArrayList<Integer>();
+    final List<BlockLookUpDTO> bldtos = new ArrayList<>();
+    final List<Integer> inodeIds = new ArrayList<>();
     try {
-      for (int blk = 0; blk < blockIds.length; blk++) {
+      for (long blockId : blockIds) {
         BlockLookUpDTO bldto =
-                session.newInstance(BlockLookUpDTO.class, blockIds[blk]);
+            session.newInstance(BlockLookUpDTO.class, blockId);
         bldto.setINodeId(NOT_FOUND_ROW);
         bldto = session.load(bldto);
         bldtos.add(bldto);
       }
       session.flush();
-
-      for (int i = 0; i < bldtos.size(); i++) {
-        BlockLookUpClusterj.BlockLookUpDTO bld = bldtos.get(i);
+  
+      for (BlockLookUpDTO bld : bldtos) {
         if (bld.getINodeId() != NOT_FOUND_ROW) {
           inodeIds.add(bld.getINodeId());
         } else {
-           BlockLookUpClusterj.BlockLookUpDTO bldn = session.find(BlockLookUpDTO.class, bld.getBlockId());
+          BlockLookUpDTO bldn =
+              session.find(BlockLookUpDTO.class, bld.getBlockId());
           if (bldn != null) {
             //[M] BUG:
             //ClusterjConnector.LOG.error("xxx: Inode doesn't exists retries for " + bld.getBlockId() + " inodeId " + bld.getINodeId() + " at index " + i);

@@ -71,8 +71,8 @@ public class LeasePathClusterj
   public void prepare(Collection<LeasePath> removed,
       Collection<LeasePath> newed, Collection<LeasePath> modified)
       throws StorageException {
-    List<LeasePathsDTO> changes = new ArrayList<LeasePathsDTO>();
-    List<LeasePathsDTO> deletions = new ArrayList<LeasePathsDTO>();
+    List<LeasePathsDTO> changes = new ArrayList<>();
+    List<LeasePathsDTO> deletions = new ArrayList<>();
     HopsSession dbSession = connector.obtainSession();
     try {
       for (LeasePath lp : newed) {
@@ -186,7 +186,7 @@ public class LeasePathClusterj
   }
 
   private List<LeasePath> createList(Collection<LeasePathsDTO> dtos) {
-    List<LeasePath> list = new ArrayList<LeasePath>();
+    List<LeasePath> list = new ArrayList<>();
     for (LeasePathsDTO leasePathsDTO : dtos) {
       list.add(createLeasePath(leasePathsDTO));
     }

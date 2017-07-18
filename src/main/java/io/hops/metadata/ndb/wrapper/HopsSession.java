@@ -49,7 +49,7 @@ public class HopsSession {
     try {
       Query<T> query =
           session.createQuery(queryDefinition.getQueryDomainType());
-      return new HopsQuery<T>(query);
+      return new HopsQuery<>(query);
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);
     }

@@ -90,8 +90,8 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
       Collection<CorruptReplica> newed, Collection<CorruptReplica> modified)
       throws StorageException {
     HopsSession dbSession = connector.obtainSession();
-    List<CorruptReplicaDTO> changes = new ArrayList<CorruptReplicaDTO>();
-    List<CorruptReplicaDTO> deletions = new ArrayList<CorruptReplicaDTO>();
+    List<CorruptReplicaDTO> changes = new ArrayList<>();
+    List<CorruptReplicaDTO> deletions = new ArrayList<>();
     try {
       for (CorruptReplica corruptReplica : removed) {
         CorruptReplicaDTO newInstance =
@@ -208,7 +208,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
 
   private List<CorruptReplica> createCorruptReplicaList(
       List<CorruptReplicaDTO> persistables) {
-    List<CorruptReplica> replicas = new ArrayList<CorruptReplica>();
+    List<CorruptReplica> replicas = new ArrayList<>();
     for (CorruptReplicaDTO bit : persistables) {
       replicas.add(createReplica(bit));
     }

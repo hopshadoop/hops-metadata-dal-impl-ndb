@@ -101,10 +101,10 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
   public void addAll(Collection<MetadataLogEntry> logEntries)
       throws StorageException {
     HopsSession session = connector.obtainSession();
-    ArrayList<MetadataLogEntryDto> added = new ArrayList<MetadataLogEntryDto>(
+    ArrayList<MetadataLogEntryDto> added = new ArrayList<>(
         logEntries.size());
     ArrayList<DatasetINodeLookupDTO> newLookupDTOS = new
-        ArrayList<DatasetINodeLookupDTO>(logEntries.size());
+        ArrayList<>(logEntries.size());
     try {
       for (MetadataLogEntry logEntry : logEntries) {
         added.add(createPersistable(logEntry));
@@ -193,7 +193,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
   private Collection<MetadataLogEntry> createCollection(
       Collection<MetadataLogEntryDto> collection) {
     ArrayList<MetadataLogEntry> list =
-        new ArrayList<MetadataLogEntry>(collection.size());
+        new ArrayList<>(collection.size());
     for (MetadataLogEntryDto dto : collection) {
       list.add(createMetadataLogEntry(dto));
     }
@@ -216,7 +216,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
       Collection<MetadataLogEntry> logEntries) throws StorageException {
     HopsSession session = connector.obtainSession();
     final ArrayList<MetadataLogEntryDto> dtos =
-        new ArrayList<MetadataLogEntryDto>();
+        new ArrayList<>();
     try {
       for (MetadataLogEntry logEntry : logEntries) {
         Object[] pk =
