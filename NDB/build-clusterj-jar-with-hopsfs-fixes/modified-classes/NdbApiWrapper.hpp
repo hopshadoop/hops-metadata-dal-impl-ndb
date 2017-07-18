@@ -3517,8 +3517,8 @@ struct NdbApiWrapper {
     Ndb_cluster_connection__set_name
     ( Ndb_cluster_connection & obj, const char * p0 )
     {
-        fprintf(stderr,"\n\nCustom libndbclient.so (7.5.6) by Logical Clocks AB.\n");
-        fprintf(stderr,"Setting connection namenode to: %s \n",p0);
+        //fprintf(stderr,"\n\nCustom libndbclient.so (7.5.6) by Logical Clocks AB.\n");
+        //fprintf(stderr,"Setting connection namenode to: %s \n",p0);
         obj.set_name(p0);
 
         // setting the recv thread activation threshold in 7.5.6
@@ -3531,7 +3531,7 @@ struct NdbApiWrapper {
         
         Uint16 cpu_array[1] = {0};
         obj.set_recv_thread_cpu(cpu_array,1,0);
-        fprintf(stderr,"CPU affinity for recv thread is set to CPU 0\n\n");
+        //fprintf(stderr,"CPU affinity for recv thread is set to CPU 0\n\n");
     }
 
     static int
