@@ -370,10 +370,10 @@ CREATE TABLE `hdfs_quota_update` (
 delimiter $$
 
 CREATE TABLE `hdfs_hash_buckets` (
-  `bucket_id` int(11) NOT NULL,
   `storage_id` int(11) NOT NULL,
+  `bucket_id` int(11) NOT NULL,
   `hash` bigint NOT NULL,
-  PRIMARY KEY (`bucket_id`,`storage_id`),
+  PRIMARY KEY (`storage_id`,`bucket_id`),
   KEY `storage_idx` (`storage_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs
 /*!50100 PARTITION BY KEY (storage_id) */$$
