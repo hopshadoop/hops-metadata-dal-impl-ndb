@@ -37,19 +37,19 @@ public class HashBucketClusterj
   @PartitionKey(column = STORAGE_ID)
   @Index(name = "storage_idx")
   public interface HashBucketDTO {
-
-    @PrimaryKey
-    @Column(name = BUCKET_ID)
-    int getBucketId();
-
-    void setBucketId(int bucketId);
-
+    
     @PrimaryKey
     @Column(name = STORAGE_ID)
     int getStorageId();
 
     void setStorageId(int storageId);
+    
+    @PrimaryKey
+    @Column(name = BUCKET_ID)
+    int getBucketId();
 
+    void setBucketId(int bucketId);
+    
     @Column(name = HASH)
     long getHash();
 
@@ -57,11 +57,12 @@ public class HashBucketClusterj
   }
 
   @Override
-  public HashBucket findBucket(int bucketId, int storageId) throws StorageException {
+  public HashBucket findBucket(int storageId, int bucketId) throws
+      StorageException {
     HopsSession session = connector.obtainSession();
     Object[] pk = new Object[2];
-    pk[0] = bucketId;
-    pk[1] = storageId;
+    pk[0] = storageId;
+    pk[1] = bucketId;
 
     HashBucketDTO result = session.find(HashBucketDTO.class, pk);
     if (result != null) {
@@ -113,7 +114,8 @@ public class HashBucketClusterj
   }
 
   private HashBucket convert(HashBucketDTO result) {
-    return new HashBucket(result.getBucketId(),result.getStorageId(),result.getHash());
+    return new HashBucket(result.getStorageId(),result.getBucketId(),
+        result.getHash());
   }
 
   private List<HashBucket> convertAndRelease(HopsSession session,
@@ -127,8 +129,8 @@ public class HashBucketClusterj
   }
 
   private void createPersistable(HashBucket hashBucket, HashBucketDTO newInstance) {
-    newInstance.setBucketId(hashBucket.getBucketId());
     newInstance.setStorageId(hashBucket.getStorageId());
+    newInstance.setBucketId(hashBucket.getBucketId());
     newInstance.setHash(hashBucket.getHash());
   }
 }
