@@ -27,6 +27,8 @@
 #include "UpdatedContainerInfoTableTailer.h"
 #include "ContainerStatusTableTailer.h"
 #include "ContainerIdToCleanTableTailer.h"
+#include "ContainerToSignalTableTailer.h"
+#include "ContainerToDecreaseTableTailer.h"
 #include "NextHeartBeatTableTailer.h"
 #include "FinishedApplicationsTableTailer.h"
 
@@ -47,6 +49,8 @@ class JniNdbEventStreamingImp {
   UpdatedContainerInfoTableTailer *updatedContainerInfoTailer;
   ContainerStatusTableTailer *containerStatusTailer;
   ContainerIdToCleanTableTailer *containerIdToCleanTailer;
+  ContainerToSignalTableTailer *containerToSignalTailer;
+  ContainerToDecreaseTableTailer *containerToDecreaseTailer;
   NextHeartBeatTableTailer *nextHeartBeatTailer;
   FinishedApplicationsTableTailer *finishedApplicationsTailer;
   

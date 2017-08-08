@@ -24,7 +24,7 @@ import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
 import io.hops.metadata.yarn.entity.ContainerId;
 import io.hops.metadata.yarn.entity.ContainerStatus;
-import io.hops.metadata.yarn.entity.FinishedApplications;
+import io.hops.metadata.yarn.entity.RMNodeApplication;
 import io.hops.metadata.yarn.entity.NextHeartbeat;
 import io.hops.metadata.yarn.entity.PendingEvent;
 import io.hops.metadata.yarn.entity.RMNode;
@@ -43,8 +43,8 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
   
   private final ContainerIdToCleanClusterJ containerToCleanDA =
       new ContainerIdToCleanClusterJ();
-  private final FinishedApplicationsClusterJ finishedApplicationsDA =
-      new FinishedApplicationsClusterJ();
+  private final RMNodeApplicationsClusterJ finishedApplicationsDA =
+      new RMNodeApplicationsClusterJ();
   private final UpdatedContainerInfoClusterJ updatedContainerDA =
       new UpdatedContainerInfoClusterJ();
 
@@ -58,7 +58,7 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
     List<ContainerId> hopContainerIdsToClean = containerToCleanDA.
             findByRMNode(nodeId);
 
-    List<FinishedApplications> hopFinishedApplications = finishedApplicationsDA.
+    List<RMNodeApplication> hopFinishedApplications = finishedApplicationsDA.
             findByRMNode(nodeId);
     List<RMNodeComponentDTO> components = new ArrayList<>();
 

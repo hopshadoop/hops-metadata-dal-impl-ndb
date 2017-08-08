@@ -22,62 +22,59 @@
  * 
  */
 
-#include "FinishedApplicationsTableTailer.h"
+#include "ContainerToSignalTableTailer.h"
 
 using namespace Utils::NdbC;
 
-const string _finishedApplications_table= "yarn_rmnode_finishedapplications";
-const int _finishedApplications_noCols= 3;
-const string _finishedApplications_cols[_finishedApplications_noCols]=
+const string _containerToSignal_table= "yarn_container_to_signal";
+const int _containerToSignal_noCols= 3;
+const string _containerToSignal_cols[_containerToSignal_noCols]=
     {"rmnodeid",
-     "applicationid",
-     "status"
+     "containerid",
+     "command"
     };
 
-const int _finishedApplications_noEvents = 2; 
-const NdbDictionary::Event::TableEvent _finishedApplications_events[_finishedApplications_noEvents] = 
+const int _containerToSignal_noEvents = 2; 
+const NdbDictionary::Event::TableEvent _containerToSignal_events[_containerToSignal_noEvents] = 
     { NdbDictionary::Event::TE_INSERT, 
       NdbDictionary::Event::TE_UPDATE
     };
 
-const WatchTable FinishedApplicationsTableTailer::TABLE = {_finishedApplications_table, _finishedApplications_cols, _finishedApplications_noCols , _finishedApplications_events, _finishedApplications_noEvents};
-
+const WatchTable ContainerToSignalTableTailer::TABLE = {_containerToSignal_table, _containerToSignal_cols, _containerToSignal_noCols , _containerToSignal_events, _containerToSignal_noEvents};
 const int RMNODE_ID = 0;
-const int APPLICATION_ID = 1;
-const int STATUS = 2;
+const int CONTAINER_ID = 1;
+const int COMMAND = 2;
 
-FinishedApplicationsTableTailer::FinishedApplicationsTableTailer(Ndb* ndb, const int poll_maxTimeToWait,JavaVM* jvm) 
+ContainerToSignalTableTailer::ContainerToSignalTableTailer(Ndb* ndb, const int poll_maxTimeToWait,JavaVM* jvm) 
   : TableTailer(ndb, TABLE, poll_maxTimeToWait, jvm){
   
   
 }
 
-void FinishedApplicationsTableTailer::handleEvent(NdbDictionary::Event::TableEvent eventType, NdbRecAttr* preValue[], NdbRecAttr* value[]) {
+void ContainerToSignalTableTailer::handleEvent(NdbDictionary::Event::TableEvent eventType, NdbRecAttr* preValue[], NdbRecAttr* value[]) {
   if(!attached){
     if (jvm->AttachCurrentThread((void**)&env, NULL)!= 0) {
       std::cout << "Failed to attach" << std::endl;
     }
-    cls = env->FindClass("io/hops/streaming/FinishedApplicationsEventReceiver");
+    cls = env->FindClass("io/hops/streaming/ContainerToSignalEventReceiver");
     jmethodID midInit = env->GetMethodID( cls, "<init>", "()V");
-    finishedApplicationsEventReceiver = env->NewObject( cls, midInit);
+    containerToSignalEventReceiver = env->NewObject( cls, midInit);
   
     midCreateAndAddToQueue = env->GetMethodID(cls, "createAndAddToQueue","(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     attached = true;
   }
   //get the values
   jstring rmnodeId = env->NewStringUTF(get_string(value[RMNODE_ID]).c_str());
-  jstring applicationId = env->NewStringUTF(get_string(value[APPLICATION_ID]).c_str());
-  jstring status = env->NewStringUTF(get_string(value[STATUS]).c_str());
+  jstring containerId = env->NewStringUTF(get_string(value[CONTAINER_ID]).c_str());
+  jstring command = env->NewStringUTF(get_string(value[COMMAND]).c_str());
   //create the rmnode object and put it in the event queue
     LOG_INFO("create event");
-    env->CallVoidMethod(finishedApplicationsEventReceiver,midCreateAndAddToQueue,rmnodeId, applicationId, status);
+    env->CallVoidMethod(containerToSignalEventReceiver,midCreateAndAddToQueue,rmnodeId, containerId, command);
   env->DeleteLocalRef(rmnodeId);
-  env->DeleteLocalRef(applicationId);
-  env->DeleteLocalRef(status);
-   
+  env->DeleteLocalRef(containerId);
+  env->DeleteLocalRef(command);
 }
 
-FinishedApplicationsTableTailer::~FinishedApplicationsTableTailer() {
-
+ContainerToSignalTableTailer::~ContainerToSignalTableTailer() {
 }
 

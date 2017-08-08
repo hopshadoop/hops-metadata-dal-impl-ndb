@@ -35,7 +35,7 @@ import java.util.List;
 
 
 public class UserClusterj implements TablesDef.UsersTableDef, UserDataAccess<User>{
-
+  
   @PersistenceCapable(table = TABLE_NAME)
   public interface UserDTO {
 
