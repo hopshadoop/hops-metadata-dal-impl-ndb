@@ -57,6 +57,8 @@ import org.apache.commons.logging.LogFactory;
 
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ClusterjConnector implements StorageConnector<DBSession> {
 
@@ -67,6 +69,10 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   static final Log LOG = LogFactory.getLog(ClusterjConnector.class);
   private String clusterConnectString;
   private String databaseName;
+  
+  static {
+    Logger.getLogger("com.mysql.clusterj").setLevel(Level.WARNING);
+  }
   
   private ClusterjConnector() {
   }
@@ -277,6 +283,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       cls = BlockChecksumClusterj.BlockChecksumDto.class;
     } else if (className == OngoingSubTreeOpsDataAccess.class) {
       cls = OnGoingSubTreeOpsClusterj.OnGoingSubTreeOpsDTO.class;
+    } else if (className == HashBucketDataAccess.class){
+      cls = HashBucketClusterj.HashBucketDTO.class;
     } else if (className == InMemoryInodeDataAccess.class) {
       cls = InMemoryFileInodeClusterj.FileInodeDataDTO.class;
     } else if (className == SmallOnDiskInodeDataAccess.class) {
@@ -292,7 +300,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     session.flush();
   }
 
-    @Override
+  @Override
   public boolean formatAllStorageNonTransactional() throws StorageException {
     return formatAll(false);
   }
@@ -336,10 +344,11 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         BlockLookUpDataAccess.class, SafeBlocksDataAccess.class,
         MisReplicatedRangeQueueDataAccess.class, QuotaUpdateDataAccess.class,
         EncodingStatusDataAccess.class, BlockChecksumDataAccess.class,
-        OngoingSubTreeOpsDataAccess.class, MetadataLogDataAccess.class,
-        EncodingJobsDataAccess.class,RepairJobsDataAccess.class,
-        UserDataAccess.class, GroupDataAccess.class,
-        UserGroupDataAccess.class,VariableDataAccess.class);
+        OngoingSubTreeOpsDataAccess.class,
+        MetadataLogDataAccess.class, EncodingJobsDataAccess.class,
+        RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
+        UserGroupDataAccess.class,VariableDataAccess.class,
+        HashBucketDataAccess.class);
   }
   
   private boolean formatAll(boolean transactional) throws StorageException {
@@ -519,6 +528,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.ProjectsDailyCostTableDef.TABLE_NAME);
           } else if (e == PriceMultiplicatorDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.PriceMultiplicatorTableDef.TABLE_NAME);
+          } else if (e == HashBucketDataAccess.class){
+            truncate(transactional, io.hops.metadata.hdfs.TablesDef
+                .HashBucketsTableDef.TABLE_NAME);
           }
         }
         MysqlServerConnector.truncateTable(transactional,
