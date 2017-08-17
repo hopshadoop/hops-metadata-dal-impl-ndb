@@ -64,6 +64,14 @@ JniNdbEventStreamingImp::JniNdbEventStreamingImp(JNIEnv *env,jboolean jIsLeader,
     containerIdToCleanTailer = new ContainerIdToCleanTableTailer(containerIdToClean_tailer_connection, mPollMaxTimeToWait,jvm);
     containerIdToCleanTailer->start();
 
+    Ndb* containerToSignal_tailer_connection = create_ndb_connection(databaseName);
+    containerToSignalTailer = new ContainerToSignalTableTailer(containerToSignal_tailer_connection, mPollMaxTimeToWait,jvm);
+    containerToSignalTailer->start();
+
+    Ndb* containerToDecrease_tailer_connection = create_ndb_connection(databaseName);
+    containerToDecreaseTailer = new ContainerToDecreaseTableTailer(containerToDecrease_tailer_connection, mPollMaxTimeToWait,jvm);
+    containerToDecreaseTailer->start();
+
     Ndb* nextHeartBeat_tailer_connection = create_ndb_connection(databaseName);
     nextHeartBeatTailer = new NextHeartBeatTableTailer(nextHeartBeat_tailer_connection, mPollMaxTimeToWait,jvm);
     nextHeartBeatTailer->start();
@@ -89,6 +97,8 @@ JniNdbEventStreamingImp::~JniNdbEventStreamingImp(){
     containerStatusTailer->stop();
   }else{
     containerIdToCleanTailer->stop();
+    containerToSignalTailer->stop();
+    containerToDecreaseTailer->stop();
     nextHeartBeatTailer->stop();
     finishedApplicationsTailer->stop();
   }

@@ -6,7 +6,7 @@
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -29,8 +29,7 @@ import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.TablesDef;
-import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
-import io.hops.metadata.yarn.entity.FinishedApplications;
+import io.hops.metadata.yarn.entity.RMNodeApplication;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -39,13 +38,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import io.hops.metadata.yarn.dal.RMNodeApplicationsDataAccess;
 
-public class FinishedApplicationsClusterJ
+public class RMNodeApplicationsClusterJ
     implements TablesDef.FinishedApplicationsTableDef,
-    FinishedApplicationsDataAccess<FinishedApplications> {
+    RMNodeApplicationsDataAccess<RMNodeApplication> {
 
-  private static final Log LOG =
-      LogFactory.getLog(FinishedApplicationsClusterJ.class);
+  private static final Log LOG = LogFactory.getLog(RMNodeApplicationsClusterJ.class);
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface FinishedApplicationsDTO {
@@ -61,16 +60,20 @@ public class FinishedApplicationsClusterJ
     String getapplicationid();
 
     void setapplicationid(String applicationid);
-    
+
+    @PrimaryKey
+    @Column(name = STATUS)
+    String getStatus();
+
+    void setStatus(String status);
   }
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
 
   @Override
-  public List<FinishedApplications> findByRMNode(String rmnodeid)
+  public List<RMNodeApplication> findByRMNode(String rmnodeid)
       throws StorageException {
-    LOG.debug("HOP :: ClusterJ FinishedApplications.findByRMNode - START:" +
-        rmnodeid);
+    LOG.debug("HOP :: ClusterJ FinishedApplications.findByRMNode - START:" + rmnodeid);
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
 
@@ -82,8 +85,7 @@ public class FinishedApplicationsClusterJ
     HopsQuery<FinishedApplicationsDTO> query = session.createQuery(dobj);
     query.setParameter(RMNODEID, rmnodeid);
     List<FinishedApplicationsDTO> results = query.getResultList();
-    LOG.debug("HOP :: ClusterJ FinishedApplications.findByRMNode - FINISH:" +
-        rmnodeid);
+    LOG.debug("HOP :: ClusterJ FinishedApplications.findByRMNode - FINISH:" + rmnodeid);
     if (results != null && !results.isEmpty()) {
       return createUpdatedContainerInfoList(results);
     }
@@ -92,30 +94,28 @@ public class FinishedApplicationsClusterJ
   }
 
   @Override
-  public Map<String, List<FinishedApplications>> getAll()
+  public Map<String, List<RMNodeApplication>> getAll()
       throws StorageException {
     LOG.debug("HOP :: ClusterJ FinishedApplications.getAll - START");
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
-    HopsQueryDomainType<FinishedApplicationsDTO> dobj =
-        qb.createQueryDefinition(FinishedApplicationsDTO.class);
+    HopsQueryDomainType<FinishedApplicationsDTO> dobj = qb.createQueryDefinition(FinishedApplicationsDTO.class);
     HopsQuery<FinishedApplicationsDTO> query = session.
         createQuery(dobj);
     List<FinishedApplicationsDTO> queryResults = query.
         getResultList();
     LOG.debug("HOP :: ClusterJ FinishedApplications.getAll - FINISH");
-    Map<String, List<FinishedApplications>> result = createMap(queryResults);
+    Map<String, List<RMNodeApplication>> result = createMap(queryResults);
     session.release(queryResults);
-      return result;
+    return result;
   }
 
   @Override
-  public void addAll(Collection<FinishedApplications> applications)
+  public void addAll(Collection<RMNodeApplication> applications)
       throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<FinishedApplicationsDTO> toModify =
-        new ArrayList<>();
-    for (FinishedApplications entry : applications) {
+    List<FinishedApplicationsDTO> toModify = new ArrayList<>();
+    for (RMNodeApplication entry : applications) {
       toModify.add(createPersistable(entry, session));
     }
     session.savePersistentAll(toModify);
@@ -123,60 +123,65 @@ public class FinishedApplicationsClusterJ
   }
 
   @Override
-  public void add(FinishedApplications application)
+  public void add(RMNodeApplication application)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     FinishedApplicationsDTO toPersist = createPersistable(application, session);
     session.savePersistent(toPersist);
-    
+
     session.release(toPersist);
   }
-  
+
   @Override
-  public void removeAll(Collection<FinishedApplications> applications)
-      throws StorageException {
+  public void removeAll(Collection<RMNodeApplication> applications) throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<FinishedApplicationsDTO> toRemove =
-        new ArrayList<>();
-    for (FinishedApplications entry : applications) {
+    List<FinishedApplicationsDTO> toRemove = new ArrayList<>();
+    for (RMNodeApplication entry : applications) {
       toRemove.add(createPersistable(entry, session));
     }
     session.deletePersistentAll(toRemove);
     session.release(toRemove);
   }
 
-  private FinishedApplications createHopFinishedApplications(
-          FinishedApplicationsDTO dto) {
-    return new FinishedApplications(dto.getrmnodeid(), dto.getapplicationid());
+  @Override
+  public void remove(RMNodeApplication application) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    FinishedApplicationsDTO toRemove = createPersistable(application, session);
+    session.deletePersistent(toRemove);
+    session.release(toRemove);
   }
 
-  private FinishedApplicationsDTO createPersistable(FinishedApplications hop,
+  private RMNodeApplication createHopFinishedApplications(
+      FinishedApplicationsDTO dto) {
+    return new RMNodeApplication(dto.getrmnodeid(), dto.getapplicationid(), RMNodeApplication.RMNodeApplicationStatus.
+        valueOf(dto.getStatus()));
+  }
+
+  private FinishedApplicationsDTO createPersistable(RMNodeApplication hop,
       HopsSession session) throws StorageException {
-    FinishedApplicationsDTO dto =
-        session.newInstance(FinishedApplicationsDTO.class);
+    FinishedApplicationsDTO dto = session.newInstance(FinishedApplicationsDTO.class);
     dto.setrmnodeid(hop.getRMNodeID());
     dto.setapplicationid(hop.getApplicationId());
+    dto.setStatus(hop.getStatus().toString());
     return dto;
   }
 
-  private List<FinishedApplications> createUpdatedContainerInfoList(
+  private List<RMNodeApplication> createUpdatedContainerInfoList(
       List<FinishedApplicationsDTO> list) {
-    List<FinishedApplications> finishedApps =
-        new ArrayList<>();
+    List<RMNodeApplication> finishedApps = new ArrayList<>();
     for (FinishedApplicationsDTO persistable : list) {
       finishedApps.add(createHopFinishedApplications(persistable));
     }
     return finishedApps;
   }
 
-  private Map<String, List<FinishedApplications>> createMap(
+  private Map<String, List<RMNodeApplication>> createMap(
       List<FinishedApplicationsDTO> results) {
-    Map<String, List<FinishedApplications>> map =
-        new HashMap<>();
+    Map<String, List<RMNodeApplication>> map = new HashMap<>();
     for (FinishedApplicationsDTO dto : results) {
-      FinishedApplications hop = createHopFinishedApplications(dto);
+      RMNodeApplication hop = createHopFinishedApplications(dto);
       if (map.get(hop.getRMNodeID()) == null) {
-        map.put(hop.getRMNodeID(), new ArrayList<FinishedApplications>());
+        map.put(hop.getRMNodeID(), new ArrayList<RMNodeApplication>());
       }
       map.get(hop.getRMNodeID()).add(hop);
     }

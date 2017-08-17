@@ -24,7 +24,6 @@ import io.hops.metadata.ndb.NdbStorageFactory;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
 import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
-import io.hops.metadata.yarn.dal.FinishedApplicationsDataAccess;
 import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
 import io.hops.metadata.yarn.dal.RMNodeDataAccess;
 import io.hops.metadata.yarn.dal.ResourceDataAccess;
@@ -32,7 +31,7 @@ import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
 import io.hops.metadata.yarn.dal.util.YARNOperationType;
 import io.hops.metadata.yarn.entity.ContainerId;
 import io.hops.metadata.yarn.entity.ContainerStatus;
-import io.hops.metadata.yarn.entity.FinishedApplications;
+import io.hops.metadata.yarn.entity.RMNodeApplication;
 import io.hops.metadata.yarn.entity.RMNode;
 import io.hops.metadata.yarn.entity.RMNodeComps;
 import io.hops.metadata.yarn.entity.Resource;
@@ -49,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import io.hops.metadata.yarn.dal.RMNodeApplicationsDataAccess;
 
 public class TestFullRMNodeClusterJ {
 
@@ -94,10 +94,10 @@ public class TestFullRMNodeClusterJ {
     hopContainerIds.add(new ContainerId("70", "container5"));
     hopContainerIds.add(new ContainerId("70", "container6"));
 
-    final List<FinishedApplications> hopFinishedApps
+    final List<RMNodeApplication> hopFinishedApps
             = new ArrayList<>();
-    hopFinishedApps.add(new FinishedApplications("70", "app1"));
-    hopFinishedApps.add(new FinishedApplications("70", "app2"));
+    hopFinishedApps.add(new RMNodeApplication("70", "app1", RMNodeApplication.RMNodeApplicationStatus.FINISHED));
+    hopFinishedApps.add(new RMNodeApplication("70", "app2", RMNodeApplication.RMNodeApplicationStatus.RUNNING));
 
     final List<ContainerStatus> hopContainersStatus
             = new ArrayList<>();
@@ -158,9 +158,9 @@ public class TestFullRMNodeClusterJ {
                 .getDataAccess(ContainerIdToCleanDataAccess.class);
                 containersIdDA.addAll(hopContainerIds);
 
-                FinishedApplicationsDataAccess finishedAppDA
-                = (FinishedApplicationsDataAccess) storageFactory
-                .getDataAccess(FinishedApplicationsDataAccess.class);
+                RMNodeApplicationsDataAccess finishedAppDA
+                = (RMNodeApplicationsDataAccess) storageFactory
+                .getDataAccess(RMNodeApplicationsDataAccess.class);
                 finishedAppDA.addAll(hopFinishedApps);
 
                 ContainerStatusDataAccess containerStatusDA

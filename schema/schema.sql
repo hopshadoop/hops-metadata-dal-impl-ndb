@@ -516,10 +516,11 @@ CREATE TABLE `yarn_containerid_toclean` (
 
 delimiter $$
 
-CREATE TABLE `yarn_rmnode_finishedapplications` (
+CREATE TABLE `yarn_rmnode_applications` (
   `rmnodeid` VARCHAR(255) NOT NULL,
   `applicationid` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`rmnodeid`, `applicationid`),
+  `status` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`rmnodeid`, `applicationid`,`status`),
   INDEX `index2` (`rmnodeid` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(applicationid) $$
 
@@ -642,3 +643,37 @@ CREATE TABLE `yarn_price_multiplicator` (
   `multiplicator` FLOAT NOT NULL,
   PRIMARY KEY (`id`))
 ENGINE = ndbcluster$$
+
+delimiter $$
+
+CREATE TABLE `yarn_container_to_signal` (
+  `rmnodeid` VARCHAR(255) NOT NULL,
+  `containerid` VARCHAR(45) NOT NULL,
+  `command` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`rmnodeid`, `containerid`),
+  INDEX `rmnodeId` (`containerid` ASC)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(rmnodeid) $$
+
+delimiter $$
+
+CREATE TABLE `yarn_container_to_decrease` (
+  `rmnodeid` VARCHAR(255) NOT NULL,
+  `containerid` VARCHAR(45) NOT NULL,
+  `http_address` VARCHAR(255) NOT NULL,
+  `priority` INT NOT NULL,
+  `memory_size` BIGINT NOT NULL,
+  `virtual_cores` INT NOT NULL,
+  `gpus` INT NOT NULL,
+  `version` INT NOT NULL,
+  PRIMARY KEY (`rmnodeid`, `containerid`),
+  INDEX `rmnodeId` (`containerid` ASC)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(rmnodeid) $$
+
+delimiter $$
+
+CREATE TABLE `yarn_reservation_state` (
+  `plan_name` VARCHAR(255) NOT NULL,
+  `reservation_id_name` VARCHAR(255) NOT NULL,
+  `state` VARBINARY(13000) NOT NULL,
+  PRIMARY KEY (`plan_name`, `reservation_id_name`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(reservation_id_name) $$

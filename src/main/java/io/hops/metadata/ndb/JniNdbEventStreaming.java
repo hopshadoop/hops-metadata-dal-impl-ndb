@@ -31,16 +31,10 @@ public class JniNdbEventStreaming implements DalNdbEventStreaming {
   private static final Log LOG = LogFactory.getLog(JniNdbEventStreaming.class);
 
   private static boolean nativeCodeLoaded = false;
-  private String SchedulerConfPath;
-  private String ResourceTrackerConfPath;
   private String connectionString;
   private String databaseName;
   
-  public void init(String SchedulerConfPath,
-          String ResourceTrackerConfPath, String connectionString,
-        String databaseName) {
-    this.SchedulerConfPath = SchedulerConfPath;
-    this.ResourceTrackerConfPath = ResourceTrackerConfPath;
+  public void init(String connectionString, String databaseName) {
     this.connectionString = connectionString;
     this.databaseName = databaseName;
   }
