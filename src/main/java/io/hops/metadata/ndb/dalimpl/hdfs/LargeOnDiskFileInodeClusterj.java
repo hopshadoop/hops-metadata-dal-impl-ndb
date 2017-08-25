@@ -12,6 +12,10 @@ import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by salman on 3/10/16.
  */
@@ -21,21 +25,25 @@ public class LargeOnDiskFileInodeClusterj
   private ClusterjConnector connector = ClusterjConnector.getInstance();
 
 
+  final int CHUNK_SIZE=8000;
+
   @PersistenceCapable(table = TABLE_NAME)
   public interface FileInodeDataDTO {
 
     @PrimaryKey
     @Column(name = ID)
     int getInodeId();
-
     void setInodeId(int inodeId);
+
+
+    @Column(name = INDEX)
+    int getIndex();
+    void setIndex(int index);
 
     @Column(name = DATA)
     byte[] getData();
-
     void setData(byte[] data);
   }
-
 
   @Override
   public void add(FileInodeData fileInodeData) throws StorageException {
@@ -43,12 +51,29 @@ public class LargeOnDiskFileInodeClusterj
       throw new IllegalArgumentException("Expecting on disk file object. Got: "+fileInodeData.getDBFileStorageType());
     }
 
+    //while adding a file split the data and store in 8000 byte chunks
+
     final HopsSession session = connector.obtainSession();
-    FileInodeDataDTO dto = session.newInstance(LargeOnDiskFileInodeClusterj.FileInodeDataDTO.class);
-    dto.setInodeId(fileInodeData.getInodeId());
-    dto.setData(fileInodeData.getInodeData());
-    session.savePersistent(dto);
-    session.release(dto);
+
+    int rows = (int)Math.ceil(fileInodeData.getSize()/((double)CHUNK_SIZE));
+    List<FileInodeDataDTO> dtos = new ArrayList<FileInodeDataDTO>();
+    for(int index = 0; index < rows; index++){
+      byte[] buffer = new byte[CHUNK_SIZE];
+      int byteWritten = index*CHUNK_SIZE;
+      int toWrite = fileInodeData.getSize() - byteWritten;
+      if(toWrite > CHUNK_SIZE){
+        toWrite = CHUNK_SIZE;
+      }
+      System.arraycopy(fileInodeData.getInodeData(), index*CHUNK_SIZE, buffer, 0, toWrite);
+      FileInodeDataDTO dto = session.newInstance(LargeOnDiskFileInodeClusterj.FileInodeDataDTO.class);
+      dto.setInodeId(fileInodeData.getInodeId());
+      dto.setIndex(index);
+      dto.setData(buffer);
+      dtos.add(dto);
+    }
+
+    session.savePersistentAll(dtos);
+    session.release(dtos);
   }
 
   @Override
@@ -57,22 +82,58 @@ public class LargeOnDiskFileInodeClusterj
       throw new IllegalArgumentException("Expecting on disk file object. Got: "+fileInodeData.getDBFileStorageType());
     }
     final HopsSession session = connector.obtainSession();
-    session.deletePersistent(LargeOnDiskFileInodeClusterj.FileInodeDataDTO.class, fileInodeData.getInodeId());
+
+    for(int index = 0; index < Math.ceil(fileInodeData.getSize()/((double)CHUNK_SIZE)); index++){
+      FileInodeDataDTO dto = session.newInstance(LargeOnDiskFileInodeClusterj.FileInodeDataDTO.class);
+      dto.setInodeId(fileInodeData.getInodeId());
+      dto.setIndex(index);
+      session.deletePersistent(dto);
+      session.release(dto);
+    }
   }
 
   @Override
   public FileInodeData get(int inodeId) throws StorageException {
+    throw new UnsupportedOperationException("The operation is not yet implemented");
+  }
+
+  @Override
+  public FileInodeData get(int inodeId, int size) throws StorageException {
     final HopsSession session = connector.obtainSession();
-    FileInodeDataDTO dataDto = session.find(FileInodeDataDTO.class, inodeId);
-    if (dataDto != null) {
-      byte[] data = new byte[dataDto.getData().length];
-      System.arraycopy(dataDto.getData(),0,data,0,data.length);
-      FileInodeData fileData = new FileInodeData(inodeId, data, FileInodeData.Type.OnDiskFile);
-      session.release(dataDto);
-      return fileData;
+    int rows = (int)Math.ceil(size/((double)CHUNK_SIZE));
+    FileInodeDataDTO[] dtos = new FileInodeDataDTO[rows];
+    for(int index = 0; index < rows ; index++) {
+      FileInodeDataDTO dto = session.newInstance(LargeOnDiskFileInodeClusterj.FileInodeDataDTO.class);
+      dtos[index] = dto;
+      dto.setInodeId(inodeId);
+      dto.setIndex(index);
+      session.load(dto);
     }
 
-    return null;
+    session.flush();
+
+    byte[] buffer = new byte[size];
+    int remaining = size;
+    for(int index = 0; index < rows ; index++) {
+      int toRead = -1;
+      if(remaining >= CHUNK_SIZE){
+        toRead  = CHUNK_SIZE;
+        remaining -= CHUNK_SIZE;
+      } else {
+        toRead = remaining;
+      }
+
+       System.arraycopy(dtos[index].getData(),0,buffer,index*CHUNK_SIZE, toRead);
+    }
+
+    FileInodeData fileData = new FileInodeData(inodeId, buffer, size, FileInodeData.Type.OnDiskFile);
+    session.release(dtos);
+    return fileData;
+  }
+
+  @Override
+  public int countUniqueFiles() throws  StorageException{
+    return MySQLQueryHelper.countAllUnique(TABLE_NAME, ID);
   }
 
   @Override

@@ -30,14 +30,14 @@ LOG_DISKS = [""]
 LOGFILE_SIZE = args.logFileSize
 LOGFILES_PER_DISK = args.logFilesCount 
 
-CONNECT_STRING = "mysql -uhop -phop -P3306 -h bbc2 hop_salman_sf -e "
-CONNECT_STRING = "mysql -u"+args.userName+" -p"+args.passwd+" -P"+args.port+" -h "+args.host+" "+args.database+" -e "
+CONNECT_STRING = "MYSQL_PWD="+args.passwd+" mysql -u"+args.userName+" -P"+args.port+" -h "+args.host+" "+args.database+" -e "
 print CONNECT_STRING
 
 
-ONDISK_SMALL_FILE_INODE_SIZE=4096
-ONDISK_MEDIUM_FILE_INODE_SIZE=8192
-ONDISK_LARGE_FILE_INODE_SIZE=32768
+ONDISK_SMALL_FILE_INODE_SIZE=2000
+ONDISK_MEDIUM_FILE_INODE_SIZE=4000
+ONDISK_LARGE_FILE_INODE_SIZE=8000
+TS_NAME="ts_1"
 
 class bcolors:
     HEADER = '\033[95m'
@@ -55,7 +55,7 @@ def printStage(message):
 
 def executeSQLCommand(subCmd):
   command = ('%s"%s"' % (CONNECT_STRING, subCmd))
-  print(command)
+  print("*** "+command)
   os.system(command)
 
 
@@ -89,18 +89,18 @@ def create():
       if tableSpaceCreated == False:
         printStage("Creating Table Space")
         tableSpaceCreated = True
-        subCommand = ("CREATE TABLESPACE ts_1 ADD datafile '%sdata_file_%d.dat' use LOGFILE GROUP lg_1 INITIAL_SIZE = %s  ENGINE ndbcluster" % (disk, fileIndex, DATAFILE_SIZE))
+        subCommand = ("CREATE TABLESPACE %s ADD datafile '%s%s_data_file_%d.dat' use LOGFILE GROUP lg_1 INITIAL_SIZE = %s  ENGINE ndbcluster" % (TS_NAME, TS_NAME, disk, fileIndex, DATAFILE_SIZE))
       else:
-        subCommand = ("ALTER TABLESPACE ts_1 ADD datafile '%sdata_file_%d.dat' INITIAL_SIZE = %s  ENGINE ndbcluster" % (disk, fileIndex, DATAFILE_SIZE))
+        subCommand = ("ALTER TABLESPACE %s ADD datafile '%s%s_data_file_%d.dat' INITIAL_SIZE = %s  ENGINE ndbcluster" % (TS_NAME, TS_NAME, disk, fileIndex, DATAFILE_SIZE))
       executeSQLCommand(subCommand)
 
   #Create Table
   printStage("Creating Tables")
-  subCommand = ("CREATE table hdfs_ondisk_small_file_inode_data ( inode_id int(11) PRIMARY KEY, data blob(%d) not null ) TABLESPACE ts_1 STORAGE DISK ENGINE ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1' partition by key (\`inode_id\`)"% (ONDISK_SMALL_FILE_INODE_SIZE))
+  subCommand = ("CREATE TABLE IF NOT EXISTS hdfs_ondisk_small_file_inode_data ( inode_id int(11) PRIMARY KEY, data varchar(%d) not null ) TABLESPACE %s STORAGE DISK ENGINE ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1' partition by key (\`inode_id\`)"% (ONDISK_SMALL_FILE_INODE_SIZE, TS_NAME))
   executeSQLCommand(subCommand)
-  subCommand = ("CREATE table hdfs_ondisk_medium_file_inode_data ( inode_id int(11) PRIMARY KEY, data blob(%d) not null ) TABLESPACE ts_1 STORAGE DISK ENGINE ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1' partition by key (\`inode_id\`)"% (ONDISK_MEDIUM_FILE_INODE_SIZE))
+  subCommand = ("CREATE TABLE IF NOT EXISTS hdfs_ondisk_medium_file_inode_data ( inode_id int(11) PRIMARY KEY, data varchar(%d) not null ) TABLESPACE %s STORAGE DISK ENGINE ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1' partition by key (\`inode_id\`)"% (ONDISK_MEDIUM_FILE_INODE_SIZE, TS_NAME))
   executeSQLCommand(subCommand)
-  subCommand = ("CREATE table hdfs_ondisk_large_file_inode_data ( inode_id int(11) PRIMARY KEY, data blob(%d) not null ) TABLESPACE ts_1 STORAGE DISK ENGINE ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1' partition by key (\`inode_id\`)"% (ONDISK_LARGE_FILE_INODE_SIZE))
+  subCommand = ("CREATE TABLE IF NOT EXISTS hdfs_ondisk_large_file_inode_data ( inode_id int(11), dindex int(11), data varchar(%d) not null  PRIMARY KEY(`indoe_id`, `dindex`) ) TABLESPACE %s STORAGE DISK ENGINE ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1' partition by key (\`inode_id\`)"% (ONDISK_LARGE_FILE_INODE_SIZE, TS_NAME))
   executeSQLCommand(subCommand)
 
 
@@ -119,10 +119,10 @@ def drop():
       if disk and not disk.endswith('/'):
         disk+="/"
 
-      subCommand = ("ALTER TABLESPACE ts_1 drop datafile '%sdata_file_%d.dat' ENGINE ndbcluster" % (disk, fileIndex))
+      subCommand = ("ALTER TABLESPACE %s drop datafile '%s%s_data_file_%d.dat' ENGINE ndbcluster" % (TS_NAME, TS_NAME, disk, fileIndex))
       executeSQLCommand(subCommand)
 
-  subCommand = "DROP TABLESPACE ts_1 ENGINE ndbcluster"
+  subCommand = ("DROP TABLESPACE %s ENGINE ndbcluster"%(TS_NAME))
   executeSQLCommand(subCommand)
 
   # drop log group

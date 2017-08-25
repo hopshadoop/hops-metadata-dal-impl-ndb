@@ -67,7 +67,7 @@ public class MediumOnDiskFileInodeClusterj
     if (dataDto != null) {
       byte[] data = new byte[dataDto.getData().length];
       System.arraycopy(dataDto.getData(),0,data,0,data.length);
-      FileInodeData fileData = new FileInodeData(inodeId, data, FileInodeData.Type.OnDiskFile);
+      FileInodeData fileData = new FileInodeData(inodeId, data,data.length, FileInodeData.Type.OnDiskFile);
       session.release(dataDto);
       return fileData;
     }

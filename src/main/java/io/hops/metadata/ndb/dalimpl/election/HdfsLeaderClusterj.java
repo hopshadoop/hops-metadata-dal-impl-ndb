@@ -55,7 +55,7 @@ public class HdfsLeaderClusterj extends LeDescriptorClusterj
     @Override
     void setCounter(long counter);
 
-    @Column(name = HOSTNAME)
+    @Column(name = RPC_ADDRESSES)
     @Override
     String getHostname();
 

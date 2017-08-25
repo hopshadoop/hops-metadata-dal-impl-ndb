@@ -21,8 +21,8 @@ CREATE TABLE `hdfs_block_lookup_table` (
   `block_id` bigint(20) NOT NULL,
   `inode_id` int(11) NOT NULL,
   PRIMARY KEY (`block_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'$$
-
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
+/*!50100 PARTITION BY KEY (block_id) */$$
 
 delimiter $$
 
@@ -58,7 +58,8 @@ CREATE TABLE `hdfs_inode_attributes` (
   `nscount` bigint(20) DEFAULT NULL,
   `diskspace` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`inodeId`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
+/*!50100 PARTITION BY KEY (inodeId) */$$
 
 
 delimiter $$
@@ -110,15 +111,15 @@ BEGIN
 	IF (lc = 0) THEN
 	    CREATE LOGFILE GROUP lg_1 ADD UNDOFILE 'undo_log_0.log' INITIAL_SIZE = 2048M ENGINE ndbcluster;
 	ELSE
-		select "The LogFile undo_log_0.log has already been created" as "";
+		select "The LogFile has already been created" as "";
 	END IF;
 
 	
 	SELECT count(TABLESPACE_NAME) INTO tc FROM INFORMATION_SCHEMA.FILES where TABLESPACE_NAME="ts_1";
 	IF (tc = 0) THEN
-		CREATE TABLESPACE ts_1 ADD datafile 'data_file_0.dat' use LOGFILE GROUP lg_1 INITIAL_SIZE = 2048M  ENGINE ndbcluster;
+		CREATE TABLESPACE ts_1 ADD datafile 'ts_1_data_file_0.dat' use LOGFILE GROUP lg_1 INITIAL_SIZE = 2048M  ENGINE ndbcluster;
 	ELSE
-		select "The DataFile  data_file_0.dat has already been created" as "";
+		select "The DataFile has already been created" as "";
 	END IF;
 END$$
 
@@ -128,28 +129,29 @@ CALL simpleproc$$
 
 delimiter $$
 
-CREATE TABLE `hdfs_ondisk_small_file_inode_data` (
+CREATE TABLE IF NOT EXISTS `hdfs_ondisk_small_file_inode_data` (
 	  `inode_id` int(11) NOT NULL,
-	  `data` blob NOT NULL,
+	  `data` varchar(2000) NOT NULL,
 	  PRIMARY KEY (`inode_id`)
 ) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 delimiter $$
 
-CREATE TABLE `hdfs_ondisk_medium_file_inode_data` (
+CREATE TABLE IF NOT EXISTS `hdfs_ondisk_medium_file_inode_data` (
   `inode_id` int(11) NOT NULL,
-  `data` blob NOT NULL,
+  `data` varchar(4000) NOT NULL,
   PRIMARY KEY (`inode_id`)
 ) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 delimiter $$
 
- CREATE TABLE `hdfs_ondisk_large_file_inode_data` (
+ CREATE TABLE IF NOT EXISTS `hdfs_ondisk_large_file_inode_data` (
   `inode_id` int(11) NOT NULL,
-  `data` blob NOT NULL,
-  PRIMARY KEY (`inode_id`)
+  `dindex`    int(11) NOT NULL,
+  `data` varchar(8000) NOT NULL,
+  PRIMARY KEY (`inode_id`, `dindex`)
 ) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$ 
 
@@ -169,7 +171,8 @@ CREATE TABLE `hdfs_users` (
   `name` varchar(100) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY (`name`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs
+/*!50100 PARTITION BY KEY (id) */  $$
 
 delimiter $$
 
@@ -178,7 +181,8 @@ CREATE TABLE `hdfs_groups` (
   `name` varchar(100) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY (`name`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs
+/*!50100 PARTITION BY KEY (id) */  $$
 
 delimiter $$
 
@@ -196,7 +200,8 @@ CREATE TABLE `hdfs_users_groups` (
     REFERENCES `hdfs_groups` (`id`)
     ON DELETE CASCADE
     ON UPDATE NO ACTION
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs
+/*!50100 PARTITION BY KEY (user_id) */  $$
 
 delimiter $$
 
@@ -217,8 +222,8 @@ delimiter $$
 CREATE TABLE `hdfs_le_descriptors` (
   `id` bigint(20) NOT NULL,
   `counter` bigint(20) NOT NULL,
-  `hostname` varchar(25) NOT NULL,
-  `httpAddress` varchar(100) DEFAULT NULL,
+  `rpc_addresses` varchar(128) NOT NULL,
+  `http_address` varchar(100) DEFAULT NULL,
   `partition_val` int(11) NOT NULL DEFAULT '0',
 PRIMARY KEY (`id`,`partition_val`),
 KEY `part` (`partition_val`)
@@ -230,8 +235,8 @@ delimiter $$
 CREATE TABLE `yarn_le_descriptors` (
   `id` bigint(20) NOT NULL,
   `counter` bigint(20) NOT NULL,
-  `hostname` varchar(25) NOT NULL,
-  `httpAddress` varchar(100) DEFAULT NULL,
+  `rpc_addresses` varchar(128) NOT NULL,
+  `http_address` varchar(100) DEFAULT NULL,
   `partition_val` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`,`partition_val`),
   KEY `part` (`partition_val`)
