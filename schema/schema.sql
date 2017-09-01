@@ -600,8 +600,8 @@ CREATE TABLE `yarn_projects_quota` (
   `projectname` VARCHAR(100) NOT NULL,
   `total` FLOAT DEFAULT '0',
   `quota_remaining` FLOAT  DEFAULT '0',
-  PRIMARY KEY (`projectname`))
-ENGINE = ndbcluster PARTITION BY KEY(projectname)$$
+  PRIMARY KEY (`projectname`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(projectname)$$
 
 delimiter $$
 
@@ -614,8 +614,8 @@ CREATE TABLE `yarn_containers_logs` (
   `vcores` INT DEFAULT NULL,
   `gpus` INT DEFAULT NULL,
   `mb` INT DEFAULT NULL,
-  PRIMARY KEY (`container_id`))
-ENGINE = ndbcluster $$
+  PRIMARY KEY (`container_id`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs $$
 
 delimiter $$
 
@@ -624,8 +624,8 @@ CREATE TABLE `yarn_projects_daily_cost` (
   `projectname` VARCHAR(100) NOT NULL,
   `day` BIGINT NOT NULL,
   `credits_used` FLOAT  DEFAULT NULL,
-  PRIMARY KEY (`projectname`, `day`, `user`))
-ENGINE = ndbcluster PARTITION BY KEY(user)$$
+  PRIMARY KEY (`projectname`, `day`, `user`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(user)$$
 
 delimiter $$
 
@@ -633,16 +633,16 @@ CREATE TABLE `yarn_containers_checkpoint` (
   `container_id` VARCHAR(255) NOT NULL,
   `checkpoint` BIGINT NOT NULL,
   `multiplicator` FLOAT NOT NULL,
-  PRIMARY KEY (`container_id`))
-ENGINE = ndbcluster PARTITION BY KEY(container_id)$$
+  PRIMARY KEY (`container_id`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(container_id)$$
 
 delimiter $$
 
 CREATE TABLE `yarn_price_multiplicator` (
   `id` VARCHAR(255) NOT NULL,
   `multiplicator` FLOAT NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = ndbcluster$$
+  PRIMARY KEY (`id`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs $$
 
 delimiter $$
 
