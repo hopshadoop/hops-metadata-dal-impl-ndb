@@ -32,6 +32,7 @@ import io.hops.metadata.hdfs.dal.INodeDataAccess;
 import io.hops.metadata.hdfs.entity.INode;
 import io.hops.metadata.hdfs.entity.INodeBase;
 import io.hops.metadata.hdfs.entity.INodeIdentifier;
+import io.hops.metadata.hdfs.entity.MetadataLogEntry;
 import io.hops.metadata.hdfs.entity.ProjectedINode;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.NdbBoolean;
@@ -169,6 +170,10 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     @Column(name = FILE_STORED_IN_DB)
     byte getFileStoredInDd();
     void setFileStoredInDd(byte isFileStoredInDB);
+
+    @Column(name = LOGICAL_TIME)
+    int getLogicalTime();
+    void setLogicalTime(int logicalTime);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -339,7 +344,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
               NdbBoolean.convert(inode.getUnderConstruction()),
               NdbBoolean.convert(inode.getSubtreeLocked()),
               inode.getSubtreeLockOwner(),
-              inode.getSize());
+              inode.getSize(),
+              inode.getLogicalTime());
   }
 //  public List<ProjectedINode> findInodesForSubtreeOperationsWithWriteLockFTIS(
 //      int parentId) throws StorageException {
@@ -600,7 +606,27 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     }
   }
 
-  
+  @Override
+  public void updateLogicalTime(Collection<MetadataLogEntry> logEntries)
+      throws StorageException {
+    HopsSession session = connector.obtainSession();
+    for(MetadataLogEntry logEntry : logEntries){
+      InodeDTO inodeDTO = createPersistable(session, logEntry);
+      session.savePersistent(inodeDTO);
+      session.release(inodeDTO);
+    }
+  }
+
+  private InodeDTO createPersistable(HopsSession session, MetadataLogEntry
+      logEntry) throws StorageException {
+    InodeDTO inodeDTO = session.newInstance(InodeDTO.class);
+    inodeDTO.setPartitionId(logEntry.getInodePartitionId());
+    inodeDTO.setParentId(logEntry.getInodeParentId());
+    inodeDTO.setName(logEntry.getInodeName());
+    inodeDTO.setLogicalTime(logEntry.getLogicalTime());
+    return inodeDTO;
+  }
+
   private List<INode> convert(List<InodeDTO> list) throws StorageException {
     List<INode> inodes = new ArrayList<>();
     for (InodeDTO persistable : list) {
@@ -625,7 +651,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         NdbBoolean.convert(persistable.getSubtreeLocked()),
         persistable.getSubtreeLockOwner(),
         NdbBoolean.convert(persistable.getMetaEnabled()),
-        persistable.getSize(), NdbBoolean.convert(persistable.getFileStoredInDd()));
+        persistable.getSize(), NdbBoolean.convert(persistable
+        .getFileStoredInDd()), persistable.getLogicalTime());
     return node;
   }
 
@@ -653,6 +680,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setFileStoredInDd(NdbBoolean.convert(inode.isFileStoredInDB()));
     persistable.setIsDir(NdbBoolean.convert(inode.isDirectory()));
     persistable.setPartitionId(inode.getPartitionId());
+    persistable.setLogicalTime(inode.getLogicalTime());
   }
 
   private void explain(HopsQuery<InodeDTO> query) {
