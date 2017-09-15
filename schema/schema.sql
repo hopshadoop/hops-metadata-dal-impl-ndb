@@ -88,6 +88,7 @@ CREATE TABLE `hdfs_inodes` (
   `under_construction` tinyint NOT NULL,
   `subtree_locked` tinyint DEFAULT NULL,
   `file_stored_in_db` tinyint(4) NOT NULL DEFAULT '0',
+  `logical_time` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`partition_id`,`parent_id`,`name`),
   KEY `pidex` (`parent_id`),
   KEY `inode_idx` (`id`),
@@ -451,13 +452,13 @@ delimiter $$
 CREATE TABLE `hdfs_metadata_log` (
   `dataset_id` int(11) NOT NULL,
   `inode_id` int(11) NOT NULL,
-  `timestamp` bigint(20) NOT NULL,
+  `logical_time` int(11) NOT NULL,
   `inode_partition_id` int(11) NOT NULL,
   `inode_parent_id` int(11) NOT NULL,
   `inode_name` varchar(255) NOT NULL DEFAULT '',
   `operation` smallint(11) NOT NULL,
-  PRIMARY KEY (`dataset_id` ,`inode_id` , `timestamp`),
-  KEY `timestamp` (`timestamp`)
+  PRIMARY KEY (`dataset_id` ,`inode_id` , `logical_time`),
+  KEY `logical_time` (`logical_time`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$

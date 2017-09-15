@@ -55,10 +55,10 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     void setInodeId(int inodeId);
 
     @PrimaryKey
-    @Column(name = TIMESTAMP)
-    long getTimestamp();
+    @Column(name = Logical_TIME)
+    int getLogicalTime();
 
-    void setTimestamp(long timestamp);
+    void setLogicalTime(int logicalTime);
 
     @Column(name = INODE_PARTITION_ID)
     int getInodePartitionId();
@@ -158,7 +158,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     dto.setInodePartitionId(logEntry.getInodePartitionId());
     dto.setInodeParentId(logEntry.getInodeParentId());
     dto.setInodeName(logEntry.getInodeName());
-    dto.setTimestamp(logEntry.getTimestamp());
+    dto.setLogicalTime(logEntry.getLogicalTime());
     dto.setOperation(logEntry.getOperationOrdinal());
     return dto;
   }
@@ -207,7 +207,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
         dto.getInodePartitionId(),
         dto.getInodeParentId(),
         dto.getInodeName(),
-        dto.getTimestamp(),
+        dto.getLogicalTime(),
         MetadataLogEntry.Operation.values()[dto.getOperation()]);
   }
 
@@ -221,7 +221,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
       for (MetadataLogEntry logEntry : logEntries) {
         Object[] pk =
             new Object[]{logEntry.getDatasetId(), logEntry.getInodeId(),
-                logEntry.getTimestamp()};
+                logEntry.getLogicalTime()};
         MetadataLogEntryDto dto =
             session.newInstance(MetadataLogEntryDto.class, pk);
         dto = session.load(dto);
