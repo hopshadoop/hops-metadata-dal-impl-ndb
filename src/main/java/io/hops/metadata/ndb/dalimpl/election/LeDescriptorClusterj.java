@@ -143,7 +143,7 @@ public abstract class LeDescriptorClusterj
       LeaderDTO lTable) {
     lTable.setId(leader.getId());
     lTable.setCounter(leader.getCounter());
-    lTable.setHostname(leader.getHostName());
+    lTable.setHostname(leader.getRpcAddresses());
     lTable.setHttpAddress(leader.getHttpAddress());
     lTable.setPartitionVal(leader.getPartitionVal());
   }

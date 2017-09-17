@@ -49,7 +49,7 @@ public class YarnLeaderClusterj extends LeDescriptorClusterj
 
     void setCounter(long counter);
 
-    @Column(name = TablesDef.LeDescriptorTableDef.HOSTNAME)
+    @Column(name = TablesDef.LeDescriptorTableDef.RPC_ADDRESSES)
     String getHostname();
 
     void setHostname(String hostname);
