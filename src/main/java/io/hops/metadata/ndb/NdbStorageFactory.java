@@ -172,6 +172,7 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(ProjectsDailyCostDataAccess.class, new ProjectsDailyCostClusterJ());
     dataAccessMap.put(PriceMultiplicatorDataAccess.class,new PriceMultiplicatorClusterJ());
     dataAccessMap.put(ReservationStateDataAccess.class, new ReservationStateClusterJ());
+    dataAccessMap.put(HashBucketDataAccess.class, new HashBucketClusterj());
   }
 
   @Override

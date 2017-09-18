@@ -280,6 +280,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       cls = BlockChecksumClusterj.BlockChecksumDto.class;
     } else if (className == OngoingSubTreeOpsDataAccess.class) {
       cls = OnGoingSubTreeOpsClusterj.OnGoingSubTreeOpsDTO.class;
+    } else if (className == HashBucketDataAccess.class){
+      cls = HashBucketClusterj.HashBucketDTO.class;
     } else if (className == InMemoryInodeDataAccess.class) {
       cls = InMemoryFileInodeClusterj.FileInodeDataDTO.class;
     } else if (className == SmallOnDiskInodeDataAccess.class) {
@@ -340,10 +342,11 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         BlockLookUpDataAccess.class, SafeBlocksDataAccess.class,
         MisReplicatedRangeQueueDataAccess.class, QuotaUpdateDataAccess.class,
         EncodingStatusDataAccess.class, BlockChecksumDataAccess.class,
-        OngoingSubTreeOpsDataAccess.class, MetadataLogDataAccess.class,
-        EncodingJobsDataAccess.class,RepairJobsDataAccess.class,
-        UserDataAccess.class, GroupDataAccess.class,
-        UserGroupDataAccess.class,VariableDataAccess.class);
+        OngoingSubTreeOpsDataAccess.class,
+        MetadataLogDataAccess.class, EncodingJobsDataAccess.class,
+        RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
+        UserGroupDataAccess.class,VariableDataAccess.class,
+        HashBucketDataAccess.class);
   }
   
   private boolean formatAll(boolean transactional) throws StorageException {
@@ -529,7 +532,10 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.ProjectsDailyCostTableDef.TABLE_NAME);
           } else if (e == PriceMultiplicatorDataAccess.class) {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.PriceMultiplicatorTableDef.TABLE_NAME);
-          }else if (e == ReservationStateDataAccess.class) {
+          } else if (e == HashBucketDataAccess.class){
+            truncate(transactional, io.hops.metadata.hdfs.TablesDef
+                .HashBucketsTableDef.TABLE_NAME);
+          } else if (e == ReservationStateDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.ReservationStateTableDef.TABLE_NAME);
           }
