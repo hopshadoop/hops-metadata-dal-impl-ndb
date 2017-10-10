@@ -121,6 +121,27 @@ public class InvalidatedBlockClusterj implements
     session.release(dtos);
     return ivl;
   }
+
+  @Override
+  public Map<Long, Long> findInvalidatedBlockAndGenStampByStorageId(int storageId)
+      throws StorageException {
+    Map<Long,Long> blockInodeMap = new HashMap<>();
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<InvalidateBlocksDTO> qdt =
+        qb.createQueryDefinition(InvalidateBlocksDTO.class);
+    qdt.where(qdt.get("storageId").equal(qdt.param("param")));
+    HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
+    query.setParameter("param", storageId);
+
+    List<InvalidateBlocksDTO> dtos = query.getResultList();
+    for(InvalidateBlocksDTO dto : dtos){
+      blockInodeMap.put(dto.getBlockId(), dto.getGenerationStamp());
+    }
+    session.release(dtos);
+    return blockInodeMap;
+  }
+
   
   @Override
   public Map<Long, Long> findInvalidatedBlockByStorageIdUsingMySQLServer(int storageId) throws StorageException {
