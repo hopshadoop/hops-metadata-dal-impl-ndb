@@ -631,7 +631,7 @@ CREATE TABLE `yarn_containers_logs` (
   `price` FLOAT  DEFAULT NULL,
   `vcores` INT DEFAULT NULL,
   `gpus` INT DEFAULT NULL,
-  `mb` INT DEFAULT NULL,
+  `mb` BIGINT DEFAULT NULL,
   PRIMARY KEY (`container_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs $$
 
