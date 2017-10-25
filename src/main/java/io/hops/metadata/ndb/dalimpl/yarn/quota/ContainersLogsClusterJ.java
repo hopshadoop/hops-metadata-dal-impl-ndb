@@ -29,6 +29,7 @@ import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.TablesDef;
 import static io.hops.metadata.yarn.TablesDef.ContainersLogsTableDef.EXITSTATUS;
+import static io.hops.metadata.yarn.TablesDef.ContainersLogsTableDef.MB;
 import io.hops.metadata.yarn.dal.quota.ContainersLogsDataAccess;
 import io.hops.metadata.yarn.entity.quota.ContainerLog;
 
@@ -77,10 +78,14 @@ public class ContainersLogsClusterJ implements
     void setVCores(int vcores);
     
     @Column(name = MB)
-    int getMB();
+    long getMB();
 
-    void setMB(int mb);
+    void setMB(long mb);
 
+    @Column(name = GPUS)
+    int getGpus();
+
+    void setGpus(int mb);
     
   }
 
@@ -142,6 +147,7 @@ public class ContainersLogsClusterJ implements
     clDTO.setPrice(hopCL.getPrice());
     clDTO.setVCores(hopCL.getNbVcores());
     clDTO.setMB(hopCL.getMemoryUsed());
+    clDTO.setGpus(hopCL.getGpuUsed());
     return clDTO;
   }
 
@@ -164,7 +170,8 @@ public class ContainersLogsClusterJ implements
             clDTO.getexitstatus(), 
             clDTO.getPrice(),
             clDTO.getVCores(),
-            clDTO.getMB()
+            clDTO.getMB(),
+            clDTO.getGpus()
     );
     return hop;
   }
