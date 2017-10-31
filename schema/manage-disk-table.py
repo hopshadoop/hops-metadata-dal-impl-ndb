@@ -96,11 +96,11 @@ def create():
 
   #Create Table
   printStage("Creating Tables")
-  subCommand = ("CREATE TABLE IF NOT EXISTS hdfs_ondisk_small_file_inode_data ( inode_id int(11) PRIMARY KEY, data varchar(%d) not null ) TABLESPACE %s STORAGE DISK ENGINE ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1' partition by key (\`inode_id\`)"% (ONDISK_SMALL_FILE_INODE_SIZE, TS_NAME))
+  subCommand = ("CREATE TABLE IF NOT EXISTS hdfs_ondisk_small_file_inode_data ( inode_id int(11) PRIMARY KEY, data varbinary(%d) not null ) TABLESPACE %s STORAGE DISK ENGINE ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1' partition by key (\`inode_id\`)"% (ONDISK_SMALL_FILE_INODE_SIZE, TS_NAME))
   executeSQLCommand(subCommand)
-  subCommand = ("CREATE TABLE IF NOT EXISTS hdfs_ondisk_medium_file_inode_data ( inode_id int(11) PRIMARY KEY, data varchar(%d) not null ) TABLESPACE %s STORAGE DISK ENGINE ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1' partition by key (\`inode_id\`)"% (ONDISK_MEDIUM_FILE_INODE_SIZE, TS_NAME))
+  subCommand = ("CREATE TABLE IF NOT EXISTS hdfs_ondisk_medium_file_inode_data ( inode_id int(11) PRIMARY KEY, data varbinary(%d) not null ) TABLESPACE %s STORAGE DISK ENGINE ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1' partition by key (\`inode_id\`)"% (ONDISK_MEDIUM_FILE_INODE_SIZE, TS_NAME))
   executeSQLCommand(subCommand)
-  subCommand = ("CREATE TABLE IF NOT EXISTS hdfs_ondisk_large_file_inode_data ( inode_id int(11), dindex int(11), data varchar(%d) not null  PRIMARY KEY(`indoe_id`, `dindex`) ) TABLESPACE %s STORAGE DISK ENGINE ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1' partition by key (\`inode_id\`)"% (ONDISK_LARGE_FILE_INODE_SIZE, TS_NAME))
+  subCommand = ("CREATE TABLE IF NOT EXISTS hdfs_ondisk_large_file_inode_data ( inode_id int(11), dindex int(11), data varbinary(%d) not null,  PRIMARY KEY(inode_id, dindex) ) TABLESPACE %s STORAGE DISK ENGINE ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1' partition by key (inode_id)"% (ONDISK_LARGE_FILE_INODE_SIZE, TS_NAME))
   executeSQLCommand(subCommand)
 
 

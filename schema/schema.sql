@@ -131,18 +131,18 @@ delimiter $$
 
 CREATE TABLE IF NOT EXISTS `hdfs_ondisk_small_file_inode_data` (
 	  `inode_id` int(11) NOT NULL,
-	  `data` varchar(2000) NOT NULL,
+	  `data` VARBINARY(2000) NOT NULL,
 	  PRIMARY KEY (`inode_id`)
-) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
+) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 delimiter $$
 
 CREATE TABLE IF NOT EXISTS `hdfs_ondisk_medium_file_inode_data` (
   `inode_id` int(11) NOT NULL,
-  `data` varchar(4000) NOT NULL,
+  `data` VARBINARY(4000) NOT NULL,
   PRIMARY KEY (`inode_id`)
-) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
+) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 delimiter $$
@@ -150,9 +150,9 @@ delimiter $$
  CREATE TABLE IF NOT EXISTS `hdfs_ondisk_large_file_inode_data` (
   `inode_id` int(11) NOT NULL,
   `dindex`    int(11) NOT NULL,
-  `data` varchar(8000) NOT NULL,
+  `data` VARBINARY(8000) NOT NULL,
   PRIMARY KEY (`inode_id`, `dindex`)
-) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
+) /*!50100 TABLESPACE `ts_1` STORAGE DISK */ ENGINE=ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
 delimiter $$
@@ -161,7 +161,7 @@ CREATE TABLE `hdfs_inmemory_file_inode_data` (
   `inode_id` int(11) NOT NULL,
   `data` varbinary(1024) NOT NULL,
   PRIMARY KEY (`inode_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */  $$
 
 delimiter $$
