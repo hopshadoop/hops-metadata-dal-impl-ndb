@@ -94,7 +94,7 @@ CREATE TABLE `hdfs_inodes` (
   KEY `inode_idx` (`id`),
   KEY `c1` (`parent_id`,`partition_id`),
   KEY `c2` (`partition_id`,`parent_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (partition_id) */  $$
 
 delimiter $$
