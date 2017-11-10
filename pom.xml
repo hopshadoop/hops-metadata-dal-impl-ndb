@@ -53,7 +53,19 @@
       <name>SICS Release Repository</name>
       <url>http://kompics.sics.se/maven/repository</url>
       <snapshots>
+        <enabled>false</enabled>
         <updatePolicy>never</updatePolicy>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>sics-snapshot-repository</id>
+      <name>SICS Snapshot Repository</name>
+      <url>http://kompics.sics.se/maven/snapshotrepository</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <updatePolicy>always</updatePolicy>
       </snapshots>
     </repository>
   </repositories>
@@ -87,10 +99,10 @@
                 <exec executable="make" dir="${project.build.directory}/native" failonerror="true">
                   <arg line="VERBOSE=1"/>
                  </exec>
-                <exec command="cp classes/libhopsyarn.so classes/libhopsyarn-1.0.so" dir="${project.build.directory}" failonerror="true">
+                <exec command="cp classes/libhopsyarn.so classes/libhopsyarn-${project.version}.so" dir="${project.build.directory}" failonerror="true">
                 </exec>
                 <exec command="mvn install:install-file -Dfile=target/classes/libhopsyarn.so -DgroupId=io.hops.streaming 
-                            -DartifactId=libhopsyarn -Dversion=1.0 -Dpackaging=so -DlocalRepositoryPath=${settings.localRepository}" 
+                            -DartifactId=libhopsyarn -Dversion=${project.version} -Dpackaging=so -DlocalRepositoryPath=${settings.localRepository}" 
                               dir="${project.build.directory}/.." failonerror="true">
                 </exec>
               </target>
@@ -99,30 +111,6 @@
         </executions>
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-deploy-plugin</artifactId>
-        <version>2.7</version>
-        <executions>
-          <execution>
-            <id>deploy-file</id>
-            <phase>deploy</phase>
-            <goals>
-              <goal>deploy-file</goal>
-            </goals>
-            <configuration>
-              <repositoryId>sics-release-repository</repositoryId>
-              <url>scpexe://kompics.i.sics.se/home/maven/repository</url>
-              <packaging>so</packaging>
-              <generatePom>true</generatePom>
-              <artifactId>libhopsyarn</artifactId>
-              <groupId>io.hops.streaming</groupId>
-              <version>${project.version}</version>
-              <file>target/classes/libhopsyarn.so</file>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
@@ -157,6 +145,11 @@
       <name>SICS Repository</name>
       <url>scpexe://kompics.i.sics.se/home/maven/repository</url>
     </repository>
-    <downloadUrl>http://kompics.sics.se/maven/repository</downloadUrl>
+    <snapshotRepository>
+      <id>sics-snapshot-repository</id>
+      <name>SICS Snapshot Repository</name>
+      <url>scpexe://kompics.i.sics.se/home/maven/snapshotrepository</url>
+    </snapshotRepository>
+    <downloadUrl>http://kompics.sics.se/maven</downloadUrl>
   </distributionManagement>
 </project>
