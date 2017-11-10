@@ -16,24 +16,24 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#ifndef FINISHEDAPPLICATIONSTABLETAILER_H
-#define FINISHEDAPPLICATIONSTABLETAILER_H
+#ifndef RMNODEAPPLICATIONSTABLETAILER_H
+#define RMNODEAPPLICATIONSTABLETAILER_H
 
 #include "TableTailer.h"
 #include <jni.h>
 
-class FinishedApplicationsTableTailer : public TableTailer{
+class RmNodeApplicationsTableTailer : public TableTailer{
 public:
-  FinishedApplicationsTableTailer(Ndb* ndb, const int poll_maxTimeToWait,JavaVM* jvm);
-  FinishedApplicationsTableTailer();
-  virtual ~FinishedApplicationsTableTailer();
+  RmNodeApplicationsTableTailer(Ndb* ndb, const int poll_maxTimeToWait,JavaVM* jvm);
+  RmNodeApplicationsTableTailer();
+  virtual ~RmNodeApplicationsTableTailer();
     
 private:
     static const WatchTable TABLE;
     JNIEnv *env;
     jclass cls;
     jmethodID midCreateAndAddToQueue;
-    jobject finishedApplicationsEventReceiver;
+    jobject rmNodeApplicationsEventReceiver;
     virtual void handleEvent(NdbDictionary::Event::TableEvent eventType, NdbRecAttr* preValue[], NdbRecAttr* value[]);
 
 };
