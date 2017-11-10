@@ -15,9 +15,9 @@
  */
 package io.hops.metadata.ndb;
 
-import io.hops.DalNdbEventStreaming;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import io.hops.DalEventStreaming;
 
 /**
  *
@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * A helper to load the native hopsndbeventstreamer code i.e. hopsndbevent.so.
  */
-public class JniNdbEventStreaming implements DalNdbEventStreaming {
+public class JniNdbEventStreaming implements DalEventStreaming {
 
   private static final Log LOG = LogFactory.getLog(JniNdbEventStreaming.class);
 
@@ -42,7 +42,7 @@ public class JniNdbEventStreaming implements DalNdbEventStreaming {
   static {
     // Try to load native hopsndbevent library and set fallback flag appropriately
 
-      System.loadLibrary("hopsyarn-1.0");
+      System.loadLibrary("hopsyarn");
       LOG.info("Loaded the native-hopsndbevent library");
 
   }
@@ -60,7 +60,7 @@ public class JniNdbEventStreaming implements DalNdbEventStreaming {
   }
 
   @Override
-  public void startHopsNdbEvetAPISession(boolean isLeader) {
+  public void startHopsEvetAPISession(boolean isLeader) {
     LOG.info(
             "Application is requesting to start the api session... only one session per jvm");
     startEventAPISession(isLeader, connectionString, databaseName);
@@ -68,7 +68,7 @@ public class JniNdbEventStreaming implements DalNdbEventStreaming {
   }
 
   @Override
-  public void closeHopsNdbEventAPISession() {
+  public void closeHopsEventAPISession() {
     LOG.info("closing EventAPI session");
     closeEventAPISession();
   }
