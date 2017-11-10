@@ -76,9 +76,9 @@ JniNdbEventStreamingImp::JniNdbEventStreamingImp(JNIEnv *env,jboolean jIsLeader,
     nextHeartBeatTailer = new NextHeartBeatTableTailer(nextHeartBeat_tailer_connection, mPollMaxTimeToWait,jvm);
     nextHeartBeatTailer->start();
 
-    Ndb* finishedApplications_tailer_connection = create_ndb_connection(databaseName);
-    finishedApplicationsTailer = new FinishedApplicationsTableTailer(finishedApplications_tailer_connection, mPollMaxTimeToWait,jvm);
-    finishedApplicationsTailer->start();
+    Ndb* rmNodeApplications_tailer_connection = create_ndb_connection(databaseName);
+    rmNodeApplicationsTailer = new RmNodeApplicationsTableTailer(rmNodeApplications_tailer_connection, mPollMaxTimeToWait,jvm);
+    rmNodeApplicationsTailer->start();
   }
 }
 
@@ -100,7 +100,7 @@ JniNdbEventStreamingImp::~JniNdbEventStreamingImp(){
     containerToSignalTailer->stop();
     containerToDecreaseTailer->stop();
     nextHeartBeatTailer->stop();
-    finishedApplicationsTailer->stop();
+//    finishedApplicationsTailer->stop();
   }
   LOG_INFO("delete tabletailer 6");
   delete mClusterConnection;

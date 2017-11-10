@@ -30,7 +30,7 @@
 #include "ContainerToSignalTableTailer.h"
 #include "ContainerToDecreaseTableTailer.h"
 #include "NextHeartBeatTableTailer.h"
-#include "FinishedApplicationsTableTailer.h"
+#include "RmNodeApplicationsTableTailer.h"
 
 class JniNdbEventStreamingImp {
  public:
@@ -52,7 +52,7 @@ class JniNdbEventStreamingImp {
   ContainerToSignalTableTailer *containerToSignalTailer;
   ContainerToDecreaseTableTailer *containerToDecreaseTailer;
   NextHeartBeatTableTailer *nextHeartBeatTailer;
-  FinishedApplicationsTableTailer *finishedApplicationsTailer;
+  RmNodeApplicationsTableTailer *rmNodeApplicationsTailer;
   
   Ndb* create_ndb_connection(const char* database);
   Ndb_cluster_connection* connect_to_cluster(const char *connection_string);
