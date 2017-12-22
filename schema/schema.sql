@@ -643,6 +643,7 @@ CREATE TABLE `yarn_projects_daily_cost` (
   `projectname` VARCHAR(100) NOT NULL,
   `day` BIGINT NOT NULL,
   `credits_used` FLOAT  DEFAULT NULL,
+  `app_ids` VARCHAR(3000) NOT NULL,
   PRIMARY KEY (`projectname`, `day`, `user`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(user)$$
 

@@ -70,6 +70,11 @@ public class ProjectsDailyCostClusterJ implements
     float getCreditUsed();
 
     void setCreditUsed(float credit);
+    
+    @Column(name = APP_IDS)
+    String getAppIds();
+
+    void setAppIds(String appIds);
 
   }
 
@@ -131,7 +136,7 @@ public class ProjectsDailyCostClusterJ implements
           ProjectDailyCostDTO csDTO) {
     ProjectDailyCost hop
             = new ProjectDailyCost(csDTO.getProjectName(), csDTO.getUser(),
-                    csDTO.getDay(), csDTO.getCreditUsed());
+                    csDTO.getDay(), csDTO.getCreditUsed(), csDTO.getAppIds());
     return hop;
   }
 
@@ -160,7 +165,14 @@ public class ProjectsDailyCostClusterJ implements
     pqDTO.setUser(hopPQ.getProjectUser());
     pqDTO.setDay(hopPQ.getDay());
     pqDTO.setCreditUsed(hopPQ.getCreditsUsed());
-
+    String appIds = "";
+    for(String appId: hopPQ.getAppIds()){
+        appIds = appIds + appId + ",";
+    }
+    if(appIds.length()>3000){
+        appIds = appIds.substring(0, 2997) +"...";
+    }
+    pqDTO.setAppIds(appIds);
     return pqDTO;
   }
 }
