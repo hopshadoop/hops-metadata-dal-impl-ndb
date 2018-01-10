@@ -575,7 +575,7 @@ delimiter $$
 CREATE TABLE `yarn_applicationstate` (
   `applicationid` VARCHAR(45) NOT NULL,
   `appstate` VARBINARY(13500) NULL,
-  `appuser` VARCHAR(45) NULL,
+  `appuser` VARCHAR(100) NULL,
   `appname` VARCHAR(200) NULL,
   `appsmstate` VARCHAR(45) NULL,
 PRIMARY KEY (`applicationid`)

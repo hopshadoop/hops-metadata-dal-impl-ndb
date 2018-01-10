@@ -164,7 +164,7 @@ public class ApplicationStateClusterJ implements
       throw new StorageException(e);
     }
     appStateDTO.setappuser(hop.getUser());
-    appStateDTO.setappname(hop.getName());
+    appStateDTO.setappname(hop.getName().substring(0, 200));
     appStateDTO.setappsmstate(hop.getState());
 
     return appStateDTO;
