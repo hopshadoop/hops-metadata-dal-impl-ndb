@@ -31,9 +31,11 @@ import io.hops.metadata.ndb.wrapper.HopsSession;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import org.apache.log4j.Logger;
 
 public class VariableClusterj
     implements TablesDef.VariableTableDef, VariableDataAccess<Variable, Variable.Finder> {
+  static final Logger LOG = Logger.getLogger(VariableClusterj.class);
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface VariableDTO {
@@ -54,11 +56,28 @@ public class VariableClusterj
 
   @Override
   public Variable getVariable(Variable.Finder varType) throws StorageException {
+    //[S] Under read intensive load this may fail. Retry before throwing an
+    // exception. The assumption is that the variable are added to the database
+    // on cluster start / format. Getting null value is unexpected.
+    VariableDTO vd = null;
     HopsSession session = connector.obtainSession();
-    VariableDTO vd = session.find(VariableDTO.class, varType.getId());
+    int retryCount = 0;
+    do{
+      vd = session.find(VariableDTO.class, varType.getId());
+      if(vd == null){
+        try {
+          Thread.sleep(100);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+        LOG.warn("Unable to read variable id="+varType.getId()+". retry " +
+                "count: " + retryCount);
+      }
+    }while(vd == null && retryCount++<10);
+
     if (vd == null) {
       throw new StorageException(
-          "There is no variable entry with id " + varType.getId());
+              "There is no variable entry with id " + varType.getId());
     }
     Variable var = Variable.initVariable(varType, vd.getValue());
     session.release(vd);
