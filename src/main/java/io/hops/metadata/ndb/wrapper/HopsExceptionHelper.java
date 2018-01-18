@@ -20,11 +20,7 @@ package io.hops.metadata.ndb.wrapper;
 
 import com.mysql.clusterj.ClusterJDatastoreException;
 import com.mysql.clusterj.ClusterJException;
-import io.hops.exception.ForeignKeyConstraintViolationException;
-import io.hops.exception.StorageException;
-import io.hops.exception.TransientStorageException;
-import io.hops.exception.TupleAlreadyExistedException;
-import io.hops.exception.UniqueKeyConstraintViolationException;
+import io.hops.exception.*;
 
 public class HopsExceptionHelper {
   public static StorageException wrap(ClusterJException e) {
@@ -36,6 +32,8 @@ public class HopsExceptionHelper {
       return new ForeignKeyConstraintViolationException(e);
     } else if(isUniqueKeyConstraintViolation(e)){
       return new UniqueKeyConstraintViolationException(e);
+    } else if (isOutOfDBExtents(e)) {
+      return new OutOfDBExtentsException(e);
     } else {
       return new StorageException(e);
     }
@@ -78,6 +76,10 @@ public class HopsExceptionHelper {
 
   private static boolean isUniqueKeyConstraintViolation(ClusterJException e){
     return isExceptionContains(e, "code 893");
+  }
+
+  private static boolean isOutOfDBExtents(ClusterJException e){
+    return isExceptionContains(e, "code 1601");
   }
 
   private static boolean isExceptionContains(ClusterJException e, String
