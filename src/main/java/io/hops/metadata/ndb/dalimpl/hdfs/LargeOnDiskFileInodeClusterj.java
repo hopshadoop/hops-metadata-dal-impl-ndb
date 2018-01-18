@@ -123,7 +123,22 @@ public class LargeOnDiskFileInodeClusterj
         toRead = remaining;
       }
 
-       System.arraycopy(dtos[index].getData(),0,buffer,index*CHUNK_SIZE, toRead);
+
+      // Typical ClusterJ bug :(. Some times the batch op fails to read the
+      // data. Retry reading the rows that are supposed to be in the database
+      byte data[] = dtos[index].getData();
+      if( data.length ==0 ){
+        Object pk[] = new Object[2];
+        pk[0] = dtos[index].getInodeId();
+        pk[1] = dtos[index].getIndex();
+        FileInodeDataDTO dto = session.find(FileInodeDataDTO.class, pk);
+        if(dto.getData().length == 0){
+          throw new IllegalStateException("Failed to read the small files " +
+                  "data from database");
+        }
+        data = dto.getData();
+      }
+      System.arraycopy(data,0,buffer,index*CHUNK_SIZE, toRead);
     }
 
     FileInodeData fileData = new FileInodeData(inodeId, buffer, size, FileInodeData.Type.OnDiskFile);
