@@ -6,7 +6,7 @@ delimiter $$
 
 CREATE PROCEDURE flyway()
 BEGIN
-	IF EXISTS(SELECT table_name 
+	IF EXISTS(SELECT table_name
             FROM INFORMATION_SCHEMA.TABLES
 			WHERE table_schema = 'hops'
              AND table_name LIKE 'flyway_schema_history')
