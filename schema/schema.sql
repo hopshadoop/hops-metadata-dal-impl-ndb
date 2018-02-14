@@ -1,19 +1,9 @@
 delimiter $$
 
--- Store which storages a machine has, and what types they are
-CREATE TABLE `hdfs_storages` (
-  `host_id` varchar(255) NOT NULL,
-  `storage_id` int(11) NOT NULL,
-  `storage_type` int(11) NOT NULL,
-  PRIMARY KEY (`storage_id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=latin1$$
-
-delimiter $$
-
 CREATE TABLE `hdfs_block_infos` (
-  `inode_id` int(11) NOT NULL, -- file id
+  `inode_id` int(11) NOT NULL,
   `block_id` bigint(20) NOT NULL,
-  `block_index` int(11) DEFAULT NULL, -- position in file
+  `block_index` int(11) DEFAULT NULL,
   `num_bytes` bigint(20) DEFAULT NULL,
   `generation_stamp` bigint(20) DEFAULT NULL,
   `block_under_construction_state` int(11) DEFAULT NULL,
@@ -23,6 +13,7 @@ CREATE TABLE `hdfs_block_infos` (
   PRIMARY KEY (`inode_id`,`block_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
+
 
 delimiter $$
 
@@ -45,6 +36,7 @@ CREATE TABLE `hdfs_corrupt_replicas` (
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
+
 delimiter $$
 
 CREATE TABLE `hdfs_excess_replicas` (
@@ -55,6 +47,7 @@ CREATE TABLE `hdfs_excess_replicas` (
   KEY `storage_idx` (`storage_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
+
 
 delimiter $$
 
@@ -67,6 +60,7 @@ CREATE TABLE `hdfs_inode_attributes` (
   PRIMARY KEY (`inodeId`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inodeId) */$$
+
 
 delimiter $$
 
@@ -94,8 +88,6 @@ CREATE TABLE `hdfs_inodes` (
   `under_construction` tinyint NOT NULL,
   `subtree_locked` tinyint DEFAULT NULL,
   `file_stored_in_db` tinyint(4) NOT NULL DEFAULT '0',
-  `logical_time` int(11) NOT NULL DEFAULT '0',
-  `storage_policy` bit(8) NOT NULL DEFAULT '0',
   PRIMARY KEY (`partition_id`,`parent_id`,`name`),
   KEY `pidex` (`parent_id`),
   KEY `inode_idx` (`id`),
@@ -117,7 +109,7 @@ BEGIN
 
 	SELECT count(LOGFILE_GROUP_NAME) INTO lc FROM INFORMATION_SCHEMA.FILES where LOGFILE_GROUP_NAME="lg_1";
 	IF (lc = 0) THEN
-	    CREATE LOGFILE GROUP lg_1 ADD UNDOFILE 'undo_log_0.log' INITIAL_SIZE = 128M ENGINE ndbcluster;
+	    CREATE LOGFILE GROUP lg_1 ADD UNDOFILE 'undo_log_0.log' INITIAL_SIZE = 2048M ENGINE ndbcluster;
 	ELSE
 		select "The LogFile has already been created" as "";
 	END IF;
@@ -125,7 +117,7 @@ BEGIN
 
 	SELECT count(TABLESPACE_NAME) INTO tc FROM INFORMATION_SCHEMA.FILES where TABLESPACE_NAME="ts_1";
 	IF (tc = 0) THEN
-		CREATE TABLESPACE ts_1 ADD datafile 'ts_1_data_file_0.dat' use LOGFILE GROUP lg_1 INITIAL_SIZE = 128M  ENGINE ndbcluster;
+		CREATE TABLESPACE ts_1 ADD datafile 'ts_1_data_file_0.dat' use LOGFILE GROUP lg_1 INITIAL_SIZE = 2048M  ENGINE ndbcluster;
 	ELSE
 		select "The DataFile has already been created" as "";
 	END IF;
@@ -224,6 +216,7 @@ CREATE TABLE `hdfs_invalidated_blocks` (
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
+
 delimiter $$
 
 CREATE TABLE `hdfs_le_descriptors` (
@@ -280,6 +273,7 @@ CREATE TABLE `hdfs_misreplicated_range_queue` (
   PRIMARY KEY (`range`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
+
 delimiter $$
 
 CREATE TABLE `hdfs_path_memcached` (
@@ -287,6 +281,7 @@ CREATE TABLE `hdfs_path_memcached` (
   `inodeids` varbinary(13500) NOT NULL,
   PRIMARY KEY (`path`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
+
 
 delimiter $$
 
@@ -299,6 +294,7 @@ CREATE TABLE `hdfs_pending_blocks` (
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
+
 delimiter $$
 
 CREATE TABLE `hdfs_replica_under_constructions` (
@@ -310,6 +306,7 @@ CREATE TABLE `hdfs_replica_under_constructions` (
   PRIMARY KEY (`inode_id`,`block_id`,`storage_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
+
 
 delimiter $$
 
@@ -324,6 +321,7 @@ CREATE TABLE `hdfs_replicas` (
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
+
 delimiter $$
 
 CREATE TABLE `hdfs_safe_blocks` (
@@ -331,14 +329,15 @@ CREATE TABLE `hdfs_safe_blocks` (
   PRIMARY KEY (`id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
+
 delimiter $$
 
--- For performance only: map String to more efficient int
 CREATE TABLE `hdfs_storage_id_map` (
   `storage_id` varchar(128) NOT NULL,
   `sid` int(11) NOT NULL,
   PRIMARY KEY (`storage_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
+
 
 delimiter $$
 
@@ -352,6 +351,7 @@ CREATE TABLE `hdfs_under_replicated_blocks` (
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
 /*!50100 PARTITION BY KEY (inode_id) */$$
 
+
 delimiter $$
 
 CREATE TABLE `hdfs_variables` (
@@ -359,6 +359,7 @@ CREATE TABLE `hdfs_variables` (
   `value` varbinary(500) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
+
 
 delimiter $$
 
@@ -450,13 +451,13 @@ delimiter $$
 CREATE TABLE `hdfs_metadata_log` (
   `dataset_id` int(11) NOT NULL,
   `inode_id` int(11) NOT NULL,
-  `logical_time` int(11) NOT NULL,
+  `timestamp` bigint(20) NOT NULL,
   `inode_partition_id` int(11) NOT NULL,
   `inode_parent_id` int(11) NOT NULL,
   `inode_name` varchar(255) NOT NULL DEFAULT '',
   `operation` smallint(11) NOT NULL,
-  PRIMARY KEY (`dataset_id` ,`inode_id` , `logical_time`),
-  KEY `logical_time` (`logical_time`)
+  PRIMARY KEY (`dataset_id` ,`inode_id` , `timestamp`),
+  KEY `timestamp` (`timestamp`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs$$
 
 delimiter $$
@@ -573,7 +574,7 @@ delimiter $$
 CREATE TABLE `yarn_applicationstate` (
   `applicationid` VARCHAR(45) NOT NULL,
   `appstate` VARBINARY(13500) NULL,
-  `appuser` VARCHAR(100) NULL,
+  `appuser` VARCHAR(45) NULL,
   `appname` VARCHAR(200) NULL,
   `appsmstate` VARCHAR(45) NULL,
 PRIMARY KEY (`applicationid`)
@@ -630,7 +631,7 @@ CREATE TABLE `yarn_containers_logs` (
   `price` FLOAT  DEFAULT NULL,
   `vcores` INT DEFAULT NULL,
   `gpus` INT DEFAULT NULL,
-  `mb` BIGINT DEFAULT NULL,
+  `mb` INT DEFAULT NULL,
   PRIMARY KEY (`container_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs $$
 
@@ -641,7 +642,6 @@ CREATE TABLE `yarn_projects_daily_cost` (
   `projectname` VARCHAR(100) NOT NULL,
   `day` BIGINT NOT NULL,
   `credits_used` FLOAT  DEFAULT NULL,
-  `app_ids` VARCHAR(3000) NOT NULL,
   PRIMARY KEY (`projectname`, `day`, `user`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs PARTITION BY KEY(user)$$
 
