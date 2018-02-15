@@ -1,4 +1,14 @@
 delimiter $$
+IF EXISTS(SELECT table_name 
+            FROM INFORMATION_SCHEMA.TABLES
+           WHERE table_schema = `hops`
+             AND table_name LIKE `flyway_schema_history`)
+
+THEN
+  ALTER TABLE `flyway_schema_history` storage = 'ndb'$$
+END IF$$
+
+delimiter $$
 
 CREATE TABLE `hdfs_block_infos` (
   `inode_id` int(11) NOT NULL,
