@@ -1,5 +1,27 @@
 delimiter $$
 
+drop procedure if exists flyway$$
+
+delimiter $$
+
+CREATE PROCEDURE flyway()
+BEGIN
+	IF EXISTS(SELECT table_name 
+            FROM INFORMATION_SCHEMA.TABLES
+			WHERE table_schema = 'hops'
+             AND table_name LIKE 'flyway_schema_history')
+
+	THEN
+		ALTER TABLE `flyway_schema_history` engine = 'ndb';
+	END IF;
+END$$
+
+delimiter $$
+
+CALL flyway$$
+
+delimiter $$
+
 CREATE TABLE `hdfs_block_infos` (
   `inode_id` int(11) NOT NULL,
   `block_id` bigint(20) NOT NULL,
