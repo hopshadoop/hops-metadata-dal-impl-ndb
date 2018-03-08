@@ -28,6 +28,7 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.ReplicaUnderConstructionDataAccess;
 import io.hops.metadata.hdfs.entity.ReplicaUnderConstruction;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.NdbBoolean;
 import io.hops.metadata.ndb.wrapper.HopsPredicate;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
@@ -72,6 +73,11 @@ public class ReplicaUnderConstructionClusterj
     @Column(name = HASH_BUCKET)
     int getBucketId();
     void setBucketId(int bucketId);
+    
+    @Column(name = CHOSEN_AS_PRIMARY)
+    byte getChosenAsPrimary();
+    void setChosenAsPrimary(byte chosenAsPrimary);
+    
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -95,6 +101,13 @@ public class ReplicaUnderConstructionClusterj
         createPersistable(replica, newInstance);
         changes.add(newInstance);
       }
+
+      for (ReplicaUnderConstruction replica : modified) {
+        ReplicaUcDTO newInstance = session.newInstance(ReplicaUcDTO.class);
+        createPersistable(replica, newInstance);
+        changes.add(newInstance);
+      }
+      
       session.deletePersistentAll(deletions);
       session.savePersistentAll(changes);
     }finally {
@@ -173,7 +186,7 @@ public class ReplicaUnderConstructionClusterj
         new ArrayList<>(replicaUc.size());
     for (ReplicaUcDTO t : replicaUc) {
       replicas.add(new ReplicaUnderConstruction(t.getState(), t.getStorageId(),
-          t.getBlockId(), t.getINodeId(), t.getBucketId()));
+          t.getBlockId(), t.getINodeId(), t.getBucketId(), NdbBoolean.convert(t.getChosenAsPrimary())));
       session.release(t);
     }
     return replicas;
@@ -186,5 +199,6 @@ public class ReplicaUnderConstructionClusterj
     newInstance.setState(replica.getState());
     newInstance.setINodeId(replica.getInodeId());
     newInstance.setBucketId(replica.getBucketId());
+    newInstance.setChosenAsPrimary(NdbBoolean.convert(replica.getChosenAsPrimary()));
   }
 }
