@@ -178,7 +178,7 @@ public class OnGoingSubTreeOpsClusterj
 
   private static int getHash(String path){
     String[] pathComponents =  PathUtils.getPathNames(path);
-    if(pathComponents.length == 1){
+    if(pathComponents.length <= 1){
       throw new UnsupportedOperationException("Taking sub tree lock on the root is not yet supported ");
     }
     return  pathComponents[1].hashCode();
