@@ -177,8 +177,11 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 
     @Column(name = STORAGE_POLICY)
     byte getStoragePolicy();
-
     void setStoragePolicy(byte storagePolicy);
+    
+    @Column(name = CHILDREN_NUM)
+    int getChildrenNum();
+    void setChildrenNum(int childrenNum);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -660,7 +663,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         NdbBoolean.convert(persistable.getMetaEnabled()),
         persistable.getSize(), NdbBoolean.convert(persistable
         .getFileStoredInDd()), persistable.getLogicalTime(),
-        persistable.getStoragePolicy());
+        persistable.getStoragePolicy(), persistable.getChildrenNum());
     return node;
   }
 
@@ -690,6 +693,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setPartitionId(inode.getPartitionId());
     persistable.setLogicalTime(inode.getLogicalTime());
     persistable.setStoragePolicy(inode.getStoragePolicy());
+    persistable.setChildrenNum(inode.getChildrenNum());
   }
 
   private void explain(HopsQuery<InodeDTO> query) {
