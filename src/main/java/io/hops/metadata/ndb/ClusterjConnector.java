@@ -290,6 +290,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       cls = MediumOnDiskFileInodeClusterj.FileInodeDataDTO.class;
     } else if (className == LargeOnDiskInodeDataAccess.class) {
       cls = LargeOnDiskFileInodeClusterj.FileInodeDataDTO.class;
+    } else if (className == AceDataAccess.class){
+      cls = AceClusterJ.AceDto.class;
     } else if (className == RetryCacheEntryDataAccess.class){
       cls = RetryCacheEntryClusterj.RetryCacheEntryDTO.class;
     }
@@ -348,7 +350,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         MetadataLogDataAccess.class, EncodingJobsDataAccess.class,
         RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
         UserGroupDataAccess.class,VariableDataAccess.class,
-        HashBucketDataAccess.class, StorageDataAccess.class, RetryCacheEntryDataAccess.class);
+        HashBucketDataAccess.class, StorageDataAccess.class,
+        AceDataAccess.class, RetryCacheEntryDataAccess.class);
   }
   
   private boolean formatAll(boolean transactional) throws StorageException {
@@ -543,6 +546,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
           } else if (e == ReservationStateDataAccess.class) {
             truncate(transactional,
                 io.hops.metadata.yarn.TablesDef.ReservationStateTableDef.TABLE_NAME);
+          } else if (e == AceDataAccess.class){
+            truncate(transactional, io.hops.metadata.hdfs.TablesDef.AcesTableDef.TABLE_NAME);
           } else if (e == RetryCacheEntryDataAccess.class){
             truncate(transactional, io.hops.metadata.hdfs.TablesDef.RetryCacheEntryTableDef.TABLE_NAME);
           }
