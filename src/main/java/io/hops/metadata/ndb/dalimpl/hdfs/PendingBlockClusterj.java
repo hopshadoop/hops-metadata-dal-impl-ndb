@@ -38,17 +38,48 @@ import io.hops.metadata.ndb.wrapper.HopsSession;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PendingBlockClusterj
     implements TablesDef.PendingBlockTableDef, PendingBlockDataAccess<PendingBlockInfo> {
 
-  @Override
-  public int countValidPendingBlocks(long timeLimit) throws StorageException {
-    return MySQLQueryHelper.countWithCriterion(TABLE_NAME,
-        String.format("%s>%d", TIME_STAMP, timeLimit));
+  @PersistenceCapable(table = TABLE_NAME)
+  @PartitionKey(column = INODE_ID)
+  public interface PendingBlockDTO {
+
+    @PrimaryKey
+    @Column(name = INODE_ID)
+    int getINodeId();
+
+    void setINodeId(int inodeId);
+    
+    @PrimaryKey
+    @Column(name = BLOCK_ID)
+    long getBlockId();
+
+    void setBlockId(long blockId);
+
+    @Column(name = TIME_STAMP)
+    long getTimestamp();
+
+    void setTimestamp(long timestamp);
+
+    @Column(name = TARGET)
+    String getTarget();
+
+    void setTarget(String target);
   }
 
+  private ClusterjConnector connector = ClusterjConnector.getInstance();
+
+  @Override
+  public int countValidPendingBlocks(long timeLimit) throws StorageException {
+    return MySQLQueryHelper.countUniqueWithCriterion(TABLE_NAME, String.format("%s, %s", INODE_ID, BLOCK_ID),
+        String.format("%s>%d", TIME_STAMP, timeLimit));
+  }
+  
   @Override
   public List<PendingBlockInfo> findByINodeId(int inodeId)
       throws StorageException {
@@ -84,36 +115,7 @@ public class PendingBlockClusterj
 
     return convertAndRelease(session, query.getResultList());
   }
-
-  @PersistenceCapable(table = TABLE_NAME)
-  @PartitionKey(column = INODE_ID)
-  public interface PendingBlockDTO {
-
-    @PrimaryKey
-    @Column(name = INODE_ID)
-    int getINodeId();
-
-    void setINodeId(int inodeId);
-    
-    @PrimaryKey
-    @Column(name = BLOCK_ID)
-    long getBlockId();
-
-    void setBlockId(long blockId);
-
-    @Column(name = TIME_STAMP)
-    long getTimestamp();
-
-    void setTimestamp(long timestamp);
-
-    @Column(name = NUM_REPLICAS_IN_PROGRESS)
-    int getNumReplicasInProgress();
-
-    void setNumReplicasInProgress(int numReplicasInProgress);
-  }
-
-  private ClusterjConnector connector = ClusterjConnector.getInstance();
-
+  
   @Override
   public void prepare(Collection<PendingBlockInfo> removed,
       Collection<PendingBlockInfo> newed, Collection<PendingBlockInfo> modified)
@@ -123,20 +125,16 @@ public class PendingBlockClusterj
     List<PendingBlockDTO> deletions = new ArrayList<>();
     try {
       for (PendingBlockInfo p : newed) {
-        PendingBlockDTO pTable = session.newInstance(PendingBlockDTO.class);
-        createPersistableHopPendingBlockInfo(p, pTable);
-        changes.add(pTable);
+        changes.addAll(createPersistableHopPendingBlockInfo(p, session));
       }
       for (PendingBlockInfo p : modified) {
         PendingBlockDTO pTable = session.newInstance(PendingBlockDTO.class);
-        createPersistableHopPendingBlockInfo(p, pTable);
-        changes.add(pTable);
+        changes.addAll(createPersistableHopPendingBlockInfo(p, session));
       }
 
       for (PendingBlockInfo p : removed) {
         PendingBlockDTO pTable = session.newInstance(PendingBlockDTO.class);
-        createPersistableHopPendingBlockInfo(p, pTable);
-        deletions.add(pTable);
+        deletions.addAll(createPersistableHopPendingBlockInfo(p, session));
       }
       session.deletePersistentAll(deletions);
       session.savePersistentAll(changes);
@@ -147,20 +145,23 @@ public class PendingBlockClusterj
   }
 
   @Override
-  public PendingBlockInfo findByPKey(long blockId, int inodeId)
+  public PendingBlockInfo findByBlockAndInodeIds(long blockId, int inodeId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
-    Object[] pk = new Object[2];
-    pk[0] = inodeId;
-    pk[1] = blockId;
-
-    PendingBlockDTO pendingTable = session.find(PendingBlockDTO.class, pk);
-    PendingBlockInfo pendingBlock = null;
-    if (pendingTable != null) {
-      pendingBlock = convertAndRelease(session, pendingTable);
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<PendingBlockDTO> dobj = qb.createQueryDefinition(PendingBlockDTO.class);
+    HopsPredicate pred = dobj.get("iNodeId").equal(dobj.param("iNodeId"));
+    dobj.where(pred);
+    pred = dobj.get("blockId").equal(dobj.param("blockId"));
+    dobj.where(pred);
+    HopsQuery<PendingBlockDTO> query = session.createQuery(dobj);
+    query.setParameter("iNodeId", inodeId);
+    query.setParameter("blockId", blockId);
+    List<PendingBlockDTO> dtos = query.getResultList();
+    if (dtos == null || dtos.isEmpty()) {
+      return null;
     }
-
-    return pendingBlock;
+    return convertAndRelease(session, dtos, blockId, inodeId, dtos.get(0).getTimestamp());
   }
 
   @Override
@@ -197,27 +198,63 @@ public class PendingBlockClusterj
 
   private List<PendingBlockInfo> convertAndRelease(HopsSession session,
       Collection<PendingBlockDTO> dtos) throws StorageException {
-    List<PendingBlockInfo> list = new ArrayList<>();
+    Map<Integer, Map<Long, List<PendingBlockDTO>>> pendingBlocks = new HashMap<>();
     for (PendingBlockDTO dto : dtos) {
-      list.add(convertAndRelease(session, dto));
+      Map<Long, List<PendingBlockDTO>> inodePendingBlocks = pendingBlocks.get(dto.getINodeId());
+      if (inodePendingBlocks == null) {
+        inodePendingBlocks = new HashMap<>();
+        pendingBlocks.put(dto.getINodeId(), inodePendingBlocks);
+      }
+      List<PendingBlockDTO> pending = inodePendingBlocks.get(dto.getBlockId());
+      if (pending == null) {
+        pending = new ArrayList<>();
+        inodePendingBlocks.put(dto.getBlockId(), pending);
+      }
+      pending.add(dto);
+    }
+    List<PendingBlockInfo> list = new ArrayList<>();
+    for (Map<Long, List<PendingBlockDTO>> inodePendingBlocks : pendingBlocks.values()) {
+      for (List<PendingBlockDTO> pending : inodePendingBlocks.values()) {
+        list.add(convertAndRelease(session, pending, pending.get(0).getBlockId(), pending.get(0).getINodeId(), pending.
+            get(0).getINodeId()));
+      }
     }
     return list;
   }
 
   private PendingBlockInfo convertAndRelease(HopsSession session,
-      PendingBlockDTO pendingTable) throws StorageException {
-    PendingBlockInfo pendingBlockInfo =  new PendingBlockInfo(pendingTable.getBlockId(),
-        pendingTable.getINodeId(), pendingTable.getTimestamp(),
-        pendingTable.getNumReplicasInProgress());
-    session.release(pendingTable);
+      List<PendingBlockDTO> pendingTables, long blockId, int nodeId, long timestamp) throws StorageException {
+    List<String> targets = new ArrayList<>();
+    for(PendingBlockDTO pendingTable : pendingTables){
+      if(pendingTable.getTarget()!=null && !pendingTable.getTarget().isEmpty()){
+        targets.add(pendingTable.getTarget());
+      }
+    }
+   PendingBlockDTO pendingTable = pendingTables.get(0);
+    PendingBlockInfo pendingBlockInfo =  new PendingBlockInfo(blockId,nodeId, timestamp, targets);
+    session.release(pendingTables);
     return pendingBlockInfo;
   }
 
-  private void createPersistableHopPendingBlockInfo(
-      PendingBlockInfo pendingBlock, PendingBlockDTO pendingTable) {
-    pendingTable.setBlockId(pendingBlock.getBlockId());
-    pendingTable.setNumReplicasInProgress(pendingBlock.getNumReplicas());
-    pendingTable.setTimestamp(pendingBlock.getTimeStamp());
-    pendingTable.setINodeId(pendingBlock.getInodeId());
+  private List<PendingBlockDTO> createPersistableHopPendingBlockInfo(PendingBlockInfo pendingBlock, HopsSession session) throws StorageException {
+    List<PendingBlockDTO> persistables = new ArrayList<>();
+    if (pendingBlock.getTargets() == null || pendingBlock.getTargets().size() == 0) {
+      PendingBlockDTO persistable = session.newInstance(PendingBlockDTO.class);
+      persistable.setBlockId(pendingBlock.getBlockId());
+      persistable.setTimestamp(pendingBlock.getTimeStamp());
+      persistable.setINodeId(pendingBlock.getInodeId());
+      persistable.setTarget("");
+      persistables.add(persistable);
+    } else {
+      for (String dnId : pendingBlock.getTargets()) {
+        PendingBlockDTO persistable = session.newInstance(PendingBlockDTO.class);
+        persistable.setBlockId(pendingBlock.getBlockId());
+        persistable.setTarget(dnId);
+        persistable.setTimestamp(pendingBlock.getTimeStamp());
+        persistable.setINodeId(pendingBlock.getInodeId());
+        persistables.add(persistable);
+      }
+    }
+    return persistables;
   }
 }

@@ -82,6 +82,15 @@ public class MySQLQueryHelper {
     return executeIntAggrQuery(queryBuilder.toString());
   }
   
+  public static int countUniqueWithCriterion(String tableName, String columnNames, String criterion)
+      throws StorageException {
+    StringBuilder queryBuilder =
+        new StringBuilder(String.format(COUNT_QUERY_UNIQUE, columnNames, tableName)).
+            append(" where ").
+            append(criterion);
+    return executeIntAggrQuery(queryBuilder.toString());
+  }
+  
   public static boolean exists(String tableName, String criterion)
       throws StorageException {
     StringBuilder query =

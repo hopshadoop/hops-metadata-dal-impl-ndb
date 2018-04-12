@@ -21,3 +21,8 @@ CREATE TABLE `hdfs_retry_cache_entry` (
   INDEX `expiration_time` (`expiration_time` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1;
  
+ALTER TABLE `hdfs_pending_blocks`
+ADD COLUMN `target` varchar(255),
+DROP COLUMN `num_replicas_in_progress`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`inode_id`,`block_id`, `target`);
