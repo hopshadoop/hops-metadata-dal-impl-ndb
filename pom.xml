@@ -70,6 +70,31 @@
     </repository>
   </repositories>
 
+  <profiles>
+    <profile>
+      <id>os.linux</id>
+      <activation>
+        <os>
+          <family>!Mac</family>
+        </os>
+      </activation>
+      <properties>
+        <lib_ext>so</lib_ext>
+      </properties>
+    </profile>
+    <profile>
+      <id>os.mac</id>
+      <activation>
+        <os>
+          <family>Mac</family>
+        </os>
+      </activation>
+      <properties>
+        <lib_ext>dylib</lib_ext>
+      </properties>
+    </profile>
+  </profiles>
+
   <build>
     <extensions>
       <extension>
@@ -99,10 +124,10 @@
                 <exec executable="make" dir="${project.build.directory}/native" failonerror="true">
                   <arg line="VERBOSE=1"/>
                  </exec>
-                <exec command="cp classes/libhopsyarn.so classes/libhopsyarn-${project.version}.so" dir="${project.build.directory}" failonerror="true">
+                <exec command="cp classes/libhopsyarn.${lib_ext} classes/libhopsyarn-${project.version}.${lib_ext}" dir="${project.build.directory}" failonerror="true">
                 </exec>
-                <exec command="mvn install:install-file -Dfile=target/classes/libhopsyarn.so -DgroupId=io.hops.streaming 
-                            -DartifactId=libhopsyarn -Dversion=${project.version} -Dpackaging=so -DlocalRepositoryPath=${settings.localRepository}" 
+                <exec command="mvn install:install-file -Dfile=target/classes/libhopsyarn.${lib_ext} -DgroupId=io.hops.streaming
+                            -DartifactId=libhopsyarn -Dversion=${project.version} -Dpackaging=${lib_ext} -DlocalRepositoryPath=${settings.localRepository}"
                               dir="${project.build.directory}/.." failonerror="true">
                 </exec>
               </target>
