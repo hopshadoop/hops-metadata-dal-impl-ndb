@@ -67,6 +67,10 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     @Column(name = TIMESTAMP)
     long getTimestamp();
     void setTimestamp(long timestamp);
+    
+    @Column(name = REASON)
+    String getReason();
+    void setReason(String reason);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -198,7 +202,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
 
   private CorruptReplica createReplica(CorruptReplicaDTO corruptReplicaTable) {
     return new CorruptReplica(corruptReplicaTable.getStorageId(),
-        corruptReplicaTable.getBlockId(), corruptReplicaTable.getINodeId());
+        corruptReplicaTable.getBlockId(), corruptReplicaTable.getINodeId(), corruptReplicaTable.getReason());
   }
 
   private List<CorruptReplica> createCorruptReplicaList(
@@ -216,5 +220,6 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     corruptReplicaTable.setStorageId(corruptReplica.getStorageId());
     corruptReplicaTable.setINodeId(corruptReplica.getInodeId());
     corruptReplicaTable.setTimestamp(System.currentTimeMillis());
+    corruptReplicaTable.setReason(corruptReplica.getReason());
   }
 }

@@ -78,6 +78,10 @@ public class ReplicaUnderConstructionClusterj
     byte getChosenAsPrimary();
     void setChosenAsPrimary(byte chosenAsPrimary);
     
+    @Column(name = GENERATION_STAMP)
+    long getGenerationStamp();
+    void setGenerationStamp(long generationStamp);
+    
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -186,7 +190,8 @@ public class ReplicaUnderConstructionClusterj
         new ArrayList<>(replicaUc.size());
     for (ReplicaUcDTO t : replicaUc) {
       replicas.add(new ReplicaUnderConstruction(t.getState(), t.getStorageId(),
-          t.getBlockId(), t.getINodeId(), t.getBucketId(), NdbBoolean.convert(t.getChosenAsPrimary())));
+          t.getBlockId(), t.getINodeId(), t.getBucketId(), NdbBoolean.convert(t.getChosenAsPrimary()),
+          t.getGenerationStamp()));
       session.release(t);
     }
     return replicas;
@@ -200,5 +205,6 @@ public class ReplicaUnderConstructionClusterj
     newInstance.setINodeId(replica.getInodeId());
     newInstance.setBucketId(replica.getBucketId());
     newInstance.setChosenAsPrimary(NdbBoolean.convert(replica.getChosenAsPrimary()));
+    newInstance.setGenerationStamp(replica.getGenerationStamp());
   }
 }
