@@ -42,3 +42,7 @@ CREATE TABLE `hdfs_aces` (
   /*!50100 PARTITION BY KEY (inode_id) */;
 
 insert into hdfs_variables (id, value) select 26, "" where (select count(*) from hdfs_variables)>0;
+
+ALTER TABLE `hdfs_replica_under_constructions` ADD COLUMN `generation_stamp`  bigint(20) NOT NULL DEFAULT '0';
+
+ALTER TABLE `hdfs_corrupt_replicas` ADD COLUMN `reason` varchar(100) NOT NULL DEFAULT 'NONE';
