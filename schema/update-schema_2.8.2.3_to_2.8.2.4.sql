@@ -39,4 +39,6 @@ CREATE TABLE `hdfs_aces` (
   PRIMARY KEY (`inode_id`,`index`),
   KEY `inode_idx` (`index`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1 COLLATE=latin1_general_cs COMMENT='NDB_TABLE=READ_BACKUP=1'
-  /*!50100 PARTITION BY KEY (inode_id) */
+  /*!50100 PARTITION BY KEY (inode_id) */;
+
+insert into hdfs_variables (id, value) select 26, "" where (select count(*) from hdfs_variables)>0;
