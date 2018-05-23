@@ -40,8 +40,11 @@ import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
+import io.hops.transaction.context.EntityContext;
 
 import java.util.*;
+
+import static io.hops.transaction.context.EntityContext.LockMode.*;
 
 public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<INode> {
 //  static final Logger LOG = Logger.getLogger(INodeClusterj.class);
@@ -301,13 +304,13 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   }
 
   @Override
-  public List<ProjectedINode> findInodesForSubtreeOperationsWithWriteLockFTIS(
-      int parentId) throws StorageException {
+  public List<ProjectedINode> findInodesFTISTx(
+      int parentId, EntityContext.LockMode lock) throws StorageException {
     HopsSession session = connector.obtainSession();
     List<InodeDTO> results = null;
     try {
       session.currentTransaction().begin();
-      session.setLockMode(LockMode.EXCLUSIVE);
+      session.setLockMode(getLock(lock));
       HopsQueryBuilder qb = session.getQueryBuilder();
       HopsQueryDomainType<InodeDTO> dobj =
               qb.createQueryDefinition(InodeDTO.class);
@@ -389,15 +392,44 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 //    return resultList;
 //  }
 
-  @Override
 
-  public List<ProjectedINode> findInodesForSubtreeOperationsWithWriteLockPPIS(
-          int parentId, int partitionId) throws StorageException {
+  @Override
+  public List<INode> lockInodesUsingPkBatchTx(String[] names, int[] parentIds, int[] partitionIds,
+                                              EntityContext.LockMode lock)
+          throws StorageException {
+    HopsSession session = connector.obtainSession();
+    session.currentTransaction().begin();
+    session.setLockMode(getLock(lock));
+    List<InodeDTO> dtos = new ArrayList<>();
+    try {
+      for (int i = 0; i < names.length; i++) {
+        InodeDTO dto = session
+                .newInstance(InodeDTO.class, new Object[]{partitionIds[i], parentIds[i], names[i]});
+        dto.setId(NOT_FOUND_ROW);
+        dto = session.load(dto);
+        dtos.add(dto);
+      }
+      session.flush();
+      List<INode> inodeList = convert(dtos);
+      session.currentTransaction().commit();
+      return inodeList;
+    }catch(StorageException e){
+      session.currentTransaction().rollback();
+      throw e;
+    } finally {
+      session.release(dtos);
+    }
+  }
+
+
+  @Override
+  public List<ProjectedINode> findInodesPPISTx(
+          int parentId, int partitionId, EntityContext.LockMode lock) throws StorageException {
     HopsSession session = connector.obtainSession();
     List<InodeDTO>  results = null;
     try {
       session.currentTransaction().begin();
-      session.setLockMode(LockMode.EXCLUSIVE);
+      session.setLockMode(getLock(lock));
       HopsQueryBuilder qb = session.getQueryBuilder();
       HopsQueryDomainType<InodeDTO> dobj =
               qb.createQueryDefinition(InodeDTO.class);
@@ -706,5 +738,17 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 //    }
   }
 
+   com.mysql.clusterj.LockMode getLock(EntityContext.LockMode lock){
+    switch(lock){
+      case WRITE_LOCK:
+        return LockMode.EXCLUSIVE;
+      case READ_LOCK:
+        return LockMode.SHARED;
+      case READ_COMMITTED:
+        return LockMode.READ_COMMITTED;
+      default:
+        throw new UnsupportedOperationException("Lock Type is not supported");
+    }
+   }
 
 }
