@@ -146,7 +146,6 @@ public class OnGoingSubTreeOpsClusterj
     HopsQuery query = dbSession.createQuery(dobj);
     query.setParameter("partitionIDParam", getHash(prefix));
     query.setParameter("prefix", prefix + "%");
-    query.setLimits(0, LIMIT);
     return convertAndRelease(dbSession, query.getResultList());
   }
 
@@ -162,7 +161,7 @@ public class OnGoingSubTreeOpsClusterj
   private SubTreeOperation convertAndRelease(HopsSession session,
       OnGoingSubTreeOpsDTO opsDto) throws StorageException {
     SubTreeOperation subTreeOperation = new SubTreeOperation(opsDto.getPath(),
-        opsDto.getNamenodeId(),SubTreeOperation.StoOperationType.values()
+        opsDto.getNamenodeId(),SubTreeOperation.Type.values()
         [opsDto.getOpName()] );
     session.release(opsDto);
     return subTreeOperation;

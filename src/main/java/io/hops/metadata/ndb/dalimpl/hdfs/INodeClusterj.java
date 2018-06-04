@@ -598,6 +598,13 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     return MySQLQueryHelper
         .countWithCriterion(TABLE_NAME, String.format("%s<>0", HEADER));
   }
+
+  @Override
+  public void deleteInode(String inodeName) throws StorageException { // only for testing
+    String query = "delete from "+TablesDef.INodeTableDef.TABLE_NAME+" where "+
+            TablesDef.INodeTableDef.NAME +" = \""+inodeName+"\"";
+    MySQLQueryHelper.execute(query);
+  }
   
   @Override
   public List<INode> allINodes() throws StorageException { // only for testing
