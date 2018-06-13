@@ -316,23 +316,30 @@ public class BlockInfoClusterj
     return blks;
   }
 
-  public boolean existsOnAnyStorage(long blockId, List<Integer> sids) throws
+  public boolean existsOnAnyStorage(int inodeId, long blockId, List<Integer> sids) throws
       StorageException {
     HopsSession session = connector.obtainSession();
-    HopsQueryBuilder qb = session.getQueryBuilder();
-    HopsQueryDomainType<ReplicaClusterj.ReplicaDTO> dobj =
-        qb.createQueryDefinition(ReplicaClusterj.ReplicaDTO.class);
+    
+    List<ReplicaClusterj.ReplicaDTO> dtos = new ArrayList<>();
+    for(Integer sid: sids){
+      Object[] pk = new Object[]{inodeId, blockId, sid};
+      ReplicaClusterj.ReplicaDTO dto = session.newInstance(ReplicaClusterj.ReplicaDTO.class, pk);
+      dto.setHashBucket(NOT_FOUND_ROW);
+      dto = session.load(dto);
+      dtos.add(dto);
+      
+    }
+    session.flush();
+    boolean exist = false;
+    for(ReplicaClusterj.ReplicaDTO dto: dtos){
+      if(dto.getHashBucket()!=NOT_FOUND_ROW){
+        exist = true;
+        break;
+      }
+    }
+    session.release(dtos);
 
-    HopsPredicate pred1 = dobj.get("blockId").equal(dobj.param("blockId"));
-    HopsPredicate pred2 = dobj.get("storageId").in(dobj.param("sids"));
-    dobj.where(pred1.and(pred2));
-
-    HopsQuery<ReplicaClusterj.ReplicaDTO> query = session.createQuery(dobj);
-
-    query.setParameter("blockId", blockId);
-    query.setParameter("sids", sids);
-
-    return query.getResultList().size() > 0;
+    return exist;
   }
 
   private List<BlockInfo> readBlockInfoBatch(final HopsSession session,
