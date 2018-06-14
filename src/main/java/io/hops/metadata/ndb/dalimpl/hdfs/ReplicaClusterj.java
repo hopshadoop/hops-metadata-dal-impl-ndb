@@ -71,11 +71,6 @@ public class ReplicaClusterj
     int getStorageId();
 
     void setStorageId(int id);
-
-    @Column(name = HASH_BUCKET)
-    int getHashBucket();
-
-    void setHashBucket(int hashBucket);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -197,49 +192,6 @@ public class ReplicaClusterj
   }
   
   @Override
-  public Map<Long, Integer> findBlockAndInodeIdsByStorageIdAndBucketIds(
-      int sId, List<Integer> mismatchedBuckets) throws StorageException {
-    HopsSession session = connector.obtainSession();
-    HopsQueryBuilder qb = session.getQueryBuilder();
-    HopsQueryDomainType<ReplicaDTO> dobj =
-        qb.createQueryDefinition(ReplicaDTO.class);
-    
-    HopsPredicate pred1 = dobj.get("storageId").equal(dobj.param
-        ("storageIdParam"));
-    
-    if (mismatchedBuckets.size() > 0){
-      HopsPredicate pred2;
-      int first = mismatchedBuckets.get(0);
-      pred2 = dobj.get("hashBucket").equal(dobj.param("bucketIdParam" +
-          first ));
-      
-      for (int i = 1 ; i < mismatchedBuckets.size() ; i++){
-        int next = mismatchedBuckets.get(i);
-        pred2 = pred2.or(dobj.get("hashBucket").equal(dobj.param
-            ("bucketIdParam" + next)));
-      }
-      
-      dobj.where(pred1.and(pred2));
-      HopsQuery<ReplicaDTO> query = session.createQuery(dobj);
-      query.setParameter("storageIdParam", sId);
-      for (int mismatchedBucket : mismatchedBuckets){
-        query.setParameter("bucketIdParam"+mismatchedBucket,
-            mismatchedBucket);
-      }
-  
-      List<Replica> replicas =
-          convertAndRelease(session, query.getResultList());
-      Map<Long, Integer> results = new HashMap<>();
-      for (Replica replica : replicas){
-        results.put(replica.getBlockId(), replica.getInodeId());
-      }
-      return results;
-    } else {
-      return new HashMap<>();
-    }
-  }
-  
-  @Override
   public int countAllReplicasForStorageId(int sid) throws StorageException {
     return MySQLQueryHelper.countWithCriterion(TABLE_NAME,
         String.format("%s=%d", STORAGE_ID, sid));
@@ -279,7 +231,7 @@ public class ReplicaClusterj
         new ArrayList<>(triplets.size());
     for (ReplicaDTO t : triplets) {
         replicas.add(
-            new Replica(t.getStorageId(), t.getBlockId(), t.getINodeId(), t.getHashBucket()));
+            new Replica(t.getStorageId(), t.getBlockId(), t.getINodeId()));
       session.release(t);
     }
     return replicas;
@@ -290,6 +242,5 @@ public class ReplicaClusterj
     newInstance.setBlockId(replica.getBlockId());
     newInstance.setStorageId(replica.getStorageId());
     newInstance.setINodeId(replica.getInodeId());
-    newInstance.setHashBucket(replica.getBucketId());
   }
 }
