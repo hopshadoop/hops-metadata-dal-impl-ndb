@@ -117,19 +117,19 @@ public class OnGoingSubTreeOpsClusterj
     return convertAndRelease(session, query.getResultList());
   }
 
-//  @Override
-//  public SubTeeOperation findByPKey(String path) throws StorageException {
-//    Object[] key = new Object[2];
-//    key[0] = path;
-//    key[1] = PART_KEY_VAL;
-//    HopsSession dbSession = connector.obtainSession();
-//    OnGoingSubTreeOpsDTO lPTable = dbSession.find(OnGoingSubTreeOpsDTO.class, key);
-//    SubTeeOperation lPath = null;
-//    if (lPTable != null) {
-//      lPath = convertAndRelease(lPTable);
-//    }
-//    return lPath;
-//  }
+  @Override
+  public Collection<SubTreeOperation> allOpsByNN(long nnID)
+          throws StorageException {
+
+    HopsSession dbSession = connector.obtainSession();
+    HopsQueryBuilder qb = dbSession.getQueryBuilder();
+    HopsQueryDomainType dobj = qb.createQueryDefinition(OnGoingSubTreeOpsDTO.class);
+    HopsPredicate pred = dobj.get("namenodeId").equal(dobj.param("namenodeIdParam"));
+    dobj.where(pred);
+    HopsQuery query = dbSession.createQuery(dobj);
+    query.setParameter("namenodeIdParam", nnID);
+    return convertAndRelease(dbSession, query.getResultList());
+  }
 
   @Override
   public Collection<SubTreeOperation> findByPathsByPrefix(String prefix)
