@@ -653,6 +653,12 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     }
   }
 
+  @Override
+  public int countSubtreeLockedInodes() throws StorageException {
+    String query = TablesDef.INodeTableDef.SUBTREE_LOCKED +" = 1";
+    return MySQLQueryHelper.countWithCriterion(TablesDef.INodeTableDef.TABLE_NAME, query);
+  }
+
   private InodeDTO createPersistable(HopsSession session, MetadataLogEntry
       logEntry) throws StorageException {
     InodeDTO inodeDTO = session.newInstance(InodeDTO.class);
