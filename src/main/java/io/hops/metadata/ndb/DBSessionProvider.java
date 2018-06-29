@@ -21,6 +21,7 @@ package io.hops.metadata.ndb;
 import com.mysql.clusterj.ClusterJException;
 import com.mysql.clusterj.ClusterJHelper;
 import com.mysql.clusterj.Constants;
+import com.mysql.clusterj.LockMode;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.wrapper.HopsExceptionHelper;
 import io.hops.metadata.ndb.wrapper.HopsSession;
@@ -128,7 +129,7 @@ public class DBSessionProvider implements Runnable {
     }
   }
 
-  public void returnSession(DBSession returnedSession, boolean forceClose) {
+  public void returnSession(DBSession returnedSession, boolean forceClose) throws StorageException {
     //session has been used, increment the use counter
     returnedSession
         .setSessionUseCount(returnedSession.getSessionUseCount() + 1);
@@ -138,6 +139,7 @@ public class DBSessionProvider implements Runnable {
         forceClose) { // session can be closed even before the reuse count has expired. Close the session incase of database errors.
       toGC.add(returnedSession);
     } else { // increment the count and return it to the pool
+      returnedSession.getSession().setLockMode(LockMode.READ_COMMITTED);
       sessionPool.add(returnedSession);
     }
   }
