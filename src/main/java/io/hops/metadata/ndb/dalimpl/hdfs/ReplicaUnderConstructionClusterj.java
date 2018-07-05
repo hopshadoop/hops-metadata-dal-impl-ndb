@@ -70,10 +70,6 @@ public class ReplicaUnderConstructionClusterj
 
     void setState(int state);
     
-    @Column(name = HASH_BUCKET)
-    int getBucketId();
-    void setBucketId(int bucketId);
-    
     @Column(name = CHOSEN_AS_PRIMARY)
     byte getChosenAsPrimary();
     void setChosenAsPrimary(byte chosenAsPrimary);
@@ -190,7 +186,7 @@ public class ReplicaUnderConstructionClusterj
         new ArrayList<>(replicaUc.size());
     for (ReplicaUcDTO t : replicaUc) {
       replicas.add(new ReplicaUnderConstruction(t.getState(), t.getStorageId(),
-          t.getBlockId(), t.getINodeId(), t.getBucketId(), NdbBoolean.convert(t.getChosenAsPrimary()),
+          t.getBlockId(), t.getINodeId(), NdbBoolean.convert(t.getChosenAsPrimary()),
           t.getGenerationStamp()));
       session.release(t);
     }
@@ -203,7 +199,6 @@ public class ReplicaUnderConstructionClusterj
     newInstance.setStorageId(replica.getStorageId());
     newInstance.setState(replica.getState());
     newInstance.setINodeId(replica.getInodeId());
-    newInstance.setBucketId(replica.getBucketId());
     newInstance.setChosenAsPrimary(NdbBoolean.convert(replica.getChosenAsPrimary()));
     newInstance.setGenerationStamp(replica.getGenerationStamp());
   }

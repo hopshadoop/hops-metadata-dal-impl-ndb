@@ -320,19 +320,18 @@ public class BlockInfoClusterj
       StorageException {
     HopsSession session = connector.obtainSession();
     
-    List<ReplicaClusterj.ReplicaDTO> dtos = new ArrayList<>();
+    List<ReplicaClusterj.ReplicaDTODynamic> dtos = new ArrayList<>();
     for(Integer sid: sids){
       Object[] pk = new Object[]{inodeId, blockId, sid};
-      ReplicaClusterj.ReplicaDTO dto = session.newInstance(ReplicaClusterj.ReplicaDTO.class, pk);
-      dto.setHashBucket(NOT_FOUND_ROW);
+      ReplicaClusterj.ReplicaDTODynamic dto = session.newInstance(ReplicaClusterj.ReplicaDTODynamic.class, pk);
       dto = session.load(dto);
       dtos.add(dto);
       
     }
     session.flush();
     boolean exist = false;
-    for(ReplicaClusterj.ReplicaDTO dto: dtos){
-      if(dto.getHashBucket()!=NOT_FOUND_ROW){
+    for(ReplicaClusterj.ReplicaDTODynamic dto: dtos){
+      if(session.found(dto) !=null && session.found(dto)){
         exist = true;
         break;
       }
