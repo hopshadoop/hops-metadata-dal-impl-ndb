@@ -52,6 +52,10 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
     @Column(name = STORAGE_TYPE)
     int getStorageType();
     void setStorageType(int storageType);
+    
+    @Column(name = STATE)
+    String getState();
+    void setState(String state);
   }
 
   @Override
@@ -67,6 +71,7 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
     sdto.setStorageId(s.getStorageID());
     sdto.setHostId(s.getHostID());
     sdto.setStorageType(s.getStorageType());
+    sdto.setState(s.getState());
     session.savePersistent(sdto);
     session.release(sdto);
   }
@@ -126,7 +131,7 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
   private Storage convertAndRelease(HopsSession session, StorageDTO sdto)
       throws StorageException {
     Storage storage = new Storage(sdto.getStorageId(), sdto.getHostId(), sdto
-        .getStorageType());
+        .getStorageType(), sdto.getState());
     session.release(sdto);
     return storage;
   }
@@ -135,7 +140,8 @@ public class StoragesClusterj implements TablesDef.StoragesTableDef,
     Storage storage = new Storage(
         dto.getStorageId(),
         dto.getHostId(),
-        dto.getStorageType());
+        dto.getStorageType(),
+        dto.getState());
     return storage;
   }
 }

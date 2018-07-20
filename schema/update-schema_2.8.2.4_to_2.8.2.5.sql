@@ -1,0 +1,1 @@
+ALTER TABLE `hdfs_storages` ADD COLUMN `state` varchar(100) NOT NULL DEFAULT 'NORMAL';
