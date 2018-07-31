@@ -9,6 +9,10 @@ if [ $# -ne 1 ] ; then
 fi
 
 V=$1
+
+MAJOR=$(echo $V | cut -d "." -f 1)
+MINOR=$(echo $V | cut -d "." -f 2)
+
 TMP=/tmp/mysql-bld
 SRC="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -17,7 +21,7 @@ mkdir $TMP
 cd $TMP
 
 #download mysql cluster source code
-wget https://dev.mysql.com/get/Downloads/MySQL-Cluster-7.5/mysql-cluster-gpl-"$V".tar.gz
+wget https://dev.mysql.com/get/Downloads/MySQL-Cluster-${MAJOR}.${MINOR}/mysql-cluster-gpl-"$V".tar.gz
 tar xvf mysql-cluster-gpl-"$V".tar.gz 
 cd mysql-cluster-gpl-"$V"
 
@@ -39,7 +43,7 @@ mvn deploy:deploy-file -Dfile=storage/ndb/clusterj/clusterj-"$V".jar -DgroupId=c
 #deploy libndbclient to kompics
 cd $SRC/../../
 if [ ! -d clusterj-native ]; then
-  git clone git@ghetto.sics.se:salman/clusterj-native.git	
+  git clone git@github.com:hopshadoop/clusterj-native.git
 fi
 
 cd clusterj-native
