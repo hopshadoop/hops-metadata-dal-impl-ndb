@@ -2,7 +2,7 @@
 set -e 
 
 if [ $# -ne 1 ] ; then
-   echo "Requirements: clone hopshadoop/clusterj-native, also make sure that wagon-ssh-common.jar and wagon-ssh-external.jar are added to maven lib folder"
+   echo "Requirements: clone hopshadoop/clusterj-native"
    echo "Usage: <prog> ndb_version"
    echo "./upgrade-ndb.sh 7.5.7"
    exit 1
@@ -37,8 +37,7 @@ cmake .. -DBUILD_CONFIG=mysql_release -DCPACK_MONOLITHIC_INSTALL=true -DDOWNLOAD
 make -j$(expr $(nproc))
 
 #deploy clusterj to kompics repo
-#make sure to add wagon-ssh-common.jar and wagon-ssh-external.jar to your maven lib folder for this step to work
-mvn deploy:deploy-file -Dfile=storage/ndb/clusterj/clusterj-"$V".jar -DgroupId=com.mysql.ndb -DartifactId=clusterj-hops-fix -Dversion=$V -Dpackaging=jar -DrepositoryId=sics-release-repository -Durl=scpexe://kompics.i.sics.se/home/maven/repository
+mvn deploy:deploy-file -Dfile=storage/ndb/clusterj/clusterj-"$V".jar -DgroupId=com.mysql.ndb -DartifactId=clusterj-hops-fix -Dversion=$V -Dpackaging=jar -DrepositoryId=Hops -Durl=https://bbc1.sics.se/archiva/repository/Hops
 
 #deploy libndbclient to kompics
 cd $SRC/../../
