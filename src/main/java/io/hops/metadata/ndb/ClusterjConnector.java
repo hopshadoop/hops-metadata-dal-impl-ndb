@@ -294,6 +294,12 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       cls = AceClusterJ.AceDto.class;
     } else if (className == RetryCacheEntryDataAccess.class){
       cls = RetryCacheEntryClusterj.RetryCacheEntryDTO.class;
+    } else if (className == CacheDirectiveDataAccess.class){
+      cls = CacheDirectiveClusterj.CacheDirectiveDTO.class;
+    } else if (className == CachePoolDataAccess.class){
+      cls = CachePoolClusterJ.CachePoolDTO.class;
+    } else if (className == CachedBlockDataAccess.class){
+      cls = CachedBlockClusterJ.CachedBlockDTO.class;
     }
 
     HopsSession session = obtainSession();
@@ -351,7 +357,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
         UserGroupDataAccess.class,VariableDataAccess.class,
         HashBucketDataAccess.class, StorageDataAccess.class,
-        AceDataAccess.class, RetryCacheEntryDataAccess.class);
+        AceDataAccess.class, RetryCacheEntryDataAccess.class, CacheDirectiveDataAccess.class,
+        CachePoolDataAccess.class, CachedBlockDataAccess.class);
   }
   
   private boolean formatAll(boolean transactional) throws StorageException {
@@ -435,9 +442,11 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             session.currentTransaction().begin();
             session.deletePersistentAll(VariableClusterj.VariableDTO.class);
             for (Variable.Finder varType : Variable.Finder.values()) {
+              LOG.info("write varialbe " + varType.name() + " with id " + varType.getId());
               VariableClusterj.VariableDTO vd =
                   session.newInstance(VariableClusterj.VariableDTO.class);
               vd.setId(varType.getId());
+              byte[] value = varType.getDefaultValue();
               vd.setValue(varType.getDefaultValue());
               session.savePersistent(vd);
             }
@@ -550,6 +559,12 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.hdfs.TablesDef.AcesTableDef.TABLE_NAME);
           } else if (e == RetryCacheEntryDataAccess.class){
             truncate(transactional, io.hops.metadata.hdfs.TablesDef.RetryCacheEntryTableDef.TABLE_NAME);
+          } else if (e == CacheDirectiveDataAccess.class){
+            truncate(transactional, io.hops.metadata.hdfs.TablesDef.CacheDirectiveTableDef.TABLE_NAME);
+          } else if (e == CachePoolDataAccess.class){
+            truncate(transactional, io.hops.metadata.hdfs.TablesDef.CachePoolTableDef.TABLE_NAME);
+          } else if (e == CachedBlockDataAccess.class){
+            truncate(transactional, io.hops.metadata.hdfs.TablesDef.CachedBlockTableDef.TABLE_NAME);
           }
         }
         MysqlServerConnector.truncateTable(transactional,
