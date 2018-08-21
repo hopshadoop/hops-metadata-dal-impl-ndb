@@ -18,6 +18,7 @@
  */
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
+import com.google.common.primitives.Ints;
 import com.mysql.clusterj.LockMode;
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.Index;
@@ -253,6 +254,33 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     }
   }
 
+  @Override
+  public Collection<INode> findInodesByIdsFTIS(int[] inodeId) throws StorageException {
+    HopsSession session = connector.obtainSession();
+
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<InodeDTO> dobj =
+        qb.createQueryDefinition(InodeDTO.class);
+    HopsPredicate pred1 = dobj.get("id").in(dobj.param("idParam"));
+    dobj.where(pred1);
+
+    HopsQuery<InodeDTO> query = session.createQuery(dobj);
+    query.setParameter("idParam", Ints.asList(inodeId));
+
+    List<InodeDTO> results = null;
+
+    try {
+      results = query.getResultList();
+      if (results.isEmpty()) {
+        return null;
+      }
+
+      return convert(results);
+    }finally {
+      session.release(results);
+    }
+  }
+  
   @Override
   public List<INode> findInodesByParentIdFTIS(int parentId)
       throws StorageException {

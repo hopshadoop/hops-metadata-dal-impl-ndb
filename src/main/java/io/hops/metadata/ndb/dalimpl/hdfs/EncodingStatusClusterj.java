@@ -57,6 +57,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   private ClusterjConnector clusterjConnector = ClusterjConnector.getInstance();
   private MysqlServerConnector mysqlConnector =
       MysqlServerConnector.getInstance();
+   private final static int NOT_FOUND = -1000;
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface EncodingStatusDto {
@@ -230,6 +231,27 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     session.release(dto);
     return es;
   }
+  
+  @Override
+  public Collection<EncodingStatus> findByInodeIds(Collection<Integer> inodeIds)
+          throws StorageException {
+    HopsSession session = clusterjConnector.obtainSession();
+    List<EncodingStatusDto> dtos = new ArrayList<>();
+    try {
+      for (int inodeId: inodeIds) {
+        EncodingStatusDto dto = session
+                .newInstance(EncodingStatusDto.class, inodeId);
+        dto.setStatus(NOT_FOUND);
+        dto = session.load(dto);
+        dtos.add(dto);
+      }
+      session.flush();
+      List<EncodingStatus> statusList = createHopEncodingsIfFound(dtos);
+      return statusList;
+    } finally {
+      session.release(dtos);
+    }
+  }
 
   @Override
   public EncodingStatus findByParityInodeId(int inodeId)
@@ -253,6 +275,31 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     EncodingStatus es = createHopEncoding(results.get(0));
     session.release(results);
     return es;
+  }
+  
+  @Override
+  public Collection<EncodingStatus> findByParityInodeIds(List<Integer> inodeIds) throws StorageException {
+    HopsSession session = clusterjConnector.obtainSession();
+    HopsQueryBuilder builder = session.getQueryBuilder();
+    HopsQueryDomainType<EncodingStatusDto> domain = builder.createQueryDefinition(EncodingStatusDto.class);
+    domain.where(domain.get("parityInodeId").in(domain.param(PARITY_INODE_ID)));
+    HopsQuery<EncodingStatusDto> query = session.createQuery(domain);
+    query.setParameter(PARITY_INODE_ID, inodeIds);
+    
+    List<EncodingStatusDto> results = null;
+    try {
+      results = query.getResultList();
+      
+      if (results.size() == 0) {
+        return null;
+      }
+      
+      List<EncodingStatus> es = createHopEncodings(results);
+      session.release(results);
+      return es;
+    } finally {
+      session.release(results);
+    }
   }
 
   @Override
@@ -428,6 +475,17 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     return result;
   }
 
+  private List<EncodingStatus> createHopEncodingsIfFound(
+      List<EncodingStatusDto> list) {
+    List<EncodingStatus> result = new ArrayList<>(list.size());
+    for (EncodingStatusDto dto : list) {
+      if(dto.getStatus()!=NOT_FOUND){
+        result.add(createHopEncoding(dto));
+      }
+    }
+    return result;
+  }
+  
   private EncodingStatus createHopEncoding(EncodingStatusDto dto) {
     if (dto == null) {
       return null;
