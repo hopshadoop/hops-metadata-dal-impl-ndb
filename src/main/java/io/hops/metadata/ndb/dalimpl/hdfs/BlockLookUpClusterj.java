@@ -31,7 +31,9 @@ import io.hops.metadata.ndb.wrapper.HopsSession;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class BlockLookUpClusterj
     implements TablesDef.BlockLookUpTableDef, BlockLookUpDataAccess<BlockLookUp> {
@@ -139,6 +141,50 @@ public class BlockLookUpClusterj
     }finally {
       session.release(bldtos);
     }
+  }
+  
+  @Override
+  public Map<Integer, List<Long>> getINodeIdsForBlockIds(final long[] blockIds) throws StorageException {
+    final HopsSession session = connector.obtainSession();
+    final List<BlockLookUpDTO> bldtos = new ArrayList<>();
+    final Map<Integer, List<Long>> InodeToBlockIdsMap = new HashMap<>(blockIds.length);
+    try {
+      for (long blockId : blockIds) {
+        BlockLookUpDTO bldto =
+            session.newInstance(BlockLookUpDTO.class, blockId);
+        bldto.setINodeId(NOT_FOUND_ROW);
+        bldto = session.load(bldto);
+        bldtos.add(bldto);
+      }
+      session.flush();
+  
+      for (BlockLookUpDTO bld : bldtos) {
+        if (bld.getINodeId() != NOT_FOUND_ROW) {
+          addBlockId(InodeToBlockIdsMap, bld);
+        } else {
+          BlockLookUpDTO bldn =
+              session.find(BlockLookUpDTO.class, bld.getBlockId());
+          if (bldn != null) {
+            //[M] BUG:
+            //ClusterjConnector.LOG.error("xxx: Inode doesn't exists retries for " + bld.getBlockId() + " inodeId " + bld.getINodeId() + " at index " + i);
+            addBlockId(InodeToBlockIdsMap, bld);
+            session.release(bldn);
+          } 
+        }
+      }
+      return InodeToBlockIdsMap;
+    }finally {
+      session.release(bldtos);
+    }
+  }
+  
+  private void addBlockId(Map<Integer, List<Long>> map, BlockLookUpDTO bld){
+    List<Long> blockIds = map.get(bld.getINodeId());
+    if(blockIds==null){
+      blockIds = new ArrayList<>();
+      map.put(bld.getINodeId(), blockIds);
+    }
+    blockIds.add(bld.getBlockId());
   }
   
   protected static BlockLookUp createBlockInfo(
