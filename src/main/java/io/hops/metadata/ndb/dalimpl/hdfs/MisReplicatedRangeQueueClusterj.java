@@ -24,9 +24,15 @@ import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.MisReplicatedRangeQueueDataAccess;
+import io.hops.metadata.hdfs.entity.MisReplicatedRange;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
+import io.hops.metadata.ndb.wrapper.HopsQuery;
+import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
+import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MisReplicatedRangeQueueClusterj
     implements TablesDef.MisReplicatedRangeQueueTableDef,
@@ -36,22 +42,26 @@ public class MisReplicatedRangeQueueClusterj
   public interface MisReplicatedRangeQueueDTO {
 
     @PrimaryKey
-    @Column(name = RANGE)
-    String getRange();
+    @Column(name = NNID)
+    long getNnId();
 
-    void setRange(String range);
+    void setNnId(long nnId);
+    
+    @Column(name = START_INDEX)
+    long getStartIndex();
+
+    void setStartIndex(long startIndex);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
   private final static String SEPERATOR = "-";
 
   @Override
-  public void insert(long start, long end) throws StorageException {
+  public void insert(MisReplicatedRange range) throws StorageException {
     HopsSession session = connector.obtainSession();
     MisReplicatedRangeQueueDTO dto = null;
     try {
-      dto = session.newInstance(MisReplicatedRangeQueueDTO.class, getRange
-          (start, end));
+      dto = createPersistable(range, session);
       session.savePersistent(dto);
     } catch (Exception e) {
       throw new StorageException(e);
@@ -62,12 +72,11 @@ public class MisReplicatedRangeQueueClusterj
   }
 
   @Override
-  public void remove(long start, long end) throws StorageException {
+  public void remove(MisReplicatedRange range) throws StorageException {
     HopsSession session = connector.obtainSession();
     MisReplicatedRangeQueueDTO oldR = null;
     try {
-      oldR = session.newInstance(MisReplicatedRangeQueueDTO.class, getRange
-          (start, end));
+      oldR = createPersistable(range, session);
       session.deletePersistent(oldR);
     } catch (Exception e) {
       throw new StorageException(e);
@@ -75,13 +84,54 @@ public class MisReplicatedRangeQueueClusterj
       session.release(oldR);
     }
   }
+  
+  @Override
+  public void remove(List<MisReplicatedRange> ranges) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    List<MisReplicatedRangeQueueDTO> oldRs = new ArrayList<>(ranges.size());
+    try {
+      for(MisReplicatedRange range: ranges){
+        oldRs.add(createPersistable(range, session));
+      }
+      session.deletePersistentAll(oldRs);
+    } catch (Exception e) {
+      throw new StorageException(e);
+    }finally {
+      session.release(oldRs);
+    }
+  }
 
+  @Override
+  public List<MisReplicatedRange> getAll() throws StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<MisReplicatedRangeQueueDTO> dobj = qb.createQueryDefinition(MisReplicatedRangeQueueDTO.class);
+    HopsQuery<MisReplicatedRangeQueueDTO> query = session.createQuery(dobj);
+
+    List<MisReplicatedRangeQueueDTO> dtos = query.getResultList();
+    List<MisReplicatedRange> directives = convert(dtos);
+    session.release(dtos);
+    return directives;
+  }
+  
   @Override
   public int countAll() throws StorageException {
     return MySQLQueryHelper.countAll(TABLE_NAME);
   }
 
-  private String getRange(long start, long end) {
-    return start + SEPERATOR + end;
+  private MisReplicatedRangeQueueDTO createPersistable(MisReplicatedRange range, HopsSession session) throws
+      StorageException {
+    MisReplicatedRangeQueueDTO dto = session.newInstance(MisReplicatedRangeQueueDTO.class);
+    dto.setNnId(range.getNnId());
+    dto.setStartIndex(range.getStartIndex());
+    return dto;
+  }
+  
+  private List<MisReplicatedRange> convert(List<MisReplicatedRangeQueueDTO> dtos){
+    List<MisReplicatedRange> result = new ArrayList<>(dtos.size());
+    for(MisReplicatedRangeQueueDTO dto: dtos){
+      result.add(new MisReplicatedRange(dto.getNnId(), dto.getStartIndex()));
+    }
+    return result;
   }
 }

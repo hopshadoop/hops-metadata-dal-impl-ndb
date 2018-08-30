@@ -45,3 +45,11 @@ CREATE TABLE `hdfs_cached_block` (
   PRIMARY KEY (`block_id`, `inode_id`, `datanode_id`),
   INDEX `inode_id` (`inode_id` ASC)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1;
+
+DROP TABLE `hdfs_misreplicated_range_queue`;
+
+CREATE TABLE `hdfs_misreplicated_range_queue` (
+  `nn_id` bigint(20) NOT NULL,
+  `start_index` bigint(20) NOT NULL,
+  PRIMARY KEY (`nn_id`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1;
