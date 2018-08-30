@@ -87,7 +87,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
 
   @Override
   public void prepare(Collection<CorruptReplica> removed,
-      Collection<CorruptReplica> newed, Collection<CorruptReplica> modified)
+      Collection<CorruptReplica> newed)
       throws StorageException {
     HopsSession dbSession = connector.obtainSession();
     List<CorruptReplicaDTO> changes = new ArrayList<>();
