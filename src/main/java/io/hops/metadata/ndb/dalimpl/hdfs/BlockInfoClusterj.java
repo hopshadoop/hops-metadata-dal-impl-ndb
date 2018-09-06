@@ -275,6 +275,22 @@ public class BlockInfoClusterj
   }
 
   @Override
+  public List<BlockInfo> findBlockInfosByStorageId(int storageId, long from, int size)
+          throws StorageException {
+    HopsSession session = connector.obtainSession();
+    List<ReplicaClusterj.ReplicaDTO> replicas = ReplicaClusterj.getReplicas(session, storageId, from, size);
+    long[] blockIds = new long[replicas.size()];
+    int[] inodeIds = new int[replicas.size()];
+    for (int i = 0; i < blockIds.length; i++) {
+      blockIds[i] = replicas.get(i).getBlockId();
+      inodeIds[i] = replicas.get(i).getINodeId();
+    }
+    List<BlockInfo> ret = readBlockInfoBatch(session, inodeIds, blockIds);
+    session.release(replicas);
+    return ret;
+  }
+  
+  @Override
   public List<BlockInfo> findBlockInfosBySids(List<Integer> sids) throws
       StorageException {
     HopsSession session = connector.obtainSession();

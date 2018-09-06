@@ -272,7 +272,39 @@ public class ReplicaClusterj
     return query.getResultList();
   }
 
+  protected static List<ReplicaClusterj.ReplicaDTO> getReplicas(
+      HopsSession session, int storageId, long from, int size) throws StorageException {
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<ReplicaDTO> dobj =
+        qb.createQueryDefinition(ReplicaClusterj.ReplicaDTO.class);
+    dobj.where(dobj.get("storageId").equal(dobj.param("storageId")));
+    dobj.where(dobj.get("blockId").greaterEqual(dobj.param("minBlockId")));
+    dobj.where(dobj.get("blockId").lessThan(dobj.param("maxBlockId")));
+    HopsQuery<ReplicaDTO> query = session.createQuery(dobj);
+    query.setParameter("storageId", storageId);
+    query.setParameter("minBlockId", from);
+    query.setParameter("maxBlockId", from + size);
+    return query.getResultList();
+  }
 
+  @Override
+  public boolean hasBlocksWithIdGreaterThan(int storageId, long from) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<ReplicaDTO> dobj =
+        qb.createQueryDefinition(ReplicaClusterj.ReplicaDTO.class);
+    dobj.where(dobj.get("storageId").equal(dobj.param("storageId")));
+    dobj.where(dobj.get("blockId").greaterEqual(dobj.param("minBlockId")));
+    HopsQuery<ReplicaDTO> query = session.createQuery(dobj);
+    query.setParameter("storageId", storageId);
+    query.setParameter("minBlockId", from);
+    query.setLimits(0, 1);
+    List<ReplicaDTO> dtos = query.getResultList();
+    boolean result = !dtos.isEmpty();
+    session.release(dtos);
+    return result;
+  }
+  
   private List<Replica> convertAndRelease(HopsSession session,
       List<ReplicaDTO> triplets) throws StorageException {
     List<Replica> replicas =
