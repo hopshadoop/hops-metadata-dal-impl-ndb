@@ -61,3 +61,11 @@ insert into hdfs_variables (id, value) select 28, "" where (select count(*) from
 insert into hdfs_variables (id, value) select 29, "" where (select count(*) from hdfs_variables)>0;
 
 insert into hdfs_variables (id, value) select 30, "" where (select count(*) from hdfs_variables)>0;
+
+insert into hdfs_variables (id, value) select 31, "" where (select count(*) from hdfs_variables)>0;
+
+insert into hdfs_variables (id, value) select 32, "" where (select count(*) from hdfs_variables)>0;
+
+insert into hdfs_variables (id, value) select 33, "" where (select count(*) from hdfs_variables)>0;
+
+insert into hdfs_variables (id, value) select 34, "" where (select count(*) from hdfs_variables)>0;
