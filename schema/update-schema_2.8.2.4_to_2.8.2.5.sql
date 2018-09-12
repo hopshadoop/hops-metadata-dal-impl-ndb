@@ -53,3 +53,11 @@ CREATE TABLE `hdfs_misreplicated_range_queue` (
   `start_index` bigint(20) NOT NULL,
   PRIMARY KEY (`nn_id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1;
+
+insert into hdfs_variables (id, value) select 27, "" where (select count(*) from hdfs_variables)>0;
+
+insert into hdfs_variables (id, value) select 28, "" where (select count(*) from hdfs_variables)>0;
+
+insert into hdfs_variables (id, value) select 29, "" where (select count(*) from hdfs_variables)>0;
+
+insert into hdfs_variables (id, value) select 30, "" where (select count(*) from hdfs_variables)>0;
