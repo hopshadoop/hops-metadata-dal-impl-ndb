@@ -69,3 +69,5 @@ insert into hdfs_variables (id, value) select 32, "" where (select count(*) from
 insert into hdfs_variables (id, value) select 33, "" where (select count(*) from hdfs_variables)>0;
 
 insert into hdfs_variables (id, value) select 34, "" where (select count(*) from hdfs_variables)>0;
+
+truncate table hdfs_retry_cache_entry;
