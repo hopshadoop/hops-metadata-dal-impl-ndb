@@ -26,9 +26,9 @@ public class SmallOnDiskFileInodeClusterj
 
     @PrimaryKey
     @Column(name = ID)
-    int getInodeId();
+    long getInodeId();
 
-    void setInodeId(int inodeId);
+    void setInodeId(long inodeId);
 
     @Column(name = DATA)
     byte[] getData();
@@ -61,7 +61,7 @@ public class SmallOnDiskFileInodeClusterj
   }
 
   @Override
-  public FileInodeData get(int inodeId) throws StorageException {
+  public FileInodeData get(long inodeId) throws StorageException {
     final HopsSession session = connector.obtainSession();
     FileInodeDataDTO dataDto = session.find(FileInodeDataDTO.class, inodeId);
     if (dataDto != null) {

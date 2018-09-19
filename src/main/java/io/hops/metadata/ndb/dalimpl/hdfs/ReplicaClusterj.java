@@ -20,6 +20,7 @@ package io.hops.metadata.ndb.dalimpl.hdfs;
 
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.Index;
 import com.mysql.clusterj.annotation.PartitionKey;
@@ -56,9 +57,9 @@ public class ReplicaClusterj
 
     @PrimaryKey
     @Column(name = INODE_ID)
-    int getINodeId();
+    long getINodeId();
 
-    void setINodeId(int inodeID);
+    void setINodeId(long inodeID);
     
     @PrimaryKey
     @Column(name = BLOCK_ID)
@@ -81,7 +82,7 @@ public class ReplicaClusterj
   private ClusterjConnector connector = ClusterjConnector.getInstance();
 
   @Override
-  public List<Replica> findReplicasById(long blockId, int inodeId)
+  public List<Replica> findReplicasById(long blockId, long inodeId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -98,7 +99,7 @@ public class ReplicaClusterj
   
   
   @Override
-  public List<Replica> findReplicasByINodeId(int inodeId)
+  public List<Replica> findReplicasByINodeId(long inodeId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -113,7 +114,7 @@ public class ReplicaClusterj
   
 
   @Override
-  public List<Replica> findReplicasByINodeIds(int[] inodeIds)
+  public List<Replica> findReplicasByINodeIds(long[] inodeIds)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -122,16 +123,16 @@ public class ReplicaClusterj
     HopsPredicate pred1 = dobj.get("iNodeId").in(dobj.param("iNodeIdParam"));
     dobj.where(pred1);
     HopsQuery<ReplicaDTO> query = session.createQuery(dobj);
-    query.setParameter("iNodeIdParam", Ints.asList(inodeIds));
+    query.setParameter("iNodeIdParam", Longs.asList(inodeIds));
     return convertAndRelease(session, query.getResultList());
   }
   
   @Override
-  public Map<Long,Integer> findBlockAndInodeIdsByStorageId(int storageId)
+  public Map<Long,Long> findBlockAndInodeIdsByStorageId(int storageId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     List<ReplicaDTO> res = getReplicas(session, storageId);
-    Map<Long,Integer> map = new HashMap<>();
+    Map<Long,Long> map = new HashMap<>();
     for(ReplicaDTO dto : res){
       map.put(dto.getBlockId(), dto.getINodeId() );
     }
@@ -140,7 +141,7 @@ public class ReplicaClusterj
   }
   
   @Override
-  public Map<Long, Integer> findBlockAndInodeIdsByStorageIdAndBucketId(
+  public Map<Long, Long> findBlockAndInodeIdsByStorageIdAndBucketId(
       int storageId, int bucketId) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -156,7 +157,7 @@ public class ReplicaClusterj
     query.setParameter("bucketIdParam", bucketId);
   
     List<Replica> replicas = convertAndRelease(session, query.getResultList());
-    Map<Long, Integer> result = new HashMap<>();
+    Map<Long, Long> result = new HashMap<>();
     for (Replica replica: replicas){
       result.put(replica.getBlockId(), replica.getInodeId());
     }
@@ -197,7 +198,7 @@ public class ReplicaClusterj
   }
   
   @Override
-  public Map<Long, Integer> findBlockAndInodeIdsByStorageIdAndBucketIds(
+  public Map<Long, Long> findBlockAndInodeIdsByStorageIdAndBucketIds(
       int sId, List<Integer> mismatchedBuckets) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -229,7 +230,7 @@ public class ReplicaClusterj
   
       List<Replica> replicas =
           convertAndRelease(session, query.getResultList());
-      Map<Long, Integer> results = new HashMap<>();
+      Map<Long, Long> results = new HashMap<>();
       for (Replica replica : replicas){
         results.put(replica.getBlockId(), replica.getInodeId());
       }

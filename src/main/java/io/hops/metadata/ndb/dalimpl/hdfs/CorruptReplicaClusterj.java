@@ -19,6 +19,7 @@
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
 import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import com.mysql.clusterj.Query;
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.Index;
@@ -51,8 +52,8 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
   public interface CorruptReplicaDTO {
     @PrimaryKey
     @Column(name = INODE_ID)
-    int getINodeId();
-    void setINodeId(int inodeId);
+    long getINodeId();
+    void setINodeId(long inodeId);
     
     @PrimaryKey
     @Column(name = BLOCK_ID)
@@ -149,7 +150,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
   }
 
   @Override
-  public List<CorruptReplica> findByBlockId(long blockId, int inodeId)
+  public List<CorruptReplica> findByBlockId(long blockId, long inodeId)
       throws StorageException {
     HopsSession dbSession = connector.obtainSession();
     HopsQueryBuilder qb = dbSession.getQueryBuilder();
@@ -168,7 +169,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
   }
   
   @Override
-  public List<CorruptReplica> findByINodeId(int inodeId)
+  public List<CorruptReplica> findByINodeId(long inodeId)
       throws StorageException {
     HopsSession dbSession = connector.obtainSession();
     HopsQueryBuilder qb = dbSession.getQueryBuilder();
@@ -184,7 +185,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
   }
 
   @Override
-  public List<CorruptReplica> findByINodeIds(int[] inodeIds)
+  public List<CorruptReplica> findByINodeIds(long[] inodeIds)
       throws StorageException {
     HopsSession dbSession = connector.obtainSession();
     HopsQueryBuilder qb = dbSession.getQueryBuilder();
@@ -193,7 +194,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
     HopsPredicate pred1 = dobj.get("iNodeId").in(dobj.param("iNodeIdParam"));
     dobj.where(pred1);
     HopsQuery<CorruptReplicaDTO> query = dbSession.createQuery(dobj);
-    query.setParameter("iNodeIdParam", Ints.asList(inodeIds));
+    query.setParameter("iNodeIdParam", Longs.asList(inodeIds));
     List<CorruptReplicaDTO> dtos = query.getResultList();
     List<CorruptReplica> crl = createCorruptReplicaList(dtos);
     dbSession.release(dtos);

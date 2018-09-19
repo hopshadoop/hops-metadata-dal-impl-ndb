@@ -19,6 +19,7 @@
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
 import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import com.mysql.clusterj.Query;
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.Index;
@@ -64,9 +65,9 @@ public class UnderReplicatedBlockClusterj
 
     @PrimaryKey
     @Column(name = INODE_ID)
-    int getINodeId();
+    long getINodeId();
 
-    void setINodeId(int inodeId);
+    void setINodeId(long inodeId);
     
     @PrimaryKey
     @Column(name = BLOCK_ID)
@@ -88,7 +89,7 @@ public class UnderReplicatedBlockClusterj
   private ClusterjConnector connector = ClusterjConnector.getInstance();
 
   @Override
-  public UnderReplicatedBlock findByPk(long blockId, int inodeId)
+  public UnderReplicatedBlock findByPk(long blockId, long inodeId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     Object[] pk = new Object[2];
@@ -215,7 +216,7 @@ public class UnderReplicatedBlockClusterj
   }
 
   @Override
-  public List<UnderReplicatedBlock> findByINodeId(int inodeId)
+  public List<UnderReplicatedBlock> findByINodeId(long inodeId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -232,7 +233,7 @@ public class UnderReplicatedBlockClusterj
   }
 
   @Override
-  public List<UnderReplicatedBlock> findByINodeIds(int[] inodeIds)
+  public List<UnderReplicatedBlock> findByINodeIds(long[] inodeIds)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -241,7 +242,7 @@ public class UnderReplicatedBlockClusterj
     HopsPredicate pred1 = qdt.get("iNodeId").in(qdt.param("idParam"));
     qdt.where(pred1);
     HopsQuery<UnderReplicatedBlocksDTO> query = session.createQuery(qdt);
-    query.setParameter("idParam", Ints.asList(inodeIds));
+    query.setParameter("idParam", Longs.asList(inodeIds));
     return convertAndRelease(session, query.getResultList());
   }
   

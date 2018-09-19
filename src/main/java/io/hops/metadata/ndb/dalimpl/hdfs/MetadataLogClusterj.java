@@ -44,15 +44,15 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
   public interface MetadataLogEntryDto {
     @PrimaryKey
     @Column(name = DATASET_ID)
-    int getDatasetId();
+    long getDatasetId();
 
-    void setDatasetId(int datasetId);
+    void setDatasetId(long datasetId);
 
     @PrimaryKey
     @Column(name = INODE_ID)
-    int getInodeId();
+    long getInodeId();
 
-    void setInodeId(int inodeId);
+    void setInodeId(long inodeId);
 
     @PrimaryKey
     @Column(name = Logical_TIME)
@@ -61,14 +61,14 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     void setLogicalTime(int logicalTime);
 
     @Column(name = INODE_PARTITION_ID)
-    int getInodePartitionId();
+    long getInodePartitionId();
 
-    void setInodePartitionId(int inodePartitionId);
+    void setInodePartitionId(long inodePartitionId);
 
     @Column(name = INODE_PARENT_ID)
-    int getInodeParentId();
+    long getInodeParentId();
 
-    void setInodeParentId(int inodeParentId);
+    void setInodeParentId(long inodeParentId);
 
     @Column(name = INODE_NAME)
     String getInodeName();
@@ -87,14 +87,14 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
 
     @PrimaryKey
     @Column(name = INODE_ID)
-    int getInodeId();
+    long getInodeId();
 
-    void setInodeId(int inodeId);
+    void setInodeId(long inodeId);
 
     @Column(name = DATASET_ID)
-    int getDatasetId();
+    long getDatasetId();
 
-    void setDatasetId(int datasetId);
+    void setDatasetId(long datasetId);
   }
 
   @Override
@@ -174,7 +174,7 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
   }
 
   @Override
-  public Collection<MetadataLogEntry> find(int fileId) throws StorageException {
+  public Collection<MetadataLogEntry> find(long fileId) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<MetadataLogEntryDto> dobj =

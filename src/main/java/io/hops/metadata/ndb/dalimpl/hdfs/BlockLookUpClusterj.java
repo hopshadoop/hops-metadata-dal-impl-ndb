@@ -19,6 +19,7 @@
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
 import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
@@ -48,14 +49,14 @@ public class BlockLookUpClusterj
     void setBlockId(long bid);
 
     @Column(name = INODE_ID)
-    int getINodeId();
+    long getINodeId();
 
-    void setINodeId(int iNodeID);
+    void setINodeId(long iNodeID);
 
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
-  private final static int NOT_FOUND_ROW = -1000;
+  private final static long NOT_FOUND_ROW = -1000L;
 
   @Override
   public void prepare(Collection<BlockLookUp> modified,
@@ -101,16 +102,16 @@ public class BlockLookUpClusterj
   }
 
   @Override
-  public int[] findINodeIdsByBlockIds(final long[] blockIds)
+  public long[] findINodeIdsByBlockIds(final long[] blockIds)
       throws StorageException {
     final HopsSession session = connector.obtainSession();
     return readINodeIdsByBlockIds(session, blockIds);
   }
 
-  protected static int[] readINodeIdsByBlockIds(final HopsSession session,
+  protected static long[] readINodeIdsByBlockIds(final HopsSession session,
       final long[] blockIds) throws StorageException {
     final List<BlockLookUpDTO> bldtos = new ArrayList<>();
-    final List<Integer> inodeIds = new ArrayList<>();
+    final List<Long> inodeIds = new ArrayList<>();
     try {
       for (long blockId : blockIds) {
         BlockLookUpDTO bldto =
@@ -137,17 +138,17 @@ public class BlockLookUpClusterj
           }
         }
       }
-      return Ints.toArray(inodeIds);
+      return Longs.toArray(inodeIds);
     }finally {
       session.release(bldtos);
     }
   }
   
   @Override
-  public Map<Integer, List<Long>> getINodeIdsForBlockIds(final long[] blockIds) throws StorageException {
+  public Map<Long, List<Long>> getINodeIdsForBlockIds(final long[] blockIds) throws StorageException {
     final HopsSession session = connector.obtainSession();
     final List<BlockLookUpDTO> bldtos = new ArrayList<>();
-    final Map<Integer, List<Long>> InodeToBlockIdsMap = new HashMap<>(blockIds.length);
+    final Map<Long, List<Long>> InodeToBlockIdsMap = new HashMap<>(blockIds.length);
     try {
       for (long blockId : blockIds) {
         BlockLookUpDTO bldto =
@@ -178,7 +179,7 @@ public class BlockLookUpClusterj
     }
   }
   
-  private void addBlockId(Map<Integer, List<Long>> map, BlockLookUpDTO bld){
+  private void addBlockId(Map<Long, List<Long>> map, BlockLookUpDTO bld){
     List<Long> blockIds = map.get(bld.getINodeId());
     if(blockIds==null){
       blockIds = new ArrayList<>();

@@ -19,6 +19,7 @@
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
 import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import com.mysql.clusterj.LockMode;
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.Index;
@@ -59,15 +60,15 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   public interface InodeDTO {
     @PrimaryKey
     @Column(name = PARTITION_ID)
-    int getPartitionId();
-    void setPartitionId(int partitionId);
+    long getPartitionId();
+    void setPartitionId(long partitionId);
 
     //id of the parent inode
     @PrimaryKey
     @Column(name = PARENT_ID)
     @Index(name = "pidex")
-    int getParentId();     // id of the inode
-    void setParentId(int parentid);
+    long getParentId();     // id of the inode
+    void setParentId(long parentid);
 
     @PrimaryKey
     @Column(name = NAME)
@@ -76,8 +77,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 
     @Column(name = ID)
     @Index(name = "inode_idx")
-    int getId();     // id of the inode
-    void setId(int id);
+    long getId();     // id of the inode
+    void setId(long id);
 
     @Column(name = IS_DIR)
     byte getIsDir();
@@ -223,7 +224,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   }
 
   @Override
-  public INode findInodeByIdFTIS(int inodeId) throws StorageException {
+  public INode findInodeByIdFTIS(long inodeId) throws StorageException {
     HopsSession session = connector.obtainSession();
 
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -255,7 +256,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   }
 
   @Override
-  public Collection<INode> findInodesByIdsFTIS(int[] inodeId) throws StorageException {
+  public Collection<INode> findInodesByIdsFTIS(long[] inodeId) throws StorageException {
     HopsSession session = connector.obtainSession();
 
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -265,7 +266,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     dobj.where(pred1);
 
     HopsQuery<InodeDTO> query = session.createQuery(dobj);
-    query.setParameter("idParam", Ints.asList(inodeId));
+    query.setParameter("idParam", Longs.asList(inodeId));
 
     List<InodeDTO> results = null;
 
@@ -282,7 +283,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   }
   
   @Override
-  public List<INode> findInodesByParentIdFTIS(int parentId)
+  public List<INode> findInodesByParentIdFTIS(long parentId)
       throws StorageException {
     //System.out.println("*** indexScanFindInodesByParentId ");
     HopsSession session = connector.obtainSession();
@@ -307,7 +308,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   }
 
   @Override
-  public List<INode> findInodesByParentIdAndPartitionIdPPIS(int parentId, int partitionId)
+  public List<INode> findInodesByParentIdAndPartitionIdPPIS(long parentId, long partitionId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
 
@@ -333,7 +334,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 
   @Override
   public List<ProjectedINode> findInodesFTISTx(
-      int parentId, EntityContext.LockMode lock) throws StorageException {
+      long parentId, EntityContext.LockMode lock) throws StorageException {
     HopsSession session = connector.obtainSession();
     List<InodeDTO> results = null;
     try {
@@ -422,7 +423,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 
 
   @Override
-  public List<INode> lockInodesUsingPkBatchTx(String[] names, int[] parentIds, int[] partitionIds,
+  public List<INode> lockInodesUsingPkBatchTx(String[] names, long[] parentIds, long[] partitionIds,
                                               EntityContext.LockMode lock)
           throws StorageException {
     HopsSession session = connector.obtainSession();
@@ -452,7 +453,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 
   @Override
   public List<ProjectedINode> findInodesPPISTx(
-          int parentId, int partitionId, EntityContext.LockMode lock) throws StorageException {
+          long parentId, long partitionId, EntityContext.LockMode lock) throws StorageException {
     HopsSession session = connector.obtainSession();
     List<InodeDTO>  results = null;
     try {
@@ -521,7 +522,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
 //  }
 
   @Override
-  public INode findInodeByNameParentIdAndPartitionIdPK(String name, int parentId, int partitionId)
+  public INode findInodeByNameParentIdAndPartitionIdPK(String name, long parentId, long partitionId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
 
@@ -541,7 +542,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   }
 
   @Override
-  public List<INode> getINodesPkBatched(String[] names, int[] parentIds, int[] partitionIds)
+  public List<INode> getINodesPkBatched(String[] names, long[] parentIds, long[] partitionIds)
       throws StorageException {
     HopsSession session = connector.obtainSession();
 
@@ -582,8 +583,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     query.setParameter("isDirParam", NdbBoolean.convert(true));
     //FIXME: InodeId is integer
     //startId is inclusive and endId exclusive
-    query.setParameter("startId", (int) startId);
-    query.setParameter("endId", (int) (endId - 1));
+    query.setParameter("startId", startId);
+    query.setParameter("endId", endId - 1);
     List<InodeDTO> dtos = query.getResultList();
     List<INodeIdentifier> res = new ArrayList<>();
     for (InodeDTO dto : dtos) {
@@ -647,7 +648,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   }
   
   @Override
-  public boolean hasChildren(int parentId, boolean areChildRandomlyPartitioned) throws StorageException {
+  public boolean hasChildren(long parentId, boolean areChildRandomlyPartitioned) throws StorageException {
     HopsSession session = connector.obtainSession();
 
     HopsQueryBuilder qb = session.getQueryBuilder();

@@ -32,8 +32,8 @@ public class LargeOnDiskFileInodeClusterj
 
     @PrimaryKey
     @Column(name = ID)
-    int getInodeId();
-    void setInodeId(int inodeId);
+    long getInodeId();
+    void setInodeId(long inodeId);
 
 
     @Column(name = INDEX)
@@ -93,12 +93,12 @@ public class LargeOnDiskFileInodeClusterj
   }
 
   @Override
-  public FileInodeData get(int inodeId) throws StorageException {
+  public FileInodeData get(long inodeId) throws StorageException {
     throw new UnsupportedOperationException("The operation is not yet implemented");
   }
 
   @Override
-  public FileInodeData get(int inodeId, int size) throws StorageException {
+  public FileInodeData get(long inodeId, int size) throws StorageException {
     final HopsSession session = connector.obtainSession();
     int rows = (int)Math.ceil(size/((double)CHUNK_SIZE));
     FileInodeDataDTO[] dtos = new FileInodeDataDTO[rows];

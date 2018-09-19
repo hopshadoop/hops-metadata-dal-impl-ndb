@@ -19,6 +19,7 @@
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
 import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
@@ -53,9 +54,9 @@ public class CachedBlockClusterJ implements TablesDef.CachedBlockTableDef, Cache
 
     @PrimaryKey
     @Column(name = INODE_ID)
-    int getInodeId();
+    long getInodeId();
 
-    void setInodeId(int inodeId);
+    void setInodeId(long inodeId);
 
     @PrimaryKey
     @Column(name = DATANODE_ID)
@@ -76,7 +77,7 @@ public class CachedBlockClusterJ implements TablesDef.CachedBlockTableDef, Cache
   }
 
   @Override
-  public CachedBlock find(long blockId, int inodeId, String datanodeId) throws StorageException {
+  public CachedBlock find(long blockId, long inodeId, String datanodeId) throws StorageException {
     HopsSession session = connector.obtainSession();
     Object[] pk = new Object[3];
     pk[0] = blockId;
@@ -114,7 +115,7 @@ public class CachedBlockClusterJ implements TablesDef.CachedBlockTableDef, Cache
   }
 
   @Override
-  public List<CachedBlock> findCachedBlockByINodeId(int inodeId)
+  public List<CachedBlock> findCachedBlockByINodeId(long inodeId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -127,7 +128,7 @@ public class CachedBlockClusterJ implements TablesDef.CachedBlockTableDef, Cache
   }
 
   @Override
-  public List<CachedBlock> findCachedBlockByINodeIds(int[] inodeIds)
+  public List<CachedBlock> findCachedBlockByINodeIds(long[] inodeIds)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -135,12 +136,12 @@ public class CachedBlockClusterJ implements TablesDef.CachedBlockTableDef, Cache
     HopsPredicate pred1 = dobj.get("inodeId").in(dobj.param("inodeId"));
     dobj.where(pred1);
     HopsQuery<CachedBlockDTO> query = session.createQuery(dobj);
-    query.setParameter("inodeId", Ints.asList(inodeIds));
+    query.setParameter("inodeId", Longs.asList(inodeIds));
     return convertAndRelease(session, query.getResultList());
   }
 
   @Override
-  public List<CachedBlock> findByIds(long[] blockIds, int[] inodeIds, String datanodeId) throws StorageException {
+  public List<CachedBlock> findByIds(long[] blockIds, long[] inodeIds, String datanodeId) throws StorageException {
     HopsSession session = connector.obtainSession();
     List<CachedBlock> blks = readCachedBlockBatch(session, inodeIds, blockIds, datanodeId);
     return blks;
@@ -195,7 +196,7 @@ public class CachedBlockClusterJ implements TablesDef.CachedBlockTableDef, Cache
     }
   }
 
-  private List<CachedBlock> readCachedBlockBatch(final HopsSession session, final int[] inodeIds, final long[] blockIds,
+  private List<CachedBlock> readCachedBlockBatch(final HopsSession session, final long[] inodeIds, final long[] blockIds,
       String datanodeId) throws StorageException {
     final List<CachedBlockDTO> bdtos = new ArrayList<>();
     for (int i = 0; i < blockIds.length; i++) {

@@ -19,6 +19,7 @@
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
 import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.PartitionKey;
 import com.mysql.clusterj.annotation.PersistenceCapable;
@@ -49,9 +50,9 @@ public class ReplicaUnderConstructionClusterj
 
     @PrimaryKey
     @Column(name = INODE_ID)
-    int getINodeId();
+    long getINodeId();
 
-    void setINodeId(int inodeID);
+    void setINodeId(long inodeID);
     
     @PrimaryKey
     @Column(name = BLOCK_ID)
@@ -122,7 +123,7 @@ public class ReplicaUnderConstructionClusterj
 
   @Override
   public List<ReplicaUnderConstruction> findReplicaUnderConstructionByBlockId(
-      long blockId, int inodeId) throws StorageException {
+      long blockId, long inodeId) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<ReplicaUcDTO> dobj =
@@ -138,7 +139,7 @@ public class ReplicaUnderConstructionClusterj
   
   @Override
   public List<ReplicaUnderConstruction> findReplicaUnderConstructionByINodeId(
-      int inodeId) throws StorageException {
+      long inodeId) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<ReplicaUcDTO> dobj =
@@ -153,7 +154,7 @@ public class ReplicaUnderConstructionClusterj
 
   @Override
   public List<ReplicaUnderConstruction> findReplicaUnderConstructionByINodeIds(
-      int[] inodeIds) throws StorageException {
+      long[] inodeIds) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<ReplicaUcDTO> dobj =
@@ -161,12 +162,12 @@ public class ReplicaUnderConstructionClusterj
     HopsPredicate pred1 = dobj.get("iNodeId").in(dobj.param("iNodeIdParam"));
     dobj.where(pred1);
     HopsQuery<ReplicaUcDTO> query = session.createQuery(dobj);
-    query.setParameter("iNodeIdParam", Ints.asList(inodeIds));
+    query.setParameter("iNodeIdParam", Longs.asList(inodeIds));
     return convertAndRelease(session, query.getResultList());
   }
 
   @Override
-  public void removeByBlockIdAndInodeId(long blockId, int inodeId) throws
+  public void removeByBlockIdAndInodeId(long blockId, long inodeId) throws
       StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
