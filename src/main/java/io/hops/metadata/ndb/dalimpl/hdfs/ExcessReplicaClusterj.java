@@ -73,6 +73,11 @@ public class ExcessReplicaClusterj
   }
 
   @Override
+  public int countAllUniqueBlk() throws StorageException {
+    return MySQLQueryHelper.countAllUnique(TABLE_NAME, BLOCK_ID);
+  }
+  
+  @Override
   public void prepare(Collection<ExcessReplica> removed,
       Collection<ExcessReplica> newed, Collection<ExcessReplica> modified)
       throws StorageException {
