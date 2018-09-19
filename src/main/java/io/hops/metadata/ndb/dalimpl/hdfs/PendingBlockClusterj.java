@@ -19,6 +19,7 @@
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
 import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.PartitionKey;
 import com.mysql.clusterj.annotation.PersistenceCapable;
@@ -51,9 +52,9 @@ public class PendingBlockClusterj
 
     @PrimaryKey
     @Column(name = INODE_ID)
-    int getINodeId();
+    long getINodeId();
 
-    void setINodeId(int inodeId);
+    void setINodeId(long inodeId);
     
     @PrimaryKey
     @Column(name = BLOCK_ID)
@@ -81,7 +82,7 @@ public class PendingBlockClusterj
   }
   
   @Override
-  public List<PendingBlockInfo> findByINodeId(int inodeId)
+  public List<PendingBlockInfo> findByINodeId(long inodeId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
 
@@ -99,7 +100,7 @@ public class PendingBlockClusterj
   }
 
   @Override
-  public List<PendingBlockInfo> findByINodeIds(int[] inodeIds)
+  public List<PendingBlockInfo> findByINodeIds(long[] inodeIds)
       throws StorageException {
     HopsSession session = connector.obtainSession();
 
@@ -111,7 +112,7 @@ public class PendingBlockClusterj
     qdt.where(pred1);
 
     HopsQuery<PendingBlockDTO> query = session.createQuery(qdt);
-    query.setParameter("idParam", Ints.asList(inodeIds));
+    query.setParameter("idParam", Longs.asList(inodeIds));
 
     return convertAndRelease(session, query.getResultList());
   }
@@ -145,7 +146,7 @@ public class PendingBlockClusterj
   }
 
   @Override
-  public PendingBlockInfo findByBlockAndInodeIds(long blockId, int inodeId)
+  public PendingBlockInfo findByBlockAndInodeIds(long blockId, long inodeId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -198,7 +199,7 @@ public class PendingBlockClusterj
 
   private List<PendingBlockInfo> convertAndRelease(HopsSession session,
       Collection<PendingBlockDTO> dtos) throws StorageException {
-    Map<Integer, Map<Long, List<PendingBlockDTO>>> pendingBlocks = new HashMap<>();
+    Map<Long, Map<Long, List<PendingBlockDTO>>> pendingBlocks = new HashMap<>();
     for (PendingBlockDTO dto : dtos) {
       Map<Long, List<PendingBlockDTO>> inodePendingBlocks = pendingBlocks.get(dto.getINodeId());
       if (inodePendingBlocks == null) {
@@ -223,7 +224,7 @@ public class PendingBlockClusterj
   }
 
   private PendingBlockInfo convertAndRelease(HopsSession session,
-      List<PendingBlockDTO> pendingTables, long blockId, int nodeId, long timestamp) throws StorageException {
+      List<PendingBlockDTO> pendingTables, long blockId, long nodeId, long timestamp) throws StorageException {
     List<String> targets = new ArrayList<>();
     for(PendingBlockDTO pendingTable : pendingTables){
       if(pendingTable.getTarget()!=null && !pendingTable.getTarget().isEmpty()){

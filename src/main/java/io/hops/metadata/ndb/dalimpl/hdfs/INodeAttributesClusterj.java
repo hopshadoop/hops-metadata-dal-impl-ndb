@@ -42,9 +42,9 @@ public class INodeAttributesClusterj implements
 
     @PrimaryKey
     @Column(name = ID)
-    int getId();
+    long getId();
 
-    void setId(int id);
+    void setId(long id);
 
     @Column(name = NSQUOTA)
     long getNSQuota();
@@ -70,7 +70,7 @@ public class INodeAttributesClusterj implements
   private ClusterjConnector connector = ClusterjConnector.getInstance();
 
   @Override
-  public INodeAttributes findAttributesByPk(Integer inodeId)
+  public INodeAttributes findAttributesByPk(Long inodeId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     INodeAttributesDTO dto = session.find(INodeAttributesDTO.class, inodeId);

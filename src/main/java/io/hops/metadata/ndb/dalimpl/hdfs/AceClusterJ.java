@@ -40,8 +40,8 @@ public class AceClusterJ implements TablesDef.AcesTableDef, AceDataAccess<Ace> {
     
     @PrimaryKey
     @Column(name = INODE_ID)
-    int getInodeId();
-    void setInodeId(int inodeId);
+    long getInodeId();
+    void setInodeId(long inodeId);
   
     @PrimaryKey
     @Column(name = INDEX)
@@ -67,7 +67,7 @@ public class AceClusterJ implements TablesDef.AcesTableDef, AceDataAccess<Ace> {
   }
   
   @Override
-  public List<Ace> getAcesByPKBatched(int inodeId, int[] ids) throws StorageException {
+  public List<Ace> getAcesByPKBatched(long inodeId, int[] ids) throws StorageException {
     HopsSession session = connector.obtainSession();
     
     boolean activeConnector = session.currentTransaction().isActive();
@@ -141,7 +141,7 @@ public class AceClusterJ implements TablesDef.AcesTableDef, AceDataAccess<Ace> {
   }
   
   private Ace fromDto(AceDto dto){
-    int inode = dto.getInodeId();
+    long inode = dto.getInodeId();
     int index = dto.getIndex();
     String subject = dto.getSubject();
     boolean isDefault = NdbBoolean.convert(dto.getIsDefault());

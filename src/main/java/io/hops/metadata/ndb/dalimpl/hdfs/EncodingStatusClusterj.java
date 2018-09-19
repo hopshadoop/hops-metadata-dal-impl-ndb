@@ -64,9 +64,9 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
     @PrimaryKey
     @Column(name = INODE_ID)
-    int getInodeId();
+    long getInodeId();
 
-    void setInodeId(int inodeId);
+    void setInodeId(long inodeId);
 
     @Column(name = STATUS)
     Integer getStatus();
@@ -90,10 +90,10 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
     @Index
     @Column(name = PARITY_INODE_ID)
-    int getParityInodeId();
+    long getParityInodeId();
 
     // Long type not possible because of index
-    void setParityInodeId(int inodeId);
+    void setParityInodeId(long inodeId);
 
     @Column(name = PARITY_STATUS)
     Integer getParityStatus();
@@ -169,7 +169,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   }
 
   private void copyState(EncodingStatus status, EncodingStatusDto dto) {
-    Integer inodeId = status.getInodeId();
+    Long inodeId = status.getInodeId();
     if (inodeId != null) {
       dto.setInodeId(inodeId);
     }
@@ -189,7 +189,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     if (statusModificationTime != null) {
       dto.setStatusModificationTime(statusModificationTime);
     }
-    Integer parityInodeId = status.getParityInodeId();
+    Long parityInodeId = status.getParityInodeId();
     if (parityInodeId != null) {
       dto.setParityInodeId(parityInodeId);
     }
@@ -221,7 +221,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   }
 
   @Override
-  public EncodingStatus findByInodeId(int inodeId) throws StorageException {
+  public EncodingStatus findByInodeId(long inodeId) throws StorageException {
     HopsSession session = clusterjConnector.obtainSession();
     EncodingStatusDto dto = session.find(EncodingStatusDto.class, inodeId);
     if (dto == null) {
@@ -233,12 +233,12 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   }
   
   @Override
-  public Collection<EncodingStatus> findByInodeIds(Collection<Integer> inodeIds)
+  public Collection<EncodingStatus> findByInodeIds(Collection<Long> inodeIds)
           throws StorageException {
     HopsSession session = clusterjConnector.obtainSession();
     List<EncodingStatusDto> dtos = new ArrayList<>();
     try {
-      for (int inodeId: inodeIds) {
+      for (long inodeId: inodeIds) {
         EncodingStatusDto dto = session
                 .newInstance(EncodingStatusDto.class, inodeId);
         dto.setStatus(NOT_FOUND);
@@ -254,7 +254,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   }
 
   @Override
-  public EncodingStatus findByParityInodeId(int inodeId)
+  public EncodingStatus findByParityInodeId(long inodeId)
       throws StorageException {
     HopsSession session = clusterjConnector.obtainSession();
     HopsQueryBuilder builder = session.getQueryBuilder();
@@ -278,7 +278,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
   }
   
   @Override
-  public Collection<EncodingStatus> findByParityInodeIds(List<Integer> inodeIds) throws StorageException {
+  public Collection<EncodingStatus> findByParityInodeIds(List<Long> inodeIds) throws StorageException {
     HopsSession session = clusterjConnector.obtainSession();
     HopsQueryBuilder builder = session.getQueryBuilder();
     HopsQueryDomainType<EncodingStatusDto> domain = builder.createQueryDefinition(EncodingStatusDto.class);
@@ -493,7 +493,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
     // This is necessary because Integer cannot be used for clusterj fields with an index.
     // But it shouldn't be 0 anyway as it is always the root folder
-    Integer parityInodeId = null;
+    Long parityInodeId = null;
     if (dto.getParityInodeId() != 0) {
       parityInodeId = dto.getParityInodeId();
     }
@@ -550,8 +550,8 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
       resultList = new ArrayList<>();
 
       while (result.next()) {
-        Integer inodeId = result.getInt(INODE_ID);
-        Integer parityInodeId = result.getInt(PARITY_INODE_ID);
+        Long inodeId = result.getLong(INODE_ID);
+        Long parityInodeId = result.getLong(PARITY_INODE_ID);
         Integer status = result.getInt(STATUS);
         String codec = result.getString(CODEC);
         Short targetReplication = result.getShort(TARGET_REPLICATION);

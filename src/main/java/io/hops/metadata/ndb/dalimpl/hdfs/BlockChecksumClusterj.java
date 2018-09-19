@@ -57,9 +57,9 @@ public class BlockChecksumClusterj
 
     @PrimaryKey
     @Column(name = INODE_ID)
-    int getInodeId();
+    long getInodeId();
 
-    void setInodeId(int inodeId);
+    void setInodeId(long inodeId);
 
     @PrimaryKey
     @Column(name = BLOCK_INDEX)
@@ -122,7 +122,7 @@ public class BlockChecksumClusterj
   }
 
   @Override
-  public BlockChecksum find(int inodeId, int blockIndex)
+  public BlockChecksum find(long inodeId, int blockIndex)
       throws StorageException {
     HopsSession session = clusterjConnector.obtainSession();
     BlockChecksumDto dto =
@@ -137,7 +137,7 @@ public class BlockChecksumClusterj
   }
 
   @Override
-  public Collection<BlockChecksum> findAll(int inodeId)
+  public Collection<BlockChecksum> findAll(long inodeId)
       throws StorageException {
     HopsSession session = clusterjConnector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -154,7 +154,7 @@ public class BlockChecksumClusterj
   }
 
   @Override
-  public void deleteAll(int inodeId) throws StorageException {
+  public void deleteAll(long inodeId) throws StorageException {
     final String query =
         String.format("DELETE FROM %s WHERE %s=%d",
                 TablesDef.BlockChecksumTableDef.TABLE_NAME,

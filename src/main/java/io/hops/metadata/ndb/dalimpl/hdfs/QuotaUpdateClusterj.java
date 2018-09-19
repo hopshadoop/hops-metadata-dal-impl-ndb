@@ -57,9 +57,9 @@ public class QuotaUpdateClusterj
 
     @PrimaryKey
     @Column(name = INODE_ID)
-    int getInodeId();
+    long getInodeId();
 
-    void setInodeId(int id);
+    void setInodeId(long id);
 
     @Column(name = NAMESPACE_DELTA)
     long getNamespaceDelta();
@@ -155,7 +155,7 @@ public class QuotaUpdateClusterj
   private static final String INODE_ID_PARAM = "inodeId";
 
   @Override
-  public List<QuotaUpdate> findByInodeId(int inodeId) throws StorageException {
+  public List<QuotaUpdate> findByInodeId(long inodeId) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<QuotaUpdateDTO> dobj =

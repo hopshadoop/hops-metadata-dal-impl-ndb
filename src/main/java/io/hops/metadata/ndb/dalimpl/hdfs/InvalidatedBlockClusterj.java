@@ -19,6 +19,7 @@
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
 import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.Index;
 import com.mysql.clusterj.annotation.PartitionKey;
@@ -55,8 +56,8 @@ public class InvalidatedBlockClusterj implements
 
     @PrimaryKey
     @Column(name = INODE_ID)
-    int getINodeId();
-    void setINodeId(int inodeID);
+    long getINodeId();
+    void setINodeId(long inodeID);
     
     @PrimaryKey
     @Column(name = BLOCK_ID)
@@ -134,7 +135,7 @@ public class InvalidatedBlockClusterj implements
 
   @Override
   public List<InvalidatedBlock> findInvalidatedBlocksByBlockId(long bid,
-      int inodeId) throws StorageException {
+      long inodeId) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<InvalidateBlocksDTO> qdt =
@@ -154,7 +155,7 @@ public class InvalidatedBlockClusterj implements
   }
   
   @Override
-  public List<InvalidatedBlock> findInvalidatedBlocksByINodeId(int inodeId)
+  public List<InvalidatedBlock> findInvalidatedBlocksByINodeId(long inodeId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -172,7 +173,7 @@ public class InvalidatedBlockClusterj implements
   }
 
   @Override
-  public List<InvalidatedBlock> findInvalidatedBlocksByINodeIds(int[] inodeIds)
+  public List<InvalidatedBlock> findInvalidatedBlocksByINodeIds(long[] inodeIds)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
@@ -181,7 +182,7 @@ public class InvalidatedBlockClusterj implements
     HopsPredicate pred1 = qdt.get("iNodeId").in(qdt.param("iNodeIdParam"));
     qdt.where(pred1);
     HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
-    query.setParameter("iNodeIdParam", Ints.asList(inodeIds));
+    query.setParameter("iNodeIdParam", Longs.asList(inodeIds));
     
     List<InvalidateBlocksDTO> dtos = query.getResultList();
     List<InvalidatedBlock> ivl = createList(dtos);
@@ -191,7 +192,7 @@ public class InvalidatedBlockClusterj implements
   
   @Override
   public InvalidatedBlock findInvBlockByPkey(long blockId, int storageId,
-      int inodeId) throws StorageException {
+      long inodeId) throws StorageException {
     HopsSession session = connector.obtainSession();
     Object[] pk = new Object[3];
     pk[0] = inodeId;
@@ -209,7 +210,7 @@ public class InvalidatedBlockClusterj implements
 
   @Override
   public List<InvalidatedBlock> findInvalidatedBlocksbyPKS(
-      final long[] blockIds, final int[] inodesIds, final int[] storageIds)
+      final long[] blockIds, final long[] inodesIds, final int[] storageIds)
       throws StorageException {
     int currentTableSize = countAll();
     if (currentTableSize == 0) {
