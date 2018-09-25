@@ -55,3 +55,11 @@ ALTER TABLE `hdfs_replica_under_constructions` MODIFY COLUMN `inode_id` bigint(2
 ALTER TABLE `hdfs_ondisk_small_file_inode_data` MODIFY COLUMN `inode_id` bigint(20);
 
 ALTER TABLE `hdfs_under_replicated_blocks` MODIFY COLUMN `inode_id` bigint(20);
+
+CREATE TABLE `hdfs_active_block_reports` (
+  `dn_address` varchar(128) NOT NULL,
+  `nn_id` bigint(20) DEFAULT NULL,
+  `start_time` bigint(20) DEFAULT NULL,
+  `num_blocks` bigint(20) DEFAULT NULL,
+  PRIMARY KEY (`dn_address`)
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1;
