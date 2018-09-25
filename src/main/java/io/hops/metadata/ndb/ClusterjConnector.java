@@ -300,6 +300,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       cls = CachePoolClusterJ.CachePoolDTO.class;
     } else if (className == CachedBlockDataAccess.class){
       cls = CachedBlockClusterJ.CachedBlockDTO.class;
+    } else if (className == ActiveBlockReportsClusterj.class){
+      cls = ActiveBlockReportsClusterj.class;
     }
 
     HopsSession session = obtainSession();
@@ -358,7 +360,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         UserGroupDataAccess.class,VariableDataAccess.class,
         HashBucketDataAccess.class, StorageDataAccess.class,
         AceDataAccess.class, RetryCacheEntryDataAccess.class, CacheDirectiveDataAccess.class,
-        CachePoolDataAccess.class, CachedBlockDataAccess.class);
+        CachePoolDataAccess.class, CachedBlockDataAccess.class,
+        ActiveBlockReportsDataAccess.class);
   }
   
   private boolean formatAll(boolean transactional) throws StorageException {
@@ -565,6 +568,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.hdfs.TablesDef.CachePoolTableDef.TABLE_NAME);
           } else if (e == CachedBlockDataAccess.class){
             truncate(transactional, io.hops.metadata.hdfs.TablesDef.CachedBlockTableDef.TABLE_NAME);
+          } else if (e == ActiveBlockReportsDataAccess.class){
+            truncate(transactional, io.hops.metadata.hdfs.TablesDef.ActiveBlockReports.TABLE_NAME);
           }
         }
         MysqlServerConnector.truncateTable(transactional,

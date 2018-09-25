@@ -179,6 +179,7 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(CacheDirectiveDataAccess.class, new CacheDirectiveClusterj());
     dataAccessMap.put(CachePoolDataAccess.class, new CachePoolClusterJ());
     dataAccessMap.put(CachedBlockDataAccess.class, new CachedBlockClusterJ());
+    dataAccessMap.put(ActiveBlockReportsDataAccess.class, new ActiveBlockReportsClusterj());
   }
 
   @Override
