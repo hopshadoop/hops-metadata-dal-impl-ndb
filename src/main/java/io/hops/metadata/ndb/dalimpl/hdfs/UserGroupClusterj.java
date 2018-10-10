@@ -124,5 +124,22 @@ public class UserGroupClusterj implements TablesDef.UsersGroupsTableDef,
       session.release(groupDTOs);
     }
   }
-
+  
+  @Override
+  public void removeUserFromGroup(int userId, int groupId)
+      throws StorageException {
+    HopsSession session = connector.obtainSession();
+    UserGroupDTO dto = null;
+    try {
+      dto = session.newInstance(UserGroupDTO.class);
+      dto.setUserId(userId);
+      dto.setGroupId(groupId);
+      
+      session.deletePersistent(dto);
+      
+    } finally {
+      session.release(dto);
+    }
+  }
+  
 }
