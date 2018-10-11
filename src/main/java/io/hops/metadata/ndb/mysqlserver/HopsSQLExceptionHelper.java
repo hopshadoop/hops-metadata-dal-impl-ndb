@@ -46,6 +46,9 @@ public class HopsSQLExceptionHelper {
     } else if (e.getErrorCode() == MysqlErrorNumbers.ER_LOCK_WAIT_TIMEOUT) {
       //Lock wait timeout exceeded; try restarting transaction
       return true;
+    } else if (e.getErrorCode() == MysqlErrorNumbers.ER_GET_TEMPORARY_ERRMSG) {
+      //temporary error, try again
+      return true;
     }
     return false;
   }
