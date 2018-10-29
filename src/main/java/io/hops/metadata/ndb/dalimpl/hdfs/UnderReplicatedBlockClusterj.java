@@ -31,12 +31,15 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.UnderReplicatedBlockDataAccess;
 import io.hops.metadata.hdfs.entity.UnderReplicatedBlock;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.mysqlserver.HopsSQLExceptionHelper;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
+import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
 import io.hops.metadata.ndb.wrapper.HopsPredicate;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
+import java.sql.SQLException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -248,7 +251,12 @@ public class UnderReplicatedBlockClusterj
   
   @Override
   public void removeAll() throws StorageException {
-    HopsSession session = connector.obtainSession();
-    session.deletePersistentAll(UnderReplicatedBlocksDTO.class);
+    try {
+      while (countAll() != 0) {
+        MysqlServerConnector.truncateTable(TABLE_NAME, 1000);
+      }
+    } catch (SQLException ex) {
+      throw HopsSQLExceptionHelper.wrap(ex);
+    }
   }
 }
