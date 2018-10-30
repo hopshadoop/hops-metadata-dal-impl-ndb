@@ -119,10 +119,6 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     String getClientMachine();
     void setClientMachine(String clientMachine);
 
-    @Column(name = CLIENT_NODE)
-    String getClientNode();
-    void setClientNode(String clientNode);
-
     //  marker for InodeFile
     @Column(name = GENERATION_STAMP)
     int getGenerationStamp();
@@ -725,7 +721,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         persistable.getUserID(), persistable.getGroupID(),
         persistable.getPermission(), NdbBoolean.convert(persistable.getUnderConstruction()),
         persistable.getClientName(), persistable.getClientMachine(),
-        persistable.getClientNode(), persistable.getGenerationStamp(),
+        persistable.getGenerationStamp(),
         persistable.getHeader(), persistable.getSymlink(),
         NdbBoolean.convert(persistable.getSubtreeLocked()),
         persistable.getSubtreeLockOwner(),
@@ -750,7 +746,6 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setUnderConstruction(NdbBoolean.convert(inode.isUnderConstruction()));
     persistable.setClientName(inode.getClientName());
     persistable.setClientMachine(inode.getClientMachine());
-    persistable.setClientNode(inode.getClientNode());
     persistable.setGenerationStamp(inode.getGenerationStamp());
     persistable.setHeader(inode.getHeader());
     persistable.setSymlink(inode.getSymlink());
