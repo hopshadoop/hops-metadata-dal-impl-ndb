@@ -63,3 +63,5 @@ CREATE TABLE `hdfs_active_block_reports` (
   `num_blocks` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`dn_address`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1;
+
+ALTER TABLE `hdfs_inodes` DROP COLUMN `client_node`;
