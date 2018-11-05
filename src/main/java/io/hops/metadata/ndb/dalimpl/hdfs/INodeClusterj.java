@@ -609,13 +609,13 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   @Override
   public long getMinFileId() throws StorageException {
     return MySQLQueryHelper
-        .minInt(TABLE_NAME, ID, String.format("%s<>0", HEADER));
+        .minLong(TABLE_NAME, ID, String.format("%s<>0", HEADER));
   }
 
   @Override
   public long getMaxFileId() throws StorageException {
     return MySQLQueryHelper
-        .maxInt(TABLE_NAME, ID, String.format("%s<>0", HEADER));
+        .maxLong(TABLE_NAME, ID, String.format("%s<>0", HEADER));
   }
 
   @Override
@@ -701,6 +701,11 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     return inodeDTO;
   }
 
+  @Override
+  public long getMaxId() throws StorageException{
+    return MySQLQueryHelper.maxLong(TABLE_NAME, ID);
+  }
+  
   private List<INode> convert(List<InodeDTO> list) throws StorageException {
     List<INode> inodes = new ArrayList<>();
     for (InodeDTO persistable : list) {
