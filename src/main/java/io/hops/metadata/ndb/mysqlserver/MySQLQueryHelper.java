@@ -99,22 +99,29 @@ public class MySQLQueryHelper {
     return executeBooleanQuery(String.format(SELECT_EXISTS, query.toString()));
   }
 
-  public static int minInt(String tableName, String column, String criterion)
+  public static long minLong(String tableName, String column, String criterion)
       throws StorageException {
     StringBuilder query =
         new StringBuilder(String.format(MIN, column, tableName));
     query.append(" where ").append(criterion);
-    return executeIntAggrQuery(query.toString());
+    return executeLongAggrQuery(query.toString());
   }
   
-  public static int maxInt(String tableName, String column, String criterion)
+  public static long maxLong(String tableName, String column, String criterion)
       throws StorageException {
     StringBuilder query =
         new StringBuilder(String.format(MAX, column, tableName));
     query.append(" where ").append(criterion);
-    return executeIntAggrQuery(query.toString());
+    return executeLongAggrQuery(query.toString());
   }
 
+  public static long maxLong(String tableName, String column)
+      throws StorageException {
+    StringBuilder query =
+        new StringBuilder(String.format(MAX, column, tableName));
+    return executeLongAggrQuery(query.toString());
+  }
+  
   private static int executeIntAggrQuery(final String query)
       throws StorageException {
     return execute(query, new ResultSetHandler<Integer>() {
@@ -129,6 +136,20 @@ public class MySQLQueryHelper {
     });
   }
   
+    private static long executeLongAggrQuery(final String query)
+      throws StorageException {
+    return execute(query, new ResultSetHandler<Long>() {
+      @Override
+      public Long handle(ResultSet result) throws SQLException, StorageException {
+        if (!result.next()) {
+          throw new StorageException(
+              String.format("result set is empty. Query: %s", query));
+        }
+        return result.getLong(1);
+      }
+    });
+  }
+    
   private static boolean executeBooleanQuery(final String query)
       throws StorageException {
     return execute(query, new ResultSetHandler<Boolean>() {
