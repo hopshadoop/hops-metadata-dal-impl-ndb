@@ -27,15 +27,19 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
+import static io.hops.metadata.hdfs.TablesDef.UnderReplicatedBlockTableDef.TABLE_NAME;
 import io.hops.metadata.hdfs.dal.ExcessReplicaDataAccess;
 import io.hops.metadata.hdfs.entity.ExcessReplica;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.mysqlserver.HopsSQLExceptionHelper;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
+import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
 import io.hops.metadata.ndb.wrapper.HopsPredicate;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
+import java.sql.SQLException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -200,7 +204,13 @@ public class ExcessReplicaClusterj
   @Override
   public void removeAll() throws StorageException {
     HopsSession session = connector.obtainSession();
-    session.deletePersistentAll(ExcessReplicaDTO.class);
+    try {
+      while (countAll() != 0) {
+        MysqlServerConnector.truncateTable(TABLE_NAME, 1000);
+      }
+    } catch (SQLException ex) {
+      throw HopsSQLExceptionHelper.wrap(ex);
+    }
   }
 
   private List<ExcessReplica> createList(List<ExcessReplicaDTO> list) {
