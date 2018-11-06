@@ -18,6 +18,7 @@
  */
 package io.hops.metadata.ndb;
 
+import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.dalimpl.yarn.ContainerToSignalClusterJ;
 import io.hops.DalStorageFactory;
 import io.hops.StorageConnector;
@@ -191,4 +192,10 @@ public class NdbStorageFactory implements DalStorageFactory {
   public EntityDataAccess getDataAccess(Class type) {
     return dataAccessMap.get(type);
   }
+  
+  @Override
+  public boolean hasResources(double threshold) throws StorageException {
+    return MysqlServerConnector.hasResources(threshold);
   }
+  
+}
