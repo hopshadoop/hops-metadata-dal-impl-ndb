@@ -33,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
@@ -329,5 +330,28 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
   
-  
+  public static boolean hasResources(final double threshold) throws StorageException {
+    return MySQLQueryHelper.execute("SELECT memory_type, used, total FROM " +
+            "ndbinfo.memoryusage",
+        new MySQLQueryHelper.ResultSetHandler<Boolean>() {
+          @Override
+          public Boolean handle(ResultSet result)
+              throws SQLException, StorageException {
+            boolean hasResource = true;
+            while (result.next()) {
+              String memoryType = result.getString("memory_type");
+              long used = result.getLong("used");
+              long total = result.getLong("total");
+              
+              hasResource = used < (total * threshold);
+              if (!hasResource) {
+                LOG.error("NDB " + memoryType + " is  " + (threshold*100) +
+                        "% full ("  +  used + "/" + total + ")");
+                break;
+              }
+            }
+            return hasResource;
+          }
+        });
+  }
 }
