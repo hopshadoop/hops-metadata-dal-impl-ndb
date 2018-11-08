@@ -20,12 +20,12 @@ group.add_argument('-Drop', action='store_true', dest="drop", help="Drop Files a
 args = parser.parse_args()
 print args
 
-#DATA_DISKS = ["/dir1,/dir2"]
+#DATA_DISKS = ["/dir1", "/dir2"]
 DATA_DISKS = [""]
 DATAFILE_SIZE = args.dataFileSize 
 DATAFILES_PER_DISK = args.dataFilesCount 
 
-#LOG_DISKS = ["/dir1,/dir2"]
+#LOG_DISKS = ["/dir1", "/dir2"]
 LOG_DISKS = [""]
 LOGFILE_SIZE = args.logFileSize
 LOGFILES_PER_DISK = args.logFilesCount 
@@ -89,9 +89,9 @@ def create():
       if tableSpaceCreated == False:
         printStage("Creating Table Space")
         tableSpaceCreated = True
-        subCommand = ("CREATE TABLESPACE %s ADD datafile '%s%s_data_file_%d.dat' use LOGFILE GROUP lg_1 INITIAL_SIZE = %s  ENGINE ndbcluster" % (TS_NAME, TS_NAME, disk, fileIndex, DATAFILE_SIZE))
+        subCommand = ("CREATE TABLESPACE %s ADD datafile '%s%s_data_file_%d.dat' use LOGFILE GROUP lg_1 INITIAL_SIZE = %s  ENGINE ndbcluster" % (TS_NAME, disk, TS_NAME, fileIndex, DATAFILE_SIZE))
       else:
-        subCommand = ("ALTER TABLESPACE %s ADD datafile '%s%s_data_file_%d.dat' INITIAL_SIZE = %s  ENGINE ndbcluster" % (TS_NAME, TS_NAME, disk, fileIndex, DATAFILE_SIZE))
+        subCommand = ("ALTER TABLESPACE %s ADD datafile '%s%s_data_file_%d.dat' INITIAL_SIZE = %s  ENGINE ndbcluster" % (TS_NAME, disk, TS_NAME, fileIndex, DATAFILE_SIZE))
       executeSQLCommand(subCommand)
 
   #Create Table
@@ -119,7 +119,7 @@ def drop():
       if disk and not disk.endswith('/'):
         disk+="/"
 
-      subCommand = ("ALTER TABLESPACE %s drop datafile '%s%s_data_file_%d.dat' ENGINE ndbcluster" % (TS_NAME, TS_NAME, disk, fileIndex))
+      subCommand = ("ALTER TABLESPACE %s drop datafile '%s%s_data_file_%d.dat' ENGINE ndbcluster" % (TS_NAME, disk, TS_NAME, fileIndex))
       executeSQLCommand(subCommand)
 
   subCommand = ("DROP TABLESPACE %s ENGINE ndbcluster"%(TS_NAME))
