@@ -57,25 +57,24 @@ public class HopsExceptionHelper {
   }
 
   private static boolean isTupleAlreadyExisted(ClusterJException e) {
-    return isExceptionContains(e, "code 630");
+    return isExceptionContains(e, 630);
   }
 
   private static boolean isForeignKeyConstraintViolation(ClusterJException e){
-    return isExceptionContains(e, "code 255");
+    return isExceptionContains(e, 255);
   }
 
   private static boolean isUniqueKeyConstraintViolation(ClusterJException e){
-    return isExceptionContains(e, "code 893");
+    return isExceptionContains(e, 893);
   }
 
   private static boolean isOutOfDBExtents(ClusterJException e){
-    return isExceptionContains(e, "code 1601");
+    return isExceptionContains(e, 1601);
   }
 
-  private static boolean isExceptionContains(ClusterJException e, String
-      checkString){
+  private static boolean isExceptionContains(ClusterJException e, int code){
     if (e instanceof  ClusterJDatastoreException) {
-      if (e.getMessage().contains(checkString)) {
+      if (((ClusterJDatastoreException)e).getCode() == code) {
         return true;
       }
     }
