@@ -166,6 +166,11 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
       connector.closeSession();
     }
   }
+  
+  @Override
+  public void returnSession(boolean error) throws StorageException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
 
   @Override
   public void beginTransaction() throws StorageException {
