@@ -118,11 +118,14 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     return dbSession.getSession();
   }
 
-  private void returnSession(boolean error) throws StorageException {
+  @Override
+  public void returnSession(boolean error) throws StorageException {
     DBSession dbSession = sessions.get();
-    sessions.remove(); // remove, and return to the pool
-    dbSessionProvider.returnSession(dbSession,
-        error); // if there was an error then close the session
+    if (dbSession != null) {
+      sessions.remove(); // remove, and return to the pool
+      dbSessionProvider.returnSession(dbSession,
+          error); // if there was an error then close the session
+    }
   }
 
   /**
