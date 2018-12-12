@@ -61,6 +61,11 @@ public class UnderReplicatedBlockClusterj
         .countWithCriterion(TABLE_NAME, String.format("%s<%d", LEVEL, level));
   }
 
+  public int countReplOneBlocks(int level) throws StorageException {
+    return MySQLQueryHelper
+        .countWithCriterion(TABLE_NAME, String.format("%s=%d and %s=1", LEVEL, level, EXPECTEDREPLICAS));
+  }
+  
   @PersistenceCapable(table = TABLE_NAME)
   @PartitionKey(column = INODE_ID)
   @Index(name = "level")
@@ -87,6 +92,11 @@ public class UnderReplicatedBlockClusterj
     long getTimestamp();
 
     void setTimestamp(long timestamp);
+    
+    @Column(name = EXPECTEDREPLICAS)
+    int getExpectedReplicas();
+    
+    void setExpectedReplicas(int expectedReplicas);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -151,13 +161,14 @@ public class UnderReplicatedBlockClusterj
     persistable.setLevel(block.getLevel());
     persistable.setINodeId(block.getInodeId());
     persistable.setTimestamp(System.currentTimeMillis());
+    persistable.setExpectedReplicas(block.getExpectedReplicas());
   }
 
   private UnderReplicatedBlock convertAndRelease(HopsSession session,
       UnderReplicatedBlocksDTO bit) throws StorageException {
     UnderReplicatedBlock block =
         new UnderReplicatedBlock(bit.getLevel(), bit.getBlockId(),
-            bit.getINodeId());
+            bit.getINodeId(), bit.getExpectedReplicas());
     session.release(bit);
     return block;
   }
