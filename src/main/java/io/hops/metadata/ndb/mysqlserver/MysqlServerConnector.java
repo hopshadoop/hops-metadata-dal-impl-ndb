@@ -332,7 +332,7 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
   
   public static boolean hasResources(final double threshold) throws StorageException {
     return MySQLQueryHelper.execute("SELECT memory_type, used, total FROM " +
-            "ndbinfo.memoryusage",
+            "ndbinfo.memoryusage where memory_type = \"Data memory\"",
         new MySQLQueryHelper.ResultSetHandler<Boolean>() {
           @Override
           public Boolean handle(ResultSet result)
