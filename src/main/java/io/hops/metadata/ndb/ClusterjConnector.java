@@ -448,7 +448,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             session.currentTransaction().begin();
             session.deletePersistentAll(VariableClusterj.VariableDTO.class);
             for (Variable.Finder varType : Variable.Finder.values()) {
-              LOG.info("write varialbe " + varType.name() + " with id " + varType.getId());
+              LOG.debug("write varialbe " + varType.name() + " with id " + varType.getId());
               VariableClusterj.VariableDTO vd =
                   session.newInstance(VariableClusterj.VariableDTO.class);
               vd.setId(varType.getId());
