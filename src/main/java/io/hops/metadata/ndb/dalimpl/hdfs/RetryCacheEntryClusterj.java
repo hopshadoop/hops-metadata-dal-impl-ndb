@@ -21,10 +21,15 @@ package io.hops.metadata.ndb.dalimpl.hdfs;
 import com.mysql.clusterj.annotation.*;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
+import static io.hops.metadata.hdfs.TablesDef.SafeBlocksTableDef.TABLE_NAME;
 import io.hops.metadata.hdfs.dal.RetryCacheEntryDataAccess;
 import io.hops.metadata.hdfs.entity.RetryCacheEntry;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.mysqlserver.HopsSQLExceptionHelper;
+import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
+import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
 import io.hops.metadata.ndb.wrapper.*;
+import java.sql.SQLException;
 
 import java.util.*;
 
@@ -116,6 +121,21 @@ public class RetryCacheEntryClusterj
     HopsQuery<RetryCacheEntryDTO> query = session.createQuery(dobj);
     query.setParameter("ExpirationTime", time);
     query.deletePersistentAll();
+  }
+
+  @Override
+  public void removeAll() throws StorageException {
+    try {
+      while (countAll() != 0) {
+        MysqlServerConnector.truncateTable(TABLE_NAME, 10000);
+      }
+    } catch (SQLException ex) {
+      throw HopsSQLExceptionHelper.wrap(ex);
+    }
+  }
+  
+  private int countAll() throws StorageException {
+    return MySQLQueryHelper.countAll(TABLE_NAME);
   }
 
   private RetryCacheEntry convert(RetryCacheEntryDTO result) {
