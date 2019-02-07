@@ -58,6 +58,13 @@ public class YarnLeaderClusterj extends LeDescriptorClusterj
     String getHttpAddress();
 
     void setHttpAddress(String httpAddress);
+  
+    @Column(name = LOCATION_DOMAIN_ID)
+    @Override
+    byte getLocationDomainId();
+  
+    @Override
+    void setLocationDomainId(byte domainId);
 
   }
 
@@ -67,7 +74,8 @@ public class YarnLeaderClusterj extends LeDescriptorClusterj
       throw new InvalidParameterException("Psrtition key should be zero");
     }
     return new LeDescriptor.YarnLeDescriptor(lTable.getId(),
-        lTable.getCounter(), lTable.getHostname(), lTable.getHttpAddress());
+        lTable.getCounter(), lTable.getHostname(), lTable.getHttpAddress(),
+        lTable.getLocationDomainId());
   }
 
   public YarnLeaderClusterj() {

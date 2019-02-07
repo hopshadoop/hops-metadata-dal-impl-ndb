@@ -68,6 +68,13 @@ public class HdfsLeaderClusterj extends LeDescriptorClusterj
 
     @Override
     void setHttpAddress(String httpAddress);
+    
+    @Column(name = LOCATION_DOMAIN_ID)
+    @Override
+    byte getLocationDomainId();
+    
+    @Override
+    void setLocationDomainId(byte domainId);
   }
 
   @Override
@@ -76,7 +83,8 @@ public class HdfsLeaderClusterj extends LeDescriptorClusterj
       throw new InvalidParameterException("Psrtition key should be zero");
     }
     return new LeDescriptor.HdfsLeDescriptor(lTable.getId(),
-        lTable.getCounter(), lTable.getHostname(), lTable.getHttpAddress());
+        lTable.getCounter(), lTable.getHostname(), lTable.getHttpAddress(),
+        lTable.getLocationDomainId());
   }
 
   public HdfsLeaderClusterj() {
