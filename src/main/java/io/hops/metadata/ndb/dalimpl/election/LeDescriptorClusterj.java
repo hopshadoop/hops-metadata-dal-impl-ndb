@@ -61,6 +61,10 @@ public abstract class LeDescriptorClusterj
     String getHttpAddress();
 
     void setHttpAddress(String httpAddress);
+    
+    byte getLocationDomainId();
+    
+    void setLocationDomainId(byte domainId);
   }
 
   public LeDescriptorClusterj(Class dto) {
@@ -146,5 +150,6 @@ public abstract class LeDescriptorClusterj
     lTable.setHostname(leader.getRpcAddresses());
     lTable.setHttpAddress(leader.getHttpAddress());
     lTable.setPartitionVal(leader.getPartitionVal());
+    lTable.setLocationDomainId(leader.getLocationDomainId());
   }
 }
