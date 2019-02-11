@@ -105,6 +105,17 @@ public class ActiveBlockReportsClusterj implements TablesDef.ActiveBlockReports,
     return convertAndRelease(session, query.getResultList());
   }
 
+  @Override
+  public ActiveBlockReport getActiveBlockReport(ActiveBlockReport abr) throws StorageException{
+    HopsSession session = connector.obtainSession();
+    ActiveBlockReportDTO dto = session.find(ActiveBlockReportDTO.class, abr.getDnAddress());
+    ActiveBlockReport result = null;
+    if(dto!=null){
+      result = convertAndRelease(session, dto);
+    }
+    return result;
+  }
+  
   private List<ActiveBlockReport> convertAndRelease(HopsSession session,
                                                     Collection<ActiveBlockReportDTO> dtos) throws
           StorageException {
