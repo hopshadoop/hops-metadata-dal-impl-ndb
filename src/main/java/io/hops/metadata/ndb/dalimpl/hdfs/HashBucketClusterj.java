@@ -51,9 +51,9 @@ public class HashBucketClusterj
     void setBucketId(int bucketId);
     
     @Column(name = HASH)
-    long getHash();
+    byte[] getHash();
 
-    void setHash(long hash);
+    void setHash(byte[] hash);
   }
 
   @Override
