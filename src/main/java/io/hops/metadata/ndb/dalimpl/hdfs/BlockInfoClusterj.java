@@ -351,7 +351,7 @@ public class BlockInfoClusterj
     for(Integer sid: sids){
       Object[] pk = new Object[]{inodeId, blockId, sid};
       ReplicaClusterj.ReplicaDTO dto = session.newInstance(ReplicaClusterj.ReplicaDTO.class, pk);
-      dto.setHashBucket(NOT_FOUND_ROW);
+      dto.setBucketId(NOT_FOUND_ROW);
       dto = session.load(dto);
       dtos.add(dto);
       
@@ -359,7 +359,7 @@ public class BlockInfoClusterj
     session.flush();
     boolean exist = false;
     for(ReplicaClusterj.ReplicaDTO dto: dtos){
-      if(dto.getHashBucket()!=NOT_FOUND_ROW){
+      if(dto.getBucketId()!=NOT_FOUND_ROW){
         exist = true;
         break;
       }
