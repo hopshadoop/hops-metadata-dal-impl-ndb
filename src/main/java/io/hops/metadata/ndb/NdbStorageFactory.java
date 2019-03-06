@@ -93,7 +93,8 @@ public class NdbStorageFactory implements DalStorageFactory {
       MysqlServerConnector.getInstance().setConfiguration(conf);
       initDataAccessMap();
     } catch (IOException ex) {
-      throw new StorageInitializtionException(ex);
+      //ClusterJ dumps username and password in the exception
+      throw new StorageInitializtionException("Error getting connection to cluster");
     }
   }
 
