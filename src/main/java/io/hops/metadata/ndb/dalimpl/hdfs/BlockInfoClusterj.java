@@ -95,6 +95,16 @@ public class BlockInfoClusterj
     long getBlockRecoveryId();
 
     void setBlockRecoveryId(long recoveryId);
+    
+    @Column(name = TRUNCATE_BLOCK_NUM_BYTES)
+    long getTruncateBlockNumBytes();
+
+    void setTruncateBlockNumBytes(long numBytes);
+    
+    @Column(name = TRUNCATE_BLOCK_GENERATION_STAMP)
+    long getTruncateBlockGenerationBlock();
+
+    void setTruncateBlockGenerationBlock(long generationStamp);
   }
   private ClusterjConnector connector = ClusterjConnector.getInstance();
   private final static int NOT_FOUND_ROW = -1000;
@@ -398,7 +408,8 @@ public class BlockInfoClusterj
             new BlockInfo(bDTO.getBlockId(), bDTO.getBlockIndex(),
             bDTO.getINodeId(), bDTO.getNumBytes(), bDTO.getGenerationStamp(),
             bDTO.getBlockUCState(), bDTO.getTimestamp(),
-            bDTO.getPrimaryNodeIndex(), bDTO.getBlockRecoveryId());
+            bDTO.getPrimaryNodeIndex(), bDTO.getBlockRecoveryId(),
+            bDTO.getTruncateBlockNumBytes(), bDTO.getTruncateBlockGenerationBlock());
     return hopBlockInfo;
   }
 
@@ -413,5 +424,7 @@ public class BlockInfoClusterj
     persistable.setBlockUCState(block.getBlockUCState());
     persistable.setPrimaryNodeIndex(block.getPrimaryNodeIndex());
     persistable.setBlockRecoveryId(block.getBlockRecoveryId());
+    persistable.setTruncateBlockNumBytes(block.getTruncateBlockNumBytes());
+    persistable.setTruncateBlockGenerationBlock(block.getTruncateBlockGenerationStamp());
   }
 }
