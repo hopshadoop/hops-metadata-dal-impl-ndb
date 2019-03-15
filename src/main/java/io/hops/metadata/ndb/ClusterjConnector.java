@@ -253,8 +253,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       cls = ReplicaUnderConstructionClusterj.ReplicaUcDTO.class;
     } else if (className == INodeDataAccess.class) {
       cls = INodeClusterj.InodeDTO.class;
-    } else if (className == INodeAttributesDataAccess.class) {
-      cls = INodeAttributesClusterj.INodeAttributesDTO.class;
+    } else if (className == DirectoryWithQuotaFeatureDataAccess.class) {
+      cls = DirectoryWithQuotaFeatureClusterj.INodeAttributesDTO.class;
     } else if (className == LeaseDataAccess.class) {
       cls = LeaseClusterj.LeaseDTO.class;
     } else if (className == LeasePathDataAccess.class) {
@@ -353,7 +353,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         InvalidateBlockDataAccess.class, ExcessReplicaDataAccess.class,
         PendingBlockDataAccess.class, CorruptReplicaDataAccess.class,
         UnderReplicatedBlockDataAccess.class, HdfsLeDescriptorDataAccess.class,
-        INodeAttributesDataAccess.class, StorageIdMapDataAccess.class,
+        DirectoryWithQuotaFeatureDataAccess.class, StorageIdMapDataAccess.class,
         BlockLookUpDataAccess.class, SafeBlocksDataAccess.class,
         MisReplicatedRangeQueueDataAccess.class, QuotaUpdateDataAccess.class,
         EncodingStatusDataAccess.class, BlockChecksumDataAccess.class,
@@ -440,9 +440,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
           } else if (e == HdfsLeDescriptorDataAccess.class) {
             MysqlServerConnector
                 .truncateTable(transactional, TablesDef.HdfsLeaderTableDef.TABLE_NAME);
-          } else if (e == INodeAttributesDataAccess.class) {
+          } else if (e == DirectoryWithQuotaFeatureDataAccess.class) {
             MysqlServerConnector.truncateTable(transactional,
-                io.hops.metadata.hdfs.TablesDef.INodeAttributesTableDef.TABLE_NAME);
+                io.hops.metadata.hdfs.TablesDef.DirectoryWithQuotaFeatureTableDef.TABLE_NAME);
           } else if (e == VariableDataAccess.class) {
             HopsSession session = obtainSession();
             session.currentTransaction().begin();
