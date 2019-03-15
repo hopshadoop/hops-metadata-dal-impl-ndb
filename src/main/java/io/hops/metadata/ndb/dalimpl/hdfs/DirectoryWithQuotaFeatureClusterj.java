@@ -23,8 +23,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
-import io.hops.metadata.hdfs.dal.INodeAttributesDataAccess;
-import io.hops.metadata.hdfs.entity.INodeAttributes;
+import io.hops.metadata.hdfs.entity.DirectoryWithQuotaFeature;
 import io.hops.metadata.hdfs.entity.INodeCandidatePrimaryKey;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.wrapper.HopsSession;
@@ -32,10 +31,14 @@ import io.hops.metadata.ndb.wrapper.HopsSession;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import io.hops.metadata.hdfs.dal.DirectoryWithQuotaFeatureDataAccess;
+import io.hops.metadata.hdfs.entity.QuotaUpdate;
+import java.util.HashMap;
+import java.util.Map;
 
-public class INodeAttributesClusterj implements
-    TablesDef.INodeAttributesTableDef,
-    INodeAttributesDataAccess<INodeAttributes> {
+public class DirectoryWithQuotaFeatureClusterj implements
+    TablesDef.DirectoryWithQuotaFeatureTableDef,
+    DirectoryWithQuotaFeatureDataAccess<DirectoryWithQuotaFeature> {
 
   @PersistenceCapable(table = TABLE_NAME)
   public interface INodeAttributesDTO {
@@ -65,16 +68,56 @@ public class INodeAttributesClusterj implements
     long getDiskspace();
 
     void setDiskspace(long diskspace);
+    
+    @Column(name = TYPESPACE_QUOTA_DISK)
+    long getTypeSpaceQuotaDisk();
+    
+    void setTypeSpaceQuotaDisk(long quota);
+    
+    @Column(name = TYPESPACE_QUOTA_SSD)
+    long getTypeSpaceQuotaSSD();
+    
+    void setTypeSpaceQuotaSSD(long quota);
+    
+    @Column(name = TYPESPACE_QUOTA_RAID5)
+    long getTypeSpaceQuotaRaid5();
+    
+    void setTypeSpaceQuotaRaid5(long quota);
+    
+    @Column(name = TYPESPACE_QUOTA_ARCHIVE)
+    long getTypeSpaceQuotaArchive();
+    
+    void setTypeSpaceQuotaArchive(long quota);
+    
+    @Column(name = TYPESPACE_USED_DISK)
+    long getTypeSpaceUsedDisk();
+    
+    void setTypeSpaceUsedDisk(long used);
+    
+    @Column(name = TYPESPACE_USED_SSD)
+    long getTypeSpaceUsedSSD();
+    
+    void setTypeSpaceUsedSSD(long used);
+    
+    @Column(name = TYPESPACE_USED_RAID5)
+    long getTypeSpaceUsedRaid5();
+    
+    void setTypeSpaceUsedRaid5(long used);
+    
+    @Column(name = TYPESPACE_USED_ARCHIVE)
+    long getTypeSpaceUsedArchive();
+    
+    void setTypeSpaceUsedArchive(long used);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
 
   @Override
-  public INodeAttributes findAttributesByPk(Long inodeId)
+  public DirectoryWithQuotaFeature findAttributesByPk(Long inodeId)
       throws StorageException {
     HopsSession session = connector.obtainSession();
     INodeAttributesDTO dto = session.find(INodeAttributesDTO.class, inodeId);
-    INodeAttributes iNodeAttributes =  null;
+    DirectoryWithQuotaFeature iNodeAttributes =  null;
     if(dto != null){
         iNodeAttributes = makeINodeAttributes(dto);
         session.release(dto);
@@ -83,10 +126,10 @@ public class INodeAttributesClusterj implements
   }
   
   @Override
-  public Collection<INodeAttributes> findAttributesByPkList(
+  public Collection<DirectoryWithQuotaFeature> findAttributesByPkList(
       List<INodeCandidatePrimaryKey> inodePks) throws StorageException {
     HopsSession session = connector.obtainSession();
-    List<INodeAttributes> inodeAttributesBatchResponse =
+    List<DirectoryWithQuotaFeature> inodeAttributesBatchResponse =
         new ArrayList<>();
     List<INodeAttributesDTO> inodeAttributesBatchRequest =
         new ArrayList<>();
@@ -113,21 +156,21 @@ public class INodeAttributesClusterj implements
   }
 
   @Override
-  public void prepare(Collection<INodeAttributes> modified,
-      Collection<INodeAttributes> removed) throws StorageException {
+  public void prepare(Collection<DirectoryWithQuotaFeature> modified,
+      Collection<DirectoryWithQuotaFeature> removed) throws StorageException {
     HopsSession session = connector.obtainSession();
     List<INodeAttributesDTO> changes = new ArrayList<>();
     List<INodeAttributesDTO> deletions = new ArrayList<>();
     try {
       if (removed != null) {
-        for (INodeAttributes attr : removed) {
+        for (DirectoryWithQuotaFeature attr : removed) {
           INodeAttributesDTO persistable =
                   session.newInstance(INodeAttributesDTO.class, attr.getInodeId());
           deletions.add(persistable);
         }
       }
       if (modified != null) {
-        for (INodeAttributes attr : modified) {
+        for (DirectoryWithQuotaFeature attr : modified) {
           INodeAttributesDTO persistable = createPersistable(attr, session);
           changes.add(persistable);
         }
@@ -140,24 +183,44 @@ public class INodeAttributesClusterj implements
     }
   }
 
-  private INodeAttributesDTO createPersistable(INodeAttributes attribute,
+  private INodeAttributesDTO createPersistable(DirectoryWithQuotaFeature dir,
       HopsSession session) throws StorageException {
     INodeAttributesDTO dto = session.newInstance(INodeAttributesDTO.class);
-    dto.setId(attribute.getInodeId());
-    dto.setNSQuota(attribute.getNsQuota());
-    dto.setNSCount(attribute.getNsCount());
-    dto.setDSQuota(attribute.getDsQuota());
-    dto.setDiskspace(attribute.getDiskspace());
+    dto.setId(dir.getInodeId());
+    dto.setNSQuota(dir.getNsQuota());
+    dto.setNSCount(dir.getNsUsed());
+    dto.setDSQuota(dir.getDsQuota());
+    dto.setDiskspace(dir.getDsUsed());
+    dto.setTypeSpaceQuotaDisk(dir.getTypeQuota().get(QuotaUpdate.StorageType.DISK));
+    dto.setTypeSpaceQuotaSSD(dir.getTypeQuota().get(QuotaUpdate.StorageType.SSD));
+    dto.setTypeSpaceQuotaRaid5(dir.getTypeQuota().get(QuotaUpdate.StorageType.RAID5));
+    dto.setTypeSpaceQuotaArchive(dir.getTypeQuota().get(QuotaUpdate.StorageType.ARCHIVE));
+    dto.setTypeSpaceUsedDisk(dir.getTypeUsed().get(QuotaUpdate.StorageType.DISK));
+    dto.setTypeSpaceUsedSSD(dir.getTypeUsed().get(QuotaUpdate.StorageType.SSD));
+    dto.setTypeSpaceUsedRaid5(dir.getTypeUsed().get(QuotaUpdate.StorageType.RAID5));
+    dto.setTypeSpaceUsedArchive(dir.getTypeUsed().get(QuotaUpdate.StorageType.ARCHIVE));
     return dto;
   }
 
-  private INodeAttributes makeINodeAttributes(INodeAttributesDTO dto) {
+  private DirectoryWithQuotaFeature makeINodeAttributes(INodeAttributesDTO dto) {
     if (dto == null) {
       return null;
     }
-    INodeAttributes iNodeAttributes =
-        new INodeAttributes(dto.getId(), dto.getNSQuota(), dto.getNSCount(),
-            dto.getDSQuota(), dto.getDiskspace());
-    return iNodeAttributes;
+    Map<QuotaUpdate.StorageType, Long> typeQuota = new HashMap<>();
+    typeQuota.put(QuotaUpdate.StorageType.DISK, dto.getTypeSpaceQuotaDisk());
+    typeQuota.put(QuotaUpdate.StorageType.SSD, dto.getTypeSpaceQuotaSSD());
+    typeQuota.put(QuotaUpdate.StorageType.RAID5, dto.getTypeSpaceQuotaRaid5());
+    typeQuota.put(QuotaUpdate.StorageType.ARCHIVE, dto.getTypeSpaceQuotaArchive());
+    
+    Map<QuotaUpdate.StorageType, Long> typeUsed = new HashMap<>();
+    typeUsed.put(QuotaUpdate.StorageType.DISK, dto.getTypeSpaceUsedDisk());
+    typeUsed.put(QuotaUpdate.StorageType.SSD, dto.getTypeSpaceUsedSSD());
+    typeUsed.put(QuotaUpdate.StorageType.RAID5, dto.getTypeSpaceUsedRaid5());
+    typeUsed.put(QuotaUpdate.StorageType.ARCHIVE, dto.getTypeSpaceUsedArchive());
+    
+    DirectoryWithQuotaFeature dir =
+        new DirectoryWithQuotaFeature(dto.getId(), dto.getNSQuota(), dto.getNSCount(),
+            dto.getDSQuota(), dto.getDiskspace(), typeQuota, typeUsed);
+    return dir;
   }
 }

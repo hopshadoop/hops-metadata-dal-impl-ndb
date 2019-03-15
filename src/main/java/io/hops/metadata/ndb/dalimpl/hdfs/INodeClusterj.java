@@ -762,7 +762,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setIsDir(NdbBoolean.convert(inode.isDirectory()));
     persistable.setPartitionId(inode.getPartitionId());
     persistable.setLogicalTime(inode.getLogicalTime());
-    persistable.setStoragePolicy(inode.getStoragePolicy());
+    persistable.setStoragePolicy(inode.getStoragePolicyID());
     persistable.setChildrenNum(inode.getChildrenNum());
     persistable.setNumAces(inode.getNumAces());
   }

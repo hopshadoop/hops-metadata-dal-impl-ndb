@@ -41,7 +41,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class QuotaUpdateClusterj
     implements TablesDef.QuotaUpdateTableDef, QuotaUpdateDataAccess<QuotaUpdate> {
@@ -70,6 +72,26 @@ public class QuotaUpdateClusterj
     long getDiskspaceDelta();
 
     void setDiskspaceDelta(long diskspaceDelta);
+    
+    @Column(name = TYPESPACE_DELTA_DISK)
+    long getTypeSpaceDeltaDisk();
+    
+    void setTypeSpaceDeltaDisk(long delta);
+    
+    @Column(name = TYPESPACE_DELTA_SSD)
+    long getTypeSpaceDeltaSSD();
+    
+    void setTypeSpaceDeltaSSD(long delta);
+    
+    @Column(name = TYPESPACE_DELTA_RAID5)
+    long getTypeSpaceDeltaRaid5();
+    
+    void setTypeSpaceDeltaRaid5(long delta);
+    
+    @Column(name = TYPESPACE_DELTA_ARCHIVE)
+    long getTypeSpaceDeltaArchive();
+    
+    void setTypeSpaceDeltaArchive(long delta);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -120,8 +142,13 @@ public class QuotaUpdateClusterj
         int inodeId = result.getInt(INODE_ID);
         int namespaceDelta = result.getInt(NAMESPACE_DELTA);
         long diskspaceDelta = result.getLong(DISKSPACE_DELTA);
+        Map<QuotaUpdate.StorageType, Long> typeSpaceDelta = new HashMap<>();
+        typeSpaceDelta.put(QuotaUpdate.StorageType.DISK, result.getLong(TYPESPACE_DELTA_DISK));
+        typeSpaceDelta.put(QuotaUpdate.StorageType.SSD, result.getLong(TYPESPACE_DELTA_SSD));
+        typeSpaceDelta.put(QuotaUpdate.StorageType.RAID5, result.getLong(TYPESPACE_DELTA_RAID5));
+        typeSpaceDelta.put(QuotaUpdate.StorageType.ARCHIVE, result.getLong(TYPESPACE_DELTA_ARCHIVE));
         resultList
-            .add(new QuotaUpdate(id, inodeId, namespaceDelta, diskspaceDelta));
+            .add(new QuotaUpdate(id, inodeId, namespaceDelta, diskspaceDelta, typeSpaceDelta));
       }
     } catch (SQLException ex) {
       throw HopsSQLExceptionHelper.wrap(ex);
@@ -138,6 +165,10 @@ public class QuotaUpdateClusterj
     dto.setInodeId(update.getInodeId());
     dto.setNamespaceDelta(update.getNamespaceDelta());
     dto.setDiskspaceDelta(update.getDiskspaceDelta());
+    dto.setTypeSpaceDeltaDisk(update.getTypeSpaces().get(QuotaUpdate.StorageType.DISK));
+    dto.setTypeSpaceDeltaSSD(update.getTypeSpaces().get(QuotaUpdate.StorageType.SSD));
+    dto.setTypeSpaceDeltaRaid5(update.getTypeSpaces().get(QuotaUpdate.StorageType.RAID5));
+    dto.setTypeSpaceDeltaArchive(update.getTypeSpaces().get(QuotaUpdate.StorageType.ARCHIVE));
     return dto;
   }
 
@@ -145,8 +176,13 @@ public class QuotaUpdateClusterj
       List<QuotaUpdateDTO> list) throws StorageException {
     List<QuotaUpdate> result = new ArrayList<>();
     for (QuotaUpdateDTO dto : list) {
+      Map<QuotaUpdate.StorageType, Long> typeSpaceDelta = new HashMap<>();
+      typeSpaceDelta.put(QuotaUpdate.StorageType.DISK, dto.getTypeSpaceDeltaDisk());
+      typeSpaceDelta.put(QuotaUpdate.StorageType.SSD, dto.getTypeSpaceDeltaSSD());
+      typeSpaceDelta.put(QuotaUpdate.StorageType.RAID5, dto.getTypeSpaceDeltaRaid5());
+      typeSpaceDelta.put(QuotaUpdate.StorageType.ARCHIVE, dto.getTypeSpaceDeltaArchive());
       result.add(new QuotaUpdate(dto.getId(), dto.getInodeId(),
-          dto.getNamespaceDelta(), dto.getDiskspaceDelta()));
+          dto.getNamespaceDelta(), dto.getDiskspaceDelta(), typeSpaceDelta));
       session.release(dto);
     }
     return result;
