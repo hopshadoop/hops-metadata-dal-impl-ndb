@@ -54,20 +54,20 @@ public class DirectoryWithQuotaFeatureClusterj implements
 
     void setNSQuota(long nsquota);
 
-    @Column(name = DSQUOTA)
-    long getDSQuota();
+    @Column(name = SSQUOTA)
+    long getSSQuota();
 
-    void setDSQuota(long dsquota);
+    void setSSQuota(long dsquota);
 
     @Column(name = NSCOUNT)
     long getNSCount();
 
     void setNSCount(long nscount);
 
-    @Column(name = DISKSPACE)
-    long getDiskspace();
+    @Column(name = STORAGESPACE)
+    long getStorageSpace();
 
-    void setDiskspace(long diskspace);
+    void setStorageSpace(long storageSpace);
     
     @Column(name = TYPESPACE_QUOTA_DISK)
     long getTypeSpaceQuotaDisk();
@@ -189,8 +189,8 @@ public class DirectoryWithQuotaFeatureClusterj implements
     dto.setId(dir.getInodeId());
     dto.setNSQuota(dir.getNsQuota());
     dto.setNSCount(dir.getNsUsed());
-    dto.setDSQuota(dir.getDsQuota());
-    dto.setDiskspace(dir.getDsUsed());
+    dto.setSSQuota(dir.getSSQuota());
+    dto.setStorageSpace(dir.getSSUsed());
     dto.setTypeSpaceQuotaDisk(dir.getTypeQuota().get(QuotaUpdate.StorageType.DISK));
     dto.setTypeSpaceQuotaSSD(dir.getTypeQuota().get(QuotaUpdate.StorageType.SSD));
     dto.setTypeSpaceQuotaRaid5(dir.getTypeQuota().get(QuotaUpdate.StorageType.RAID5));
@@ -220,7 +220,7 @@ public class DirectoryWithQuotaFeatureClusterj implements
     
     DirectoryWithQuotaFeature dir =
         new DirectoryWithQuotaFeature(dto.getId(), dto.getNSQuota(), dto.getNSCount(),
-            dto.getDSQuota(), dto.getDiskspace(), typeQuota, typeUsed);
+            dto.getSSQuota(), dto.getStorageSpace(), typeQuota, typeUsed);
     return dir;
   }
 }

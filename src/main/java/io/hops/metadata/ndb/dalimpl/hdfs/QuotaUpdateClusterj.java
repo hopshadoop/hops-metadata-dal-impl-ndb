@@ -68,10 +68,10 @@ public class QuotaUpdateClusterj
 
     void setNamespaceDelta(long namespaceDelta);
 
-    @Column(name = DISKSPACE_DELTA)
-    long getDiskspaceDelta();
+    @Column(name = STORAGE_SPACE_DELTA)
+    long getStorageSpaceDelta();
 
-    void setDiskspaceDelta(long diskspaceDelta);
+    void setStorageSpaceDelta(long StorageSpaceDelta);
     
     @Column(name = TYPESPACE_DELTA_DISK)
     long getTypeSpaceDeltaDisk();
@@ -141,7 +141,7 @@ public class QuotaUpdateClusterj
         int id = result.getInt(ID);
         int inodeId = result.getInt(INODE_ID);
         int namespaceDelta = result.getInt(NAMESPACE_DELTA);
-        long diskspaceDelta = result.getLong(DISKSPACE_DELTA);
+        long diskspaceDelta = result.getLong(STORAGE_SPACE_DELTA);
         Map<QuotaUpdate.StorageType, Long> typeSpaceDelta = new HashMap<>();
         typeSpaceDelta.put(QuotaUpdate.StorageType.DISK, result.getLong(TYPESPACE_DELTA_DISK));
         typeSpaceDelta.put(QuotaUpdate.StorageType.SSD, result.getLong(TYPESPACE_DELTA_SSD));
@@ -164,7 +164,7 @@ public class QuotaUpdateClusterj
     dto.setId(update.getId());
     dto.setInodeId(update.getInodeId());
     dto.setNamespaceDelta(update.getNamespaceDelta());
-    dto.setDiskspaceDelta(update.getDiskspaceDelta());
+    dto.setStorageSpaceDelta(update.getStorageSpaceDelta());
     dto.setTypeSpaceDeltaDisk(update.getTypeSpaces().get(QuotaUpdate.StorageType.DISK));
     dto.setTypeSpaceDeltaSSD(update.getTypeSpaces().get(QuotaUpdate.StorageType.SSD));
     dto.setTypeSpaceDeltaRaid5(update.getTypeSpaces().get(QuotaUpdate.StorageType.RAID5));
@@ -182,7 +182,7 @@ public class QuotaUpdateClusterj
       typeSpaceDelta.put(QuotaUpdate.StorageType.RAID5, dto.getTypeSpaceDeltaRaid5());
       typeSpaceDelta.put(QuotaUpdate.StorageType.ARCHIVE, dto.getTypeSpaceDeltaArchive());
       result.add(new QuotaUpdate(dto.getId(), dto.getInodeId(),
-          dto.getNamespaceDelta(), dto.getDiskspaceDelta(), typeSpaceDelta));
+          dto.getNamespaceDelta(), dto.getStorageSpaceDelta(), typeSpaceDelta));
       session.release(dto);
     }
     return result;

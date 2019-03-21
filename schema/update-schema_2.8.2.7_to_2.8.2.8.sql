@@ -45,3 +45,9 @@ ALTER TABLE `hdfs_quota_update` ADD COLUMN `typespace_delta_archive` bigint(20) 
 ALTER TABLE `yarn_applicationstate` MODIFY COLUMN `appstate` longblob NULL;
 
 ALTER TABLE `yarn_applicationattemptstate` MODIFY COLUMN `applicationattemptstate` longblob NULL;
+
+ALTER TABLE `hdfs_quota_update` CHANGE `diskspace_delta` `storage_space_delta` bigint(20);
+
+ALTER TABLE `hdfs_directory_with_quota_feature` CHANGE `dsquota` `ssquota` bigint(20);
+
+ALTER TABLE `hdfs_directory_with_quota_feature` CHANGE `diskspace` `storage_space` bigint(20);
