@@ -41,3 +41,7 @@ ALTER TABLE `hdfs_quota_update` ADD COLUMN `typespace_delta_ssd` bigint(20) NOT 
 ALTER TABLE `hdfs_quota_update` ADD COLUMN `typespace_delta_raid5` bigint(20) NOT NULL DEFAULT '-1';
 
 ALTER TABLE `hdfs_quota_update` ADD COLUMN `typespace_delta_archive` bigint(20) NOT NULL DEFAULT '-1';
+
+ALTER TABLE `yarn_applicationstate` MODIFY COLUMN `appstate` longblob NULL;
+
+ALTER TABLE `yarn_applicationattemptstate` MODIFY COLUMN `applicationattemptstate` longblob NULL;
