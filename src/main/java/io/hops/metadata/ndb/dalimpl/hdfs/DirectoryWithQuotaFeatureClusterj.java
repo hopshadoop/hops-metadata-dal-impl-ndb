@@ -88,7 +88,12 @@ public class DirectoryWithQuotaFeatureClusterj implements
     long getTypeSpaceQuotaArchive();
     
     void setTypeSpaceQuotaArchive(long quota);
-    
+
+    @Column(name = TYPESPACE_QUOTA_DB)
+    long getTypeSpaceQuotaDb();
+
+    void setTypeSpaceQuotaDb(long quota);
+
     @Column(name = TYPESPACE_USED_DISK)
     long getTypeSpaceUsedDisk();
     
@@ -108,6 +113,11 @@ public class DirectoryWithQuotaFeatureClusterj implements
     long getTypeSpaceUsedArchive();
     
     void setTypeSpaceUsedArchive(long used);
+
+    @Column(name = TYPESPACE_USED_DB)
+    long getTypeSpaceUsedDb();
+
+    void setTypeSpaceUsedDb(long used);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -191,14 +201,19 @@ public class DirectoryWithQuotaFeatureClusterj implements
     dto.setNSCount(dir.getNsUsed());
     dto.setSSQuota(dir.getSSQuota());
     dto.setStorageSpace(dir.getSSUsed());
+
     dto.setTypeSpaceQuotaDisk(dir.getTypeQuota().get(QuotaUpdate.StorageType.DISK));
     dto.setTypeSpaceQuotaSSD(dir.getTypeQuota().get(QuotaUpdate.StorageType.SSD));
     dto.setTypeSpaceQuotaRaid5(dir.getTypeQuota().get(QuotaUpdate.StorageType.RAID5));
     dto.setTypeSpaceQuotaArchive(dir.getTypeQuota().get(QuotaUpdate.StorageType.ARCHIVE));
+    dto.setTypeSpaceQuotaDb(dir.getTypeQuota().get(QuotaUpdate.StorageType.DB));
+
     dto.setTypeSpaceUsedDisk(dir.getTypeUsed().get(QuotaUpdate.StorageType.DISK));
     dto.setTypeSpaceUsedSSD(dir.getTypeUsed().get(QuotaUpdate.StorageType.SSD));
     dto.setTypeSpaceUsedRaid5(dir.getTypeUsed().get(QuotaUpdate.StorageType.RAID5));
     dto.setTypeSpaceUsedArchive(dir.getTypeUsed().get(QuotaUpdate.StorageType.ARCHIVE));
+    dto.setTypeSpaceUsedDb(dir.getTypeUsed().get(QuotaUpdate.StorageType.DB));
+
     return dto;
   }
 
@@ -211,13 +226,15 @@ public class DirectoryWithQuotaFeatureClusterj implements
     typeQuota.put(QuotaUpdate.StorageType.SSD, dto.getTypeSpaceQuotaSSD());
     typeQuota.put(QuotaUpdate.StorageType.RAID5, dto.getTypeSpaceQuotaRaid5());
     typeQuota.put(QuotaUpdate.StorageType.ARCHIVE, dto.getTypeSpaceQuotaArchive());
-    
+    typeQuota.put(QuotaUpdate.StorageType.DB, dto.getTypeSpaceQuotaDb());
+
     Map<QuotaUpdate.StorageType, Long> typeUsed = new HashMap<>();
     typeUsed.put(QuotaUpdate.StorageType.DISK, dto.getTypeSpaceUsedDisk());
     typeUsed.put(QuotaUpdate.StorageType.SSD, dto.getTypeSpaceUsedSSD());
     typeUsed.put(QuotaUpdate.StorageType.RAID5, dto.getTypeSpaceUsedRaid5());
     typeUsed.put(QuotaUpdate.StorageType.ARCHIVE, dto.getTypeSpaceUsedArchive());
-    
+    typeUsed.put(QuotaUpdate.StorageType.DB, dto.getTypeSpaceUsedDb());
+
     DirectoryWithQuotaFeature dir =
         new DirectoryWithQuotaFeature(dto.getId(), dto.getNSQuota(), dto.getNSCount(),
             dto.getSSQuota(), dto.getStorageSpace(), typeQuota, typeUsed);

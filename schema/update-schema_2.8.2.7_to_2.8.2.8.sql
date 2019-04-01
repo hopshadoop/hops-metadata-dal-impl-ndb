@@ -22,6 +22,8 @@ ALTER TABLE `hdfs_directory_with_quota_feature` ADD COLUMN `typespace_quota_raid
 
 ALTER TABLE `hdfs_directory_with_quota_feature` ADD COLUMN `typespace_quota_archive` bigint(20) NOT NULL DEFAULT '-1';
 
+ALTER TABLE `hdfs_directory_with_quota_feature` ADD COLUMN `typespace_quota_db` bigint(20) NOT NULL DEFAULT '-1';
+
 ALTER TABLE `hdfs_directory_with_quota_feature` ADD COLUMN `typespace_used_disk` bigint(20) NOT NULL DEFAULT '-1';
 
 ALTER TABLE `hdfs_directory_with_quota_feature` ADD COLUMN `typespace_used_ssd` bigint(20) NOT NULL DEFAULT '-1';
@@ -30,6 +32,8 @@ ALTER TABLE `hdfs_directory_with_quota_feature` ADD COLUMN `typespace_used_raid5
 
 ALTER TABLE `hdfs_directory_with_quota_feature` ADD COLUMN `typespace_used_archive` bigint(20) NOT NULL DEFAULT '-1';
 
+ALTER TABLE `hdfs_directory_with_quota_feature` ADD COLUMN `typespace_used_db` bigint(20) NOT NULL DEFAULT '-1';
+
 ALTER TABLE `hdfs_quota_update` ADD COLUMN `typespace_delta_disk` bigint(20) NOT NULL DEFAULT '-1';
 
 ALTER TABLE `hdfs_quota_update` ADD COLUMN `typespace_delta_ssd` bigint(20) NOT NULL DEFAULT '-1';
@@ -37,6 +41,8 @@ ALTER TABLE `hdfs_quota_update` ADD COLUMN `typespace_delta_ssd` bigint(20) NOT 
 ALTER TABLE `hdfs_quota_update` ADD COLUMN `typespace_delta_raid5` bigint(20) NOT NULL DEFAULT '-1';
 
 ALTER TABLE `hdfs_quota_update` ADD COLUMN `typespace_delta_archive` bigint(20) NOT NULL DEFAULT '-1';
+
+ALTER TABLE `hdfs_quota_update` ADD COLUMN `typespace_delta_db` bigint(20) NOT NULL DEFAULT '-1';
 
 ALTER TABLE `yarn_applicationstate` MODIFY COLUMN `appstate` longblob NULL;
 
