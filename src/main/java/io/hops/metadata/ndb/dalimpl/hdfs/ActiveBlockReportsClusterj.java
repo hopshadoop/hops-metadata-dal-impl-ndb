@@ -54,6 +54,10 @@ public class ActiveBlockReportsClusterj implements TablesDef.ActiveBlockReports,
     long getNnId();
     void setNnId(long nnId);
 
+    @Column(name = NN_ADDRESS)
+    String getNnAddress();
+    void setNnAddress(String nnAddress);
+
     @Column(name = START_TIME)
     long getStartTime();
     void setStartTime(long startTime);
@@ -91,6 +95,7 @@ public class ActiveBlockReportsClusterj implements TablesDef.ActiveBlockReports,
     ActiveBlockReportDTO dto = session.newInstance(ActiveBlockReportDTO.class);
     dto.setDnAddress(abr.getDnAddress());
     dto.setNnId(abr.getNnId());
+    dto.setNnAddress(abr.getNnAddress());
     dto.setStartTime(abr.getStartTime());
     dto.setNumBlocks(abr.getNumBlocks());
     return dto;
@@ -115,10 +120,10 @@ public class ActiveBlockReportsClusterj implements TablesDef.ActiveBlockReports,
     }
     return result;
   }
-  
+
   private List<ActiveBlockReport> convertAndRelease(HopsSession session,
-                                                    Collection<ActiveBlockReportDTO> dtos) throws
-          StorageException {
+                                                    Collection<ActiveBlockReportDTO> dtos)
+          throws StorageException {
     List<ActiveBlockReport> list = new ArrayList<>();
     for (ActiveBlockReportDTO dto : dtos) {
       list.add(convertAndRelease(session, dto));
@@ -126,11 +131,10 @@ public class ActiveBlockReportsClusterj implements TablesDef.ActiveBlockReports,
     return list;
   }
 
-
-  private ActiveBlockReport convertAndRelease(HopsSession session,
-                                              ActiveBlockReportDTO abrDto) throws StorageException {
-    ActiveBlockReport abr = new ActiveBlockReport(abrDto.getDnAddress(),
-            abrDto.getNnId(), abrDto.getStartTime(), abrDto.getNumBlocks() );
+  private ActiveBlockReport convertAndRelease(HopsSession session, ActiveBlockReportDTO abrDto)
+          throws StorageException {
+    ActiveBlockReport abr = new ActiveBlockReport(abrDto.getDnAddress(), abrDto.getNnId(),
+            abrDto.getNnAddress(), abrDto.getStartTime(), abrDto.getNumBlocks() );
     session.release(abrDto);
     return abr;
   }

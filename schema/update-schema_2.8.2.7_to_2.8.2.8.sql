@@ -64,3 +64,5 @@ ALTER TABLE `hdfs_metadata_log` CHANGE `inode_parent_id` `pk2` bigint(20);
 ALTER TABLE `hdfs_metadata_log` CHANGE `inode_name` `pk3` varchar(255) COLLATE latin1_general_cs NOT NULL DEFAULT '';
 
 ALTER TABLE `yarn_applicationattemptstate` DROP FOREIGN KEY `applicationid`;
+
+ALTER TABLE hdfs_active_block_reports ADD (`nn_address` varchar(128) COLLATE latin1_general_cs NOT NULL);
