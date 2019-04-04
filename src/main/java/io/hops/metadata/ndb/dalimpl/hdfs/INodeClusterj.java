@@ -18,7 +18,6 @@
  */
 package io.hops.metadata.ndb.dalimpl.hdfs;
 
-import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.mysql.clusterj.LockMode;
 import com.mysql.clusterj.annotation.Column;
@@ -46,10 +45,7 @@ import io.hops.transaction.context.EntityContext;
 
 import java.util.*;
 
-import static io.hops.transaction.context.EntityContext.LockMode.*;
-
 public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<INode> {
-//  static final Logger LOG = Logger.getLogger(INodeClusterj.class);
   @Override
   public int countAll() throws StorageException {
     return MySQLQueryHelper.countAll(TABLE_NAME);
@@ -211,7 +207,12 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         createPersistable(inode, persistable);
         changes.add(persistable);
       }
-      session.deletePersistentAll(deletions);
+
+      if(!deletions.isEmpty()) {
+        session.deletePersistentAll(deletions);
+        session.flush();
+      }
+
       session.savePersistentAll(changes);
     }finally {
       session.release(deletions);
