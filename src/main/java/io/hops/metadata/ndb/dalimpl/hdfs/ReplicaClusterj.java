@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ReplicaClusterj
     implements TablesDef.ReplicaTableDef, ReplicaDataAccess<Replica> {
@@ -201,7 +202,7 @@ public class ReplicaClusterj
       int sId, List<Integer> mismatchedBuckets) throws StorageException {
     HopsSession session = connector.obtainSession();
 
-    Map<Long, Long> results = new HashMap<>();
+    Map<Long, Long> results = new ConcurrentHashMap<>();
     if (mismatchedBuckets.size() > 0){
       HopsQueryBuilder qb = session.getQueryBuilder();
       HopsQueryDomainType<ReplicaDTO> dobj = qb.createQueryDefinition(ReplicaDTO.class);
