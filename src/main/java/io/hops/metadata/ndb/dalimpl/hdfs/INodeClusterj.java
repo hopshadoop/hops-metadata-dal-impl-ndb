@@ -30,7 +30,7 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.INodeDataAccess;
 import io.hops.metadata.hdfs.entity.INode;
 import io.hops.metadata.hdfs.entity.INodeIdentifier;
-import io.hops.metadata.hdfs.entity.MetadataLogEntry;
+import io.hops.metadata.hdfs.entity.INodeMetadataLogEntry;
 import io.hops.metadata.hdfs.entity.ProjectedINode;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.NdbBoolean;
@@ -177,6 +177,10 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     @Column(name = NUM_ACES)
     int getNumAces();
     void setNumAces(int numAces);
+  
+    @Column(name = NUM_XATTRS)
+    byte getNumXAttrs();
+    void setNumXAttrs(byte numXAttrs);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -382,7 +386,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
               inode.getSize(),
               inode.getLogicalTime(),
               inode.getStoragePolicy(),
-              inode.getNumAces());
+              inode.getNumAces(),
+              inode.getNumXAttrs());
   }
 //  public List<ProjectedINode> findInodesForSubtreeOperationsWithWriteLockFTIS(
 //      int parentId) throws StorageException {
@@ -680,10 +685,10 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   }
 
   @Override
-  public void updateLogicalTime(Collection<MetadataLogEntry> logEntries)
+  public void updateLogicalTime(Collection<INodeMetadataLogEntry> logEntries)
       throws StorageException {
     HopsSession session = connector.obtainSession();
-    for(MetadataLogEntry logEntry : logEntries){
+    for(INodeMetadataLogEntry logEntry : logEntries){
       InodeDTO inodeDTO = createPersistable(session, logEntry);
       session.savePersistent(inodeDTO);
       session.release(inodeDTO);
@@ -696,12 +701,12 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     return MySQLQueryHelper.countWithCriterion(TablesDef.INodeTableDef.TABLE_NAME, query);
   }
 
-  private InodeDTO createPersistable(HopsSession session, MetadataLogEntry
+  private InodeDTO createPersistable(HopsSession session, INodeMetadataLogEntry
       logEntry) throws StorageException {
     InodeDTO inodeDTO = session.newInstance(InodeDTO.class);
-    inodeDTO.setPartitionId(logEntry.getInodePartitionId());
-    inodeDTO.setParentId(logEntry.getInodeParentId());
-    inodeDTO.setName(logEntry.getInodeName());
+    inodeDTO.setPartitionId(logEntry.getPartitionId());
+    inodeDTO.setParentId(logEntry.getParentId());
+    inodeDTO.setName(logEntry.getName());
     inodeDTO.setLogicalTime(logEntry.getLogicalTime());
     return inodeDTO;
   }
@@ -738,7 +743,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         NdbBoolean.convert(persistable.getMetaEnabled()),
         persistable.getSize(), NdbBoolean.convert(persistable
         .getFileStoredInDd()), persistable.getLogicalTime(),
-        persistable.getStoragePolicy(), persistable.getChildrenNum(), persistable.getNumAces());
+        persistable.getStoragePolicy(), persistable.getChildrenNum(),
+        persistable.getNumAces(), persistable.getNumXAttrs());
 
     return node;
   }
@@ -770,6 +776,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setStoragePolicy(inode.getStoragePolicyID());
     persistable.setChildrenNum(inode.getChildrenNum());
     persistable.setNumAces(inode.getNumAces());
+    persistable.setNumXAttrs(inode.getNumXAttrs());
   }
 
   private void explain(HopsQuery<InodeDTO> query) {

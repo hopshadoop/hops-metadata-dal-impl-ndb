@@ -22,8 +22,10 @@ import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
+import io.hops.exception.UnknownMetadataOperationType;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.MetadataLogDataAccess;
+import io.hops.metadata.hdfs.entity.INodeMetadataLogEntry;
 import io.hops.metadata.hdfs.entity.MetadataLogEntry;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.wrapper.HopsPredicate;
@@ -60,20 +62,20 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
 
     void setLogicalTime(int logicalTime);
 
-    @Column(name = INODE_PARTITION_ID)
-    long getInodePartitionId();
+    @Column(name = PK1)
+    long getPk1();
 
-    void setInodePartitionId(long inodePartitionId);
+    void setPk1(long pk1);
 
-    @Column(name = INODE_PARENT_ID)
-    long getInodeParentId();
+    @Column(name = PK2)
+    long getPk2();
 
-    void setInodeParentId(long inodeParentId);
+    void setPk2(long pk2);
 
-    @Column(name = INODE_NAME)
-    String getInodeName();
+    @Column(name = PK3)
+    String getPk3();
 
-    void setInodeName(String inodeName);
+    void setPk3(String pk3);
 
     @Column(name = OPERATION)
     short getOperation();
@@ -108,13 +110,18 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     try {
       for (MetadataLogEntry logEntry : logEntries) {
         added.add(createPersistable(logEntry));
-        DatasetINodeLookupDTO lookupDTO = createLookupPersistable(logEntry);
-        if (logEntry.getOperation() == MetadataLogEntry.Operation.ADD) {
-          newLookupDTOS.add(lookupDTO);
-        } else if (logEntry.getOperation() ==
-            MetadataLogEntry.Operation.DELETE) {
-          session.deletePersistent(lookupDTO);
-          session.release(lookupDTO);
+        
+        if(INodeMetadataLogEntry.isValidOperation(logEntry.getOperationId())) {
+          INodeMetadataLogEntry iNodeLogEntry =
+              (INodeMetadataLogEntry) logEntry;
+          DatasetINodeLookupDTO lookupDTO = createLookupPersistable(logEntry);
+          if (iNodeLogEntry.getOperation() == INodeMetadataLogEntry.Operation.Add) {
+            newLookupDTOS.add(lookupDTO);
+          } else if (iNodeLogEntry.getOperation() ==
+              INodeMetadataLogEntry.Operation.Delete) {
+            session.deletePersistent(lookupDTO);
+            session.release(lookupDTO);
+          }
         }
       }
 
@@ -133,15 +140,19 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     DatasetINodeLookupDTO lookupDTO = null;
     try {
       dto = createPersistable(metadataLogEntry);
-      lookupDTO = createLookupPersistable(metadataLogEntry);
-
       session.makePersistent(dto);
-
-      if (metadataLogEntry.getOperation() == MetadataLogEntry.Operation.ADD) {
-        session.savePersistent(lookupDTO);
-      } else if (metadataLogEntry.getOperation() ==
-          MetadataLogEntry.Operation.DELETE) {
-        session.deletePersistent(lookupDTO);
+      
+      if(INodeMetadataLogEntry.isValidOperation(metadataLogEntry.getOperationId())) {
+        lookupDTO = createLookupPersistable(metadataLogEntry);
+        
+        INodeMetadataLogEntry iNodeMetadataLogEntry =
+            (INodeMetadataLogEntry) metadataLogEntry;
+        if (iNodeMetadataLogEntry.getOperation() == INodeMetadataLogEntry.Operation.Add) {
+          session.savePersistent(lookupDTO);
+        } else if (iNodeMetadataLogEntry.getOperation() ==
+            INodeMetadataLogEntry.Operation.Delete) {
+          session.deletePersistent(lookupDTO);
+        }
       }
     }finally {
       session.release(dto);
@@ -155,11 +166,11 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     MetadataLogEntryDto dto = session.newInstance(MetadataLogEntryDto.class);
     dto.setDatasetId(logEntry.getDatasetId());
     dto.setInodeId(logEntry.getInodeId());
-    dto.setInodePartitionId(logEntry.getInodePartitionId());
-    dto.setInodeParentId(logEntry.getInodeParentId());
-    dto.setInodeName(logEntry.getInodeName());
+    dto.setPk1(logEntry.getPk1());
+    dto.setPk2(logEntry.getPk2());
+    dto.setPk3(logEntry.getPk3());
     dto.setLogicalTime(logEntry.getLogicalTime());
-    dto.setOperation(logEntry.getOperationOrdinal());
+    dto.setOperation(logEntry.getOperationId());
     return dto;
   }
 
@@ -191,7 +202,8 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
   }
 
   private Collection<MetadataLogEntry> createCollection(
-      Collection<MetadataLogEntryDto> collection) {
+      Collection<MetadataLogEntryDto> collection)
+      throws UnknownMetadataOperationType {
     ArrayList<MetadataLogEntry> list =
         new ArrayList<>(collection.size());
     for (MetadataLogEntryDto dto : collection) {
@@ -200,38 +212,15 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     return list;
   }
 
-  private MetadataLogEntry createMetadataLogEntry(MetadataLogEntryDto dto) {
-    return new MetadataLogEntry(
+  private MetadataLogEntry createMetadataLogEntry(MetadataLogEntryDto dto)
+      throws UnknownMetadataOperationType {
+    return MetadataLogEntry.newEntry(
         dto.getDatasetId(),
         dto.getInodeId(),
-        dto.getInodePartitionId(),
-        dto.getInodeParentId(),
-        dto.getInodeName(),
         dto.getLogicalTime(),
-        MetadataLogEntry.Operation.values()[dto.getOperation()]);
-  }
-
-  @Override
-  public Collection<MetadataLogEntry> readExisting(
-      Collection<MetadataLogEntry> logEntries) throws StorageException {
-    HopsSession session = connector.obtainSession();
-    final ArrayList<MetadataLogEntryDto> dtos =
-        new ArrayList<>();
-    try {
-      for (MetadataLogEntry logEntry : logEntries) {
-        Object[] pk =
-            new Object[]{logEntry.getDatasetId(), logEntry.getInodeId(),
-                logEntry.getLogicalTime()};
-        MetadataLogEntryDto dto =
-            session.newInstance(MetadataLogEntryDto.class, pk);
-        dto = session.load(dto);
-        dtos.add(dto);
-      }
-      session.flush();
-      Collection<MetadataLogEntry> mlel = createCollection(dtos);
-      return mlel;
-    }finally {
-      session.release(dtos);
-    }
+        dto.getPk1(),
+        dto.getPk2(),
+        dto.getPk3(),
+        dto.getOperation());
   }
 }
