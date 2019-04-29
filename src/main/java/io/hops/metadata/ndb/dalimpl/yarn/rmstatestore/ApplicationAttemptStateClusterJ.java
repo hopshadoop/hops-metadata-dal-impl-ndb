@@ -23,6 +23,7 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.wrapper.HopsPredicate;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
@@ -86,6 +87,22 @@ public class ApplicationAttemptStateClusterJ
     return result;
   }
 
+  @Override
+  public List<ApplicationAttemptState> getByAppId(String appId) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<ApplicationAttemptStateDTO> dobj = qb.
+        createQueryDefinition(ApplicationAttemptStateDTO.class);
+    HopsPredicate pred1 = dobj.get("applicationid").equal(dobj.param("applicationid"));
+    HopsQuery<ApplicationAttemptStateDTO> query = session.createQuery(dobj);
+    query.setParameter("applicationid", appId);
+    List<ApplicationAttemptStateDTO> queryResults = query.getResultList();
+
+    List<ApplicationAttemptState> result = createList(queryResults);
+    session.release(queryResults);
+    return result;
+  }
+  
   @Override
   public void add(ApplicationAttemptState entry)
       throws StorageException {
@@ -164,5 +181,14 @@ public class ApplicationAttemptStateClusterJ
       map.get(hop.getApplicationId()).add(hop);
     }
     return map;
+  }
+  
+  private List<ApplicationAttemptState> createList(List<ApplicationAttemptStateDTO> results) throws StorageException {
+    List<ApplicationAttemptState> list = new ArrayList<>();
+    for (ApplicationAttemptStateDTO persistable : results) {
+      ApplicationAttemptState hop = createHopApplicationAttemptState(persistable);
+      list.add(hop);
+    }
+    return list;
   }
 }
