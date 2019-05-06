@@ -25,7 +25,11 @@ import io.hops.exception.*;
 public class HopsExceptionHelper {
   public static StorageException wrap(ClusterJException e) {
     if (isTransient(e)) {
-      return new TransientStorageException(e);
+      if(isDeadLockException(e)){
+        return new TransientDeadLockException(e);
+      }else {
+        return new TransientStorageException(e);
+      }
     } else if (isTupleAlreadyExisted(e)) {
       return new TupleAlreadyExistedException(e);
     } else if(isForeignKeyConstraintViolation(e)){
@@ -70,6 +74,10 @@ public class HopsExceptionHelper {
 
   private static boolean isOutOfDBExtents(ClusterJException e){
     return isExceptionContains(e, 1601);
+  }
+
+  private static boolean isDeadLockException(ClusterJException e){
+    return isExceptionContains(e, 266);
   }
 
   private static boolean isExceptionContains(ClusterJException e, int code){
