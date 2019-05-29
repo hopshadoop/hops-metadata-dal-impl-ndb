@@ -48,7 +48,7 @@ fi
 cd clusterj-native
 git pull
 rm src/main/resources/libndbclient.so*
-cp $BLD/library_output_directory/libndbclient.so* src/main/resources/
+cp $BLD/storage/ndb/src/libndbclient.so* src/main/resources/
 sed -i "0,/<version>.*<\/version>/s//<version>$V<\/version>/g" pom.xml
 
 git commit -am "Upgrade to $V"
