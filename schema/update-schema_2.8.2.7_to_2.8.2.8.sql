@@ -72,3 +72,11 @@ ALTER TABLE `hdfs_metadata_log` CHANGE `inode_parent_id` `pk2` bigint(20);
 ALTER TABLE `hdfs_metadata_log` CHANGE `inode_name` `pk3` varchar(255) COLLATE latin1_general_cs NOT NULL DEFAULT '';
 
 ALTER TABLE hdfs_active_block_reports ADD (`nn_address` varchar(128) COLLATE latin1_general_cs NOT NULL);
+
+ALTER TABLE `hdfs_on_going_sub_tree_ops` ADD COLUMN `start_time` bigint(20) NOT NULL;
+
+ALTER TABLE `hdfs_on_going_sub_tree_ops` ADD COLUMN `async_lock_recovery_time` bigint(20) NOT NULL DEFAULT '0';
+
+ALTER TABLE `hdfs_on_going_sub_tree_ops` ADD COLUMN `user` varchar(256) NOT NULL DEFAULT '';
+
+ALTER TABLE `hdfs_on_going_sub_tree_ops` ADD COLUMN `inode_id` bigint(20) NOT NULL DEFAULT '0';

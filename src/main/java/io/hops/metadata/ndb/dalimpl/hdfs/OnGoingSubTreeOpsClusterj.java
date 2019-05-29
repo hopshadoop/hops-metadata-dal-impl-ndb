@@ -61,6 +61,23 @@ public class OnGoingSubTreeOpsClusterj
     @Column(name = OP_NAME)
     int getOpName();
     void setOpName(int namenodeId);
+
+    @Column(name = START_TIME)
+    long getStartTime();
+    void setStartTime(long startTime);
+
+    //time asyn recovery enabled
+    @Column(name = ASYNC_LOCK_RECOVERY_TIME)
+    long getAsyncLockRecoveryTime();
+    void setAsyncLockRecoveryTime(long asyncLockRecoveryTime);
+
+    @Column(name = USER)
+    String getUser();
+    void setUser(String user);
+
+    @Column(name = INODE_ID)
+    long getInodeId();
+    void setInodeId(long inodeId);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -118,6 +135,21 @@ public class OnGoingSubTreeOpsClusterj
   }
 
   @Override
+  public Collection<SubTreeOperation> allOpsToRecoverAsync()
+          throws StorageException {
+
+    HopsSession dbSession = connector.obtainSession();
+    HopsQueryBuilder qb = dbSession.getQueryBuilder();
+    HopsQueryDomainType dobj = qb.createQueryDefinition(OnGoingSubTreeOpsDTO.class);
+    HopsPredicate pred = dobj.get("asyncLockRecoveryTime")
+            .greaterThan(dobj.param("asyncLockRecoveryTimeParam"));
+    dobj.where(pred);
+    HopsQuery query = dbSession.createQuery(dobj);
+    query.setParameter("asyncLockRecoveryTimeParam", (long)0);
+    return convertAndRelease(dbSession, query.getResultList());
+  }
+
+  @Override
   public Collection<SubTreeOperation> allOpsByNN(long nnID)
           throws StorageException {
 
@@ -129,6 +161,23 @@ public class OnGoingSubTreeOpsClusterj
     HopsQuery query = dbSession.createQuery(dobj);
     query.setParameter("namenodeIdParam", nnID);
     return convertAndRelease(dbSession, query.getResultList());
+  }
+
+  @Override
+  public SubTreeOperation findByPath(String path) throws StorageException {
+    HopsSession session = connector.obtainSession();
+
+    Object[] pk = new Object[2];
+    pk[0] = getHash(path);
+    pk[1] = path;
+
+    OnGoingSubTreeOpsDTO result = session.find(OnGoingSubTreeOpsDTO.class, pk);
+    if (result != null) {
+      SubTreeOperation op = convertAndRelease(session, result);
+      return op;
+    } else {
+      return null;
+    }
   }
 
   @Override
@@ -161,8 +210,9 @@ public class OnGoingSubTreeOpsClusterj
   private SubTreeOperation convertAndRelease(HopsSession session,
       OnGoingSubTreeOpsDTO opsDto) throws StorageException {
     SubTreeOperation subTreeOperation = new SubTreeOperation(opsDto.getPath(),
-        opsDto.getNamenodeId(),SubTreeOperation.Type.values()
-        [opsDto.getOpName()] );
+        opsDto.getInodeId(), opsDto.getNamenodeId(), SubTreeOperation.Type.values()
+        [opsDto.getOpName()], opsDto.getStartTime(),
+            opsDto.getUser(), opsDto.getAsyncLockRecoveryTime());
     session.release(opsDto);
     return subTreeOperation;
   }
@@ -173,6 +223,10 @@ public class OnGoingSubTreeOpsClusterj
     opDto.setPartitionId(getHash(op.getPath()));
     opDto.setNamenodeId(op.getNameNodeId());
     opDto.setOpName(op.getOpType().ordinal());
+    opDto.setStartTime(op.getStartTime());
+    opDto.setUser(op.getUser());
+    opDto.setAsyncLockRecoveryTime(op.getAsyncLockRecoveryTime());
+    opDto.setInodeId(op.getInodeID());
   }
 
   private static int getHash(String path){
