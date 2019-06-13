@@ -122,7 +122,7 @@ public class MySQLQueryHelper {
     return executeLongAggrQuery(query.toString());
   }
   
-  private static int executeIntAggrQuery(final String query)
+  public static int executeIntAggrQuery(final String query)
       throws StorageException {
     return execute(query, new ResultSetHandler<Integer>() {
       @Override
