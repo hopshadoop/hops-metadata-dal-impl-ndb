@@ -79,4 +79,14 @@ public class MediumOnDiskFileInodeClusterj
   public int count() throws StorageException {
     return MySQLQueryHelper.countAll(TABLE_NAME);
   }
+
+  @Override
+  public int getLength() throws StorageException {
+    String query = "SELECT character_maximum_length  FROM information_schema.columns  " +
+            "WHERE   table_schema =  Database() AND " +
+            "table_name =\""+TABLE_NAME+"\" AND " +
+            "column_name = \""+DATA+"\"";
+
+    return MySQLQueryHelper.executeIntAggrQuery(query);
+  }
 }
