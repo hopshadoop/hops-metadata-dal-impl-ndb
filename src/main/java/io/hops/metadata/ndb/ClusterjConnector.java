@@ -36,6 +36,7 @@ import io.hops.metadata.ndb.dalimpl.hdfs.*;
 import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.ndb.wrapper.HopsTransaction;
+import io.hops.metadata.yarn.dal.AppProvenanceDataAccess;
 import io.hops.metadata.yarn.dal.quota.PriceMultiplicatorDataAccess;
 import io.hops.metadata.yarn.dal.quota.ProjectQuotaDataAccess;
 import io.hops.metadata.yarn.dal.quota.ProjectsDailyCostDataAccess;
@@ -324,7 +325,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     return format(transactional, YarnLeDescriptorDataAccess.class, ApplicationStateDataAccess.class,
         ApplicationAttemptStateDataAccess.class, DelegationKeyDataAccess.class, DelegationTokenDataAccess.class,
         ProjectQuotaDataAccess.class, ProjectsDailyCostDataAccess.class, PriceMultiplicatorDataAccess.class,
-        ReservationStateDataAccess.class, ConfMutationDataAccess.class, ConfDataAccess.class);
+        ReservationStateDataAccess.class, ConfMutationDataAccess.class, ConfDataAccess.class, 
+        AppProvenanceDataAccess.class);
   }
   
   private boolean formatHDFS(boolean transactional) throws StorageException{
@@ -349,7 +351,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         HashBucketDataAccess.class, StorageDataAccess.class,
         AceDataAccess.class, RetryCacheEntryDataAccess.class, CacheDirectiveDataAccess.class,
         CachePoolDataAccess.class, CachedBlockDataAccess.class,
-        ActiveBlockReportsDataAccess.class, XAttrDataAccess.class, EncryptionZoneDataAccess.class);
+        ActiveBlockReportsDataAccess.class, XAttrDataAccess.class, EncryptionZoneDataAccess.class,
+        FileProvenanceDataAccess.class, FileProvXAttrBufferDataAccess.class);
   }
   
   private boolean formatAll(boolean transactional) throws StorageException {
@@ -534,6 +537,10 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.yarn.TablesDef.ConfTableDef.TABLE_NAME);
           } else if (e == EncryptionZoneDataAccess.class){
             truncate(transactional, io.hops.metadata.hdfs.TablesDef.EncryptionZones.TABLE_NAME);
+          } else if (e == FileProvenanceDataAccess.class) {
+            truncate(transactional, io.hops.metadata.hdfs.TablesDef.FileProvenanceTableDef.TABLE_NAME);
+          }  else if (e == FileProvXAttrBufferDataAccess.class) {
+            truncate(transactional, io.hops.metadata.hdfs.TablesDef.FileProvXAttrBufferTableDef.TABLE_NAME);
           }
         }
         MysqlServerConnector.truncateTable(transactional,

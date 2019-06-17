@@ -745,7 +745,7 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         persistable.getHeader(), persistable.getSymlink(),
         NdbBoolean.convert(persistable.getSubtreeLocked()),
         persistable.getSubtreeLockOwner(),
-        NdbBoolean.convert(persistable.getMetaEnabled()),
+        persistable.getMetaEnabled(),
         persistable.getSize(), NdbBoolean.convert(persistable
         .getFileStoredInDd()), persistable.getLogicalTime(),
         persistable.getStoragePolicy(), persistable.getChildrenNum(),
@@ -773,8 +773,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setSymlink(inode.getSymlink());
     persistable.setSubtreeLocked(NdbBoolean.convert(inode.isSubtreeLocked()));
     persistable.setSubtreeLockOwner(inode.getSubtreeLockOwner());
-    persistable.setMetaEnabled(NdbBoolean.convert(inode.isMetaEnabled()));
     persistable.setSize(inode.getFileSize());
+    persistable.setMetaEnabled(inode.getMetaStatus().getVal());
     persistable.setFileStoredInDd(NdbBoolean.convert(inode.isFileStoredInDB()));
     persistable.setIsDir(NdbBoolean.convert(inode.isDirectory()));
     persistable.setPartitionId(inode.getPartitionId());
