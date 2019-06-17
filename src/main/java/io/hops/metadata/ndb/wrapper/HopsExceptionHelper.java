@@ -43,7 +43,12 @@ public class HopsExceptionHelper {
     }
   }
 
-  private static boolean isTransient(ClusterJException e) {
+  private static boolean isTransient(ClusterJException ex) {
+    ClusterJException e = ex;
+    if (!(e instanceof ClusterJDatastoreException) && e.getCause() != null
+        && e.getCause() instanceof ClusterJDatastoreException) {
+      e = (ClusterJException) e.getCause();
+    }
     if (e instanceof ClusterJDatastoreException) {
       // http://dev.mysql.com/doc/ndbapi/en/ndb-error-classifications.html
       // The classifications can be found in ndberror.h and ndberror.c in the ndb sources

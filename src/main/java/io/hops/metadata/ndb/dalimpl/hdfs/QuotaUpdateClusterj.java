@@ -97,6 +97,11 @@ public class QuotaUpdateClusterj
     long getTypeSpaceDeltaDb();
 
     void setTypeSpaceDeltaDb(long delta);
+    
+    @Column(name = TYPESPACE_DELTA_PROVIDED)
+    long getTypeSpaceDeltaProvided();
+
+    void setTypeSpaceDeltaProvided(long delta);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -153,6 +158,7 @@ public class QuotaUpdateClusterj
         typeSpaceDelta.put(QuotaUpdate.StorageType.RAID5, result.getLong(TYPESPACE_DELTA_RAID5));
         typeSpaceDelta.put(QuotaUpdate.StorageType.ARCHIVE, result.getLong(TYPESPACE_DELTA_ARCHIVE));
         typeSpaceDelta.put(QuotaUpdate.StorageType.DB, result.getLong(TYPESPACE_DELTA_DB));
+        typeSpaceDelta.put(QuotaUpdate.StorageType.PROVIDED, result.getLong(TYPESPACE_DELTA_PROVIDED));
         resultList
             .add(new QuotaUpdate(id, inodeId, namespaceDelta, diskspaceDelta, typeSpaceDelta));
       }
@@ -176,6 +182,7 @@ public class QuotaUpdateClusterj
     dto.setTypeSpaceDeltaRaid5(update.getTypeSpaces().get(QuotaUpdate.StorageType.RAID5));
     dto.setTypeSpaceDeltaArchive(update.getTypeSpaces().get(QuotaUpdate.StorageType.ARCHIVE));
     dto.setTypeSpaceDeltaDb(update.getTypeSpaces().get(QuotaUpdate.StorageType.DB));
+    dto.setTypeSpaceDeltaProvided(update.getTypeSpaces().get(QuotaUpdate.StorageType.PROVIDED));
     return dto;
   }
 
@@ -189,6 +196,7 @@ public class QuotaUpdateClusterj
       typeSpaceDelta.put(QuotaUpdate.StorageType.RAID5, dto.getTypeSpaceDeltaRaid5());
       typeSpaceDelta.put(QuotaUpdate.StorageType.ARCHIVE, dto.getTypeSpaceDeltaArchive());
       typeSpaceDelta.put(QuotaUpdate.StorageType.DB, dto.getTypeSpaceDeltaDb());
+      typeSpaceDelta.put(QuotaUpdate.StorageType.PROVIDED, dto.getTypeSpaceDeltaProvided());
       result.add(new QuotaUpdate(dto.getId(), dto.getInodeId(),
           dto.getNamespaceDelta(), dto.getStorageSpaceDelta(), typeSpaceDelta));
       session.release(dto);

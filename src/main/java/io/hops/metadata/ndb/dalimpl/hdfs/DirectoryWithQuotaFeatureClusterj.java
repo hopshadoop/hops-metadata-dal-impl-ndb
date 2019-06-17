@@ -23,6 +23,8 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
+import static io.hops.metadata.hdfs.TablesDef.DirectoryWithQuotaFeatureTableDef.TYPESPACE_QUOTA_DB;
+import static io.hops.metadata.hdfs.TablesDef.DirectoryWithQuotaFeatureTableDef.TYPESPACE_USED_DB;
 import io.hops.metadata.hdfs.entity.DirectoryWithQuotaFeature;
 import io.hops.metadata.hdfs.entity.INodeCandidatePrimaryKey;
 import io.hops.metadata.ndb.ClusterjConnector;
@@ -93,6 +95,11 @@ public class DirectoryWithQuotaFeatureClusterj implements
     long getTypeSpaceQuotaDb();
 
     void setTypeSpaceQuotaDb(long quota);
+    
+    @Column(name = TYPESPACE_QUOTA_PROVIDED)
+    long getTypeSpaceQuotaProvided();
+
+    void setTypeSpaceQuotaProvided(long quota);
 
     @Column(name = TYPESPACE_USED_DISK)
     long getTypeSpaceUsedDisk();
@@ -118,6 +125,11 @@ public class DirectoryWithQuotaFeatureClusterj implements
     long getTypeSpaceUsedDb();
 
     void setTypeSpaceUsedDb(long used);
+    
+    @Column(name = TYPESPACE_USED_PROVIDED)
+    long getTypeSpaceUsedProvided();
+
+    void setTypeSpaceUsedProvided(long used);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -207,12 +219,14 @@ public class DirectoryWithQuotaFeatureClusterj implements
     dto.setTypeSpaceQuotaRaid5(dir.getTypeQuota().get(QuotaUpdate.StorageType.RAID5));
     dto.setTypeSpaceQuotaArchive(dir.getTypeQuota().get(QuotaUpdate.StorageType.ARCHIVE));
     dto.setTypeSpaceQuotaDb(dir.getTypeQuota().get(QuotaUpdate.StorageType.DB));
+    dto.setTypeSpaceQuotaProvided(dir.getTypeQuota().get(QuotaUpdate.StorageType.PROVIDED));
 
     dto.setTypeSpaceUsedDisk(dir.getTypeUsed().get(QuotaUpdate.StorageType.DISK));
     dto.setTypeSpaceUsedSSD(dir.getTypeUsed().get(QuotaUpdate.StorageType.SSD));
     dto.setTypeSpaceUsedRaid5(dir.getTypeUsed().get(QuotaUpdate.StorageType.RAID5));
     dto.setTypeSpaceUsedArchive(dir.getTypeUsed().get(QuotaUpdate.StorageType.ARCHIVE));
     dto.setTypeSpaceUsedDb(dir.getTypeUsed().get(QuotaUpdate.StorageType.DB));
+    dto.setTypeSpaceUsedProvided(dir.getTypeUsed().get(QuotaUpdate.StorageType.PROVIDED));
 
     return dto;
   }
@@ -227,6 +241,7 @@ public class DirectoryWithQuotaFeatureClusterj implements
     typeQuota.put(QuotaUpdate.StorageType.RAID5, dto.getTypeSpaceQuotaRaid5());
     typeQuota.put(QuotaUpdate.StorageType.ARCHIVE, dto.getTypeSpaceQuotaArchive());
     typeQuota.put(QuotaUpdate.StorageType.DB, dto.getTypeSpaceQuotaDb());
+    typeQuota.put(QuotaUpdate.StorageType.PROVIDED, dto.getTypeSpaceQuotaProvided());
 
     Map<QuotaUpdate.StorageType, Long> typeUsed = new HashMap<>();
     typeUsed.put(QuotaUpdate.StorageType.DISK, dto.getTypeSpaceUsedDisk());
@@ -234,6 +249,7 @@ public class DirectoryWithQuotaFeatureClusterj implements
     typeUsed.put(QuotaUpdate.StorageType.RAID5, dto.getTypeSpaceUsedRaid5());
     typeUsed.put(QuotaUpdate.StorageType.ARCHIVE, dto.getTypeSpaceUsedArchive());
     typeUsed.put(QuotaUpdate.StorageType.DB, dto.getTypeSpaceUsedDb());
+    typeUsed.put(QuotaUpdate.StorageType.PROVIDED, dto.getTypeSpaceUsedProvided());
 
     DirectoryWithQuotaFeature dir =
         new DirectoryWithQuotaFeature(dto.getId(), dto.getNSQuota(), dto.getNSCount(),
