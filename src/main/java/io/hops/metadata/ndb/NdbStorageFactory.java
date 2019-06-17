@@ -32,6 +32,7 @@ import io.hops.metadata.ndb.dalimpl.election.HdfsLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.election.YarnLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.*;
 import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.ReservationStateClusterJ;
+import io.hops.metadata.ndb.dalimpl.yarn.AppProvenanceClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.quota.PriceMultiplicatorClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.quota.ProjectQuotaClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.quota.ProjectsDailyCostClusterJ;
@@ -40,6 +41,7 @@ import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.ApplicationStateClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.DelegationKeyClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.DelegationTokenClusterJ;
 import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
+import io.hops.metadata.yarn.dal.AppProvenanceDataAccess;
 import io.hops.metadata.yarn.dal.quota.PriceMultiplicatorDataAccess;
 import io.hops.metadata.yarn.dal.quota.ProjectQuotaDataAccess;
 import io.hops.metadata.yarn.dal.quota.ProjectsDailyCostDataAccess;
@@ -47,7 +49,6 @@ import io.hops.metadata.yarn.dal.rmstatestore.ApplicationAttemptStateDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.ApplicationStateDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.DelegationKeyDataAccess;
 import io.hops.metadata.yarn.dal.rmstatestore.DelegationTokenDataAccess;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -138,6 +139,9 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(ConfMutationDataAccess.class, new ConfMutationClusterJ());
     dataAccessMap.put(ConfDataAccess.class, new ConfClusterJ());
     dataAccessMap.put(EncryptionZoneDataAccess.class, new EncryptionZoneClusterJ());
+    dataAccessMap.put(FileProvenanceDataAccess.class, new FileProvenanceClusterj());
+    dataAccessMap.put(AppProvenanceDataAccess.class, new AppProvenanceClusterJ());
+    dataAccessMap.put(FileProvXAttrBufferDataAccess.class, new FileProvXAttrBufferClusterj());
   }
 
   @Override

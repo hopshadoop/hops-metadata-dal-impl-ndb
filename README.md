@@ -30,3 +30,8 @@ Updates to the schema should be done in the schema/update-schema_XXX.sql corresp
 # License
 
 Hops-Metadata-dal-impl-ndb is released under an [GPL 2.0 license](LICENSE.txt).
+
+OsX Developer Help
+===
+Add to bash profile:
+export LIBRARY_PATH=<your path here> #location of the ndbclient.dylib
