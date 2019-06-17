@@ -61,7 +61,7 @@ public class TestFullRMNodeClusterJ {
     storageFactory.setConfiguration(getMetadataClusterConfiguration());
     RequestHandler.setStorageConnector(connector);
     LightWeightRequestHandler setRMDTMasterKeyHandler
-            = new LightWeightRequestHandler(YARNOperationType.TEST) {
+            = new LightWeightRequestHandler(YARNOperationType.OTHER) {
               @Override
               public Object performTask() throws IOException {
                 connector.formatStorage();
@@ -132,7 +132,7 @@ public class TestFullRMNodeClusterJ {
             hopUpdatedContainers.get(1).getUpdatedContainerInfoId()));
 
     LightWeightRequestHandler fillDB
-            = new LightWeightRequestHandler(YARNOperationType.TEST) {
+            = new LightWeightRequestHandler(YARNOperationType.OTHER) {
               @Override
               public Object performTask() throws StorageException {
                 connector.beginTransaction();
@@ -175,7 +175,7 @@ public class TestFullRMNodeClusterJ {
 
     //get the RMNode
     LightWeightRequestHandler getHopRMNode
-            = new LightWeightRequestHandler(YARNOperationType.TEST) {
+            = new LightWeightRequestHandler(YARNOperationType.OTHER) {
               @Override
               public Object performTask() throws StorageException {
                 connector.beginTransaction();

@@ -28,6 +28,8 @@ import io.hops.metadata.election.TablesDef;
 import io.hops.metadata.election.dal.HdfsLeDescriptorDataAccess;
 import io.hops.metadata.election.dal.YarnLeDescriptorDataAccess;
 import io.hops.metadata.hdfs.dal.*;
+import io.hops.metadata.ndb.dalimpl.configurationstore.ConfClusterJ;
+import io.hops.metadata.ndb.dalimpl.configurationstore.ConfMutationClusterJ;
 import io.hops.metadata.ndb.dalimpl.election.HdfsLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.election.YarnLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.*;
@@ -305,6 +307,10 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       cls = CachedBlockClusterJ.CachedBlockDTO.class;
     } else if (className == ActiveBlockReportsClusterj.class){
       cls = ActiveBlockReportsClusterj.class;
+    } else if (className == ConfMutationDataAccess.class) {
+      cls = ConfMutationClusterJ.ConfMutationDTO.class;
+    } else if (className == ConfDataAccess.class) {
+      cls = ConfClusterJ.ConfDTO.class;
     }
 
     HopsSession session = obtainSession();
@@ -339,7 +345,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         ContainersLogsDataAccess.class, ContainersCheckPointsDataAccess.class,
         ProjectsDailyCostDataAccess.class, PriceMultiplicatorDataAccess.class,
         ResourceDataAccess.class, ContainerToSignalDataAccess.class,
-        ContainerToDecreaseDataAccess.class, ReservationStateDataAccess.class);
+        ContainerToDecreaseDataAccess.class, ReservationStateDataAccess.class,
+        ConfMutationDataAccess.class, ConfDataAccess.class);
   }
   
   private boolean formatHDFS(boolean transactional) throws StorageException{
@@ -575,6 +582,10 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional, io.hops.metadata.hdfs.TablesDef.ActiveBlockReports.TABLE_NAME);
           } else if (e == XAttrDataAccess.class){
             truncate(transactional, io.hops.metadata.hdfs.TablesDef.XAttrTableDef.TABLE_NAME);
+          } else if (e == ConfMutationDataAccess.class){
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.ConfMutationTableDef.TABLE_NAME);
+          } else if (e == ConfDataAccess.class){
+            truncate(transactional, io.hops.metadata.yarn.TablesDef.ConfTableDef.TABLE_NAME);
           }
         }
         MysqlServerConnector.truncateTable(transactional,

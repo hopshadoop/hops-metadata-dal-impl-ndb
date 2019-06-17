@@ -104,6 +104,21 @@ public class ApplicationAttemptStateClusterJ
   }
   
   @Override
+  public ApplicationAttemptState get(String appId, String appAttemptId)
+      throws StorageException {
+    HopsSession session = connector.obtainSession();
+
+    String[] key = new String[2];
+    key[0] = appId;
+    key[1] = appAttemptId;
+    ApplicationAttemptStateDTO appStateDTO = session.find(ApplicationAttemptStateDTO.class, key);
+
+    ApplicationAttemptState result =  createHopApplicationAttemptState(appStateDTO);
+    session.release(appStateDTO);
+    return result;
+  }
+  
+  @Override
   public void add(ApplicationAttemptState entry)
       throws StorageException {
     HopsSession session = connector.obtainSession();

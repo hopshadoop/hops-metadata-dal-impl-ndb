@@ -27,6 +27,8 @@ import io.hops.metadata.common.EntityDataAccess;
 import io.hops.metadata.election.dal.HdfsLeDescriptorDataAccess;
 import io.hops.metadata.election.dal.YarnLeDescriptorDataAccess;
 import io.hops.metadata.hdfs.dal.*;
+import io.hops.metadata.ndb.dalimpl.configurationstore.ConfClusterJ;
+import io.hops.metadata.ndb.dalimpl.configurationstore.ConfMutationClusterJ;
 import io.hops.metadata.ndb.dalimpl.election.HdfsLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.election.YarnLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.*;
@@ -183,6 +185,8 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(CachedBlockDataAccess.class, new CachedBlockClusterJ());
     dataAccessMap.put(ActiveBlockReportsDataAccess.class, new ActiveBlockReportsClusterj());
     dataAccessMap.put(XAttrDataAccess.class, new XAttrClusterJ());
+    dataAccessMap.put(ConfMutationDataAccess.class, new ConfMutationClusterJ());
+    dataAccessMap.put(ConfDataAccess.class, new ConfClusterJ());
   }
 
   @Override
