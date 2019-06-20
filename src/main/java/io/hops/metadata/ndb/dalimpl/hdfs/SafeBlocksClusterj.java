@@ -67,12 +67,24 @@ public class SafeBlocksClusterj
   }
   
   @Override
+  public boolean isSafe(Long BlockId) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    SafeBlockDTO dto = null;
+    try {
+      dto = session.find(SafeBlockDTO.class, BlockId);
+      return dto!=null;
+    }finally {
+      session.release(dto);
+    }
+  }
+  
+  @Override
   public void remove(Long safeBlock) throws StorageException {
     HopsSession session = connector.obtainSession();
     SafeBlockDTO dto = null;
     try {
       dto = create(session, safeBlock);
-      session.deletePersistent(dto);
+      session.remove(dto);
     }finally {
       session.release(dto);
     }
