@@ -264,12 +264,14 @@ public class ReplicaClusterj
 
   protected static List<ReplicaClusterj.ReplicaDTO> getReplicas(
       HopsSession session, int storageId, long from, int size) throws StorageException {
+    while(countBlocksInWindow(storageId, from, size)==0){
+      from+=size;
+    }
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<ReplicaDTO> dobj =
         qb.createQueryDefinition(ReplicaClusterj.ReplicaDTO.class);
     dobj.where(dobj.get("storageId").equal(dobj.param("storageId")));
-    dobj.where(dobj.get("blockId").greaterEqual(dobj.param("minBlockId")));
-    dobj.where(dobj.get("blockId").lessThan(dobj.param("maxBlockId")));
+    dobj.where(dobj.get("blockId").between(dobj.param("minBlockId"), dobj.param("maxBlockId")));
     HopsQuery<ReplicaDTO> query = session.createQuery(dobj);
     query.setParameter("storageId", storageId);
     query.setParameter("minBlockId", from);
@@ -292,6 +294,49 @@ public class ReplicaClusterj
     List<ReplicaDTO> dtos = query.getResultList();
     boolean result = !dtos.isEmpty();
     session.release(dtos);
+    return result;
+  }
+
+  @Override  
+  public long findBlockIdAtIndex(int storageId, long index, int maxFetchingSize) throws StorageException{
+    HopsSession session = connector.obtainSession();
+    
+    long startId=0;
+    long nbBlocks=0;
+    long prevStartId = 0;
+    long prevNbBlocks = 0;
+    int windowSize = maxFetchingSize * 1000;
+    while (windowSize > maxFetchingSize) {
+      while (nbBlocks < index) {
+        prevStartId = startId;
+        prevNbBlocks = nbBlocks;
+        nbBlocks += countBlocksInWindow(storageId, startId, windowSize);
+        startId += windowSize;
+
+      }
+      nbBlocks = prevNbBlocks;
+      startId = prevStartId;
+      windowSize = windowSize/10;
+    }
+      
+    while(nbBlocks<index){
+      List<ReplicaClusterj.ReplicaDTO> list = getReplicas(session, storageId, prevStartId, maxFetchingSize);
+      for(ReplicaDTO dto:list){
+        nbBlocks++;
+        if(nbBlocks==index){
+          return dto.getBlockId();
+        }
+      }
+      startId+=maxFetchingSize;
+    }
+    return 0;
+  }
+  
+  private static Long countBlocksInWindow(int storageId, long from, int size) throws
+      StorageException {
+    Long result =  MySQLQueryHelper.executeLongAggrQuery(String.format("SELECT count(*) " +
+        "FROM %s WHERE %s='%d' and %s>='%d' and %s<=%d",TABLE_NAME, STORAGE_ID, storageId, BLOCK_ID,
+        from, BLOCK_ID, from+size));
     return result;
   }
   
