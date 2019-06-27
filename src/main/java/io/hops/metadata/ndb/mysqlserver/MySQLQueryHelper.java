@@ -136,7 +136,7 @@ public class MySQLQueryHelper {
     });
   }
   
-    private static long executeLongAggrQuery(final String query)
+    public static long executeLongAggrQuery(final String query)
       throws StorageException {
     return execute(query, new ResultSetHandler<Long>() {
       @Override
