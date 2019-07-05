@@ -202,6 +202,18 @@ public class ExcessReplicaClusterj
   }
 
   @Override
+  public List<ExcessReplica> findAll() throws StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQuery<ExcessReplicaDTO> query =
+            session.createQuery(qb.createQueryDefinition(ExcessReplicaDTO.class));
+    List<ExcessReplicaDTO> dtos = query.getResultList();
+    List<ExcessReplica> list = createList(dtos);
+    session.release(dtos);
+    return list;
+  }
+
+  @Override
   public void removeAll() throws StorageException {
     HopsSession session = connector.obtainSession();
     try {

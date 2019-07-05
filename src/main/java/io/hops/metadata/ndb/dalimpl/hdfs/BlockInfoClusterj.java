@@ -105,6 +105,12 @@ public class BlockInfoClusterj
     long getTruncateBlockGenerationBlock();
 
     void setTruncateBlockGenerationBlock(long generationStamp);
+
+    @Column(name = CLOUD_BUCKET_ID)
+    short getCloudBucketId();
+
+    void setCloudBucketId(short cloudBucketId);
+
   }
   private ClusterjConnector connector = ClusterjConnector.getInstance();
   private final static int NOT_FOUND_ROW = -1000;
@@ -409,7 +415,8 @@ public class BlockInfoClusterj
             bDTO.getINodeId(), bDTO.getNumBytes(), bDTO.getGenerationStamp(),
             bDTO.getBlockUCState(), bDTO.getTimestamp(),
             bDTO.getPrimaryNodeIndex(), bDTO.getBlockRecoveryId(),
-            bDTO.getTruncateBlockNumBytes(), bDTO.getTruncateBlockGenerationBlock());
+            bDTO.getTruncateBlockNumBytes(), bDTO.getTruncateBlockGenerationBlock(),
+            bDTO.getCloudBucketId());
     return hopBlockInfo;
   }
 
@@ -426,5 +433,6 @@ public class BlockInfoClusterj
     persistable.setBlockRecoveryId(block.getBlockRecoveryId());
     persistable.setTruncateBlockNumBytes(block.getTruncateBlockNumBytes());
     persistable.setTruncateBlockGenerationBlock(block.getTruncateBlockGenerationStamp());
+    persistable.setCloudBucketId(block.getCloudBucketID());
   }
 }
