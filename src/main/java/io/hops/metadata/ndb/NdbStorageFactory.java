@@ -19,7 +19,6 @@
 package io.hops.metadata.ndb;
 
 import io.hops.exception.StorageException;
-import io.hops.metadata.ndb.dalimpl.yarn.ContainerToSignalClusterJ;
 import io.hops.DalStorageFactory;
 import io.hops.StorageConnector;
 import io.hops.exception.StorageInitializtionException;
@@ -32,20 +31,7 @@ import io.hops.metadata.ndb.dalimpl.configurationstore.ConfMutationClusterJ;
 import io.hops.metadata.ndb.dalimpl.election.HdfsLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.election.YarnLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.*;
-import io.hops.metadata.ndb.dalimpl.yarn.ContainerIdToCleanClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.ContainerStatusClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.ContainerToDecreaseClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.RMNodeApplicationsClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.FullRMNodeClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.NextHeartbeatClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.PendingEventClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.RMLoadClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.RMNodeClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.ReservationStateClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.ResourceClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.UpdatedContainerInfoClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.quota.ContainersCheckPointsClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.quota.ContainersLogsClusterJ;
+import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.ReservationStateClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.quota.PriceMultiplicatorClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.quota.ProjectQuotaClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.quota.ProjectsDailyCostClusterJ;
@@ -54,19 +40,6 @@ import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.ApplicationStateClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.DelegationKeyClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.DelegationTokenClusterJ;
 import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
-import io.hops.metadata.yarn.dal.ContainerIdToCleanDataAccess;
-import io.hops.metadata.yarn.dal.ContainerStatusDataAccess;
-import io.hops.metadata.yarn.dal.ContainerToDecreaseDataAccess;
-import io.hops.metadata.yarn.dal.ContainerToSignalDataAccess;
-import io.hops.metadata.yarn.dal.FullRMNodeDataAccess;
-import io.hops.metadata.yarn.dal.NextHeartbeatDataAccess;
-import io.hops.metadata.yarn.dal.PendingEventDataAccess;
-import io.hops.metadata.yarn.dal.RMLoadDataAccess;
-import io.hops.metadata.yarn.dal.RMNodeDataAccess;
-import io.hops.metadata.yarn.dal.ResourceDataAccess;
-import io.hops.metadata.yarn.dal.UpdatedContainerInfoDataAccess;
-import io.hops.metadata.yarn.dal.quota.ContainersCheckPointsDataAccess;
-import io.hops.metadata.yarn.dal.quota.ContainersLogsDataAccess;
 import io.hops.metadata.yarn.dal.quota.PriceMultiplicatorDataAccess;
 import io.hops.metadata.yarn.dal.quota.ProjectQuotaDataAccess;
 import io.hops.metadata.yarn.dal.quota.ProjectsDailyCostDataAccess;
@@ -79,7 +52,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import io.hops.metadata.yarn.dal.RMNodeApplicationsDataAccess;
 import io.hops.metadata.yarn.dal.ReservationStateDataAccess;
 
 public class NdbStorageFactory implements DalStorageFactory {
@@ -102,21 +74,6 @@ public class NdbStorageFactory implements DalStorageFactory {
 
   private void initDataAccessMap() {
     dataAccessMap.put(StorageDataAccess.class, new StoragesClusterj());
-    dataAccessMap.put(ResourceDataAccess.class, new ResourceClusterJ());
-    dataAccessMap.put(ResourceDataAccess.class, new ResourceClusterJ());
-    dataAccessMap.put(RMNodeDataAccess.class, new RMNodeClusterJ());
-    dataAccessMap
-            .put(ContainerStatusDataAccess.class, new ContainerStatusClusterJ());
-    dataAccessMap.put(UpdatedContainerInfoDataAccess.class,
-            new UpdatedContainerInfoClusterJ());
-    dataAccessMap.put(ContainerIdToCleanDataAccess.class,
-            new ContainerIdToCleanClusterJ());
-    dataAccessMap.put(ContainerToSignalDataAccess.class,
-            new ContainerToSignalClusterJ());
-    dataAccessMap.put(ContainerToDecreaseDataAccess.class,
-            new ContainerToDecreaseClusterJ());
-    dataAccessMap.put(RMNodeApplicationsDataAccess.class,
-            new RMNodeApplicationsClusterJ());
     dataAccessMap.put(BlockInfoDataAccess.class, new BlockInfoClusterj());
     dataAccessMap.put(PendingBlockDataAccess.class, new PendingBlockClusterj());
     dataAccessMap.put(ReplicaUnderConstructionDataAccess.class,
@@ -154,13 +111,8 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(MisReplicatedRangeQueueDataAccess.class,
             new MisReplicatedRangeQueueClusterj());
     dataAccessMap.put(QuotaUpdateDataAccess.class, new QuotaUpdateClusterj());
-    dataAccessMap.put(PendingEventDataAccess.class, new PendingEventClusterJ());
     dataAccessMap
             .put(BlockChecksumDataAccess.class, new BlockChecksumClusterj());
-    dataAccessMap
-            .put(NextHeartbeatDataAccess.class, new NextHeartbeatClusterJ());
-    dataAccessMap.put(RMLoadDataAccess.class, new RMLoadClusterJ());
-    dataAccessMap.put(FullRMNodeDataAccess.class, new FullRMNodeClusterJ());
     dataAccessMap.put(MetadataLogDataAccess.class, new MetadataLogClusterj());
     dataAccessMap.put(EncodingJobsDataAccess.class, new EncodingJobsClusterj());
     dataAccessMap.put(RepairJobsDataAccess.class, new RepairJobsClusterj());
@@ -172,8 +124,6 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(DelegationTokenDataAccess.class, new DelegationTokenClusterJ());
     dataAccessMap.put(DelegationKeyDataAccess.class, new DelegationKeyClusterJ());
     dataAccessMap.put(ProjectQuotaDataAccess.class, new ProjectQuotaClusterJ());
-    dataAccessMap.put(ContainersLogsDataAccess.class, new ContainersLogsClusterJ());
-    dataAccessMap.put(ContainersCheckPointsDataAccess.class, new ContainersCheckPointsClusterJ());
     dataAccessMap.put(ProjectsDailyCostDataAccess.class, new ProjectsDailyCostClusterJ());
     dataAccessMap.put(PriceMultiplicatorDataAccess.class,new PriceMultiplicatorClusterJ());
     dataAccessMap.put(ReservationStateDataAccess.class, new ReservationStateClusterJ());
