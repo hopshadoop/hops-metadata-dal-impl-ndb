@@ -80,6 +80,28 @@ public class ProjectsDailyCostClusterJ implements
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
 
+    @Override 
+  public ProjectDailyCost get(String projectName, String user, long day) throws StorageException{
+    HopsSession session = connector.obtainSession();
+    Object[] keys = new Object[]{projectName, user, day};
+    ProjectDailyCostDTO dto = session.find(ProjectDailyCostDTO.class, keys);
+    ProjectDailyCost result = null;
+    if (dto != null) {
+      result= createProjectDailyCost(dto);
+    }
+    session.release(dto);
+    return result;
+  }
+  
+  @Override
+  public void add(ProjectDailyCost projectDailyCost) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    ProjectDailyCostDTO dto = createPersistable(projectDailyCost, session);
+      
+    session.savePersistent(dto);
+    session.release(dto);
+  }
+  
   @Override
   public Map<ProjectDailyId, ProjectDailyCost> getAll() throws
           StorageException {
@@ -124,7 +146,7 @@ public class ProjectsDailyCostClusterJ implements
             = new HashMap<>();
     for (ProjectDailyCostDTO persistable
             : results) {
-      ProjectDailyCost hop = createHopProjectDailyCost(persistable);
+      ProjectDailyCost hop = createProjectDailyCost(persistable);
       map.
               put(new ProjectDailyId(hop.getProjectName(), hop.
                               getProjectUser(), hop.getDay()), hop);
@@ -132,7 +154,7 @@ public class ProjectsDailyCostClusterJ implements
     return map;
   }
 
-  private static ProjectDailyCost createHopProjectDailyCost(
+  private static ProjectDailyCost createProjectDailyCost(
           ProjectDailyCostDTO csDTO) {
     ProjectDailyCost hop
             = new ProjectDailyCost(csDTO.getProjectName(), csDTO.getUser(),
