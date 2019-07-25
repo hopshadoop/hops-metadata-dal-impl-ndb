@@ -15,3 +15,29 @@ ALTER TABLE `hdfs_directory_with_quota_feature` ADD COLUMN `typespace_used_provi
 ALTER TABLE `hdfs_directory_with_quota_feature` ADD COLUMN `typespace_quota_provided` bigint(20) NOT NULL DEFAULT '-1';
 
 ALTER TABLE `hdfs_quota_update` ADD COLUMN `typespace_delta_provided` bigint(20) NOT NULL DEFAULT '-1';
+
+DROP TABLE `yarn_containerid_toclean`;
+
+DROP TABLE `yarn_container_to_signal`;
+
+DROP TABLE `yarn_container_to_decrease`;
+
+DROP TABLE `yarn_containerstatus`;
+
+DROP TABLE `yarn_rmnode_applications`;
+
+DROP TABLE `yarn_nextheartbeat`;
+
+DROP TABLE `yarn_pendingevents`;
+
+DROP TABLE `yarn_resource`;
+
+DROP TABLE `yarn_rms_load`;
+
+DROP TABLE `yarn_rmnode`;
+
+DROP TABLE `yarn_updatedcontainerinfo`;
+
+DROP TABLE `yarn_containers_logs`;
+
+DROP TABLE `yarn_containers_checkpoint`;

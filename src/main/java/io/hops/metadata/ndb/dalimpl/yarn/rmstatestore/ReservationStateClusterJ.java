@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package io.hops.metadata.ndb.dalimpl.yarn;
+package io.hops.metadata.ndb.dalimpl.yarn.rmstatestore;
 
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.PersistenceCapable;
@@ -29,7 +29,7 @@ import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.yarn.TablesDef;
 import io.hops.metadata.yarn.dal.ReservationStateDataAccess;
-import io.hops.metadata.yarn.entity.ReservationState;
+import io.hops.metadata.yarn.entity.rmstatestore.ReservationState;
 import java.util.ArrayList;
 import java.util.List;
 
