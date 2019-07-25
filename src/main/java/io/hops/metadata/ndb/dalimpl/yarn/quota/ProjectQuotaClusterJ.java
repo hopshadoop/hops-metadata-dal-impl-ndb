@@ -43,10 +43,10 @@ public class ProjectQuotaClusterJ implements TablesDef.ProjectQuotaTableDef,
   public interface ProjectQuotaDTO {
 
     @PrimaryKey
-    @Column(name = PROJECTID)
-    String getProjectid();
+    @Column(name = PROJECT_NAME)
+    String getProjectName();
 
-    void setProjectid(String projectid);
+    void setProjectName(String projectName);
 
     @Column(name = REMAINING_QUOTA)
     float getRemainingQuota();
@@ -62,6 +62,28 @@ public class ProjectQuotaClusterJ implements TablesDef.ProjectQuotaTableDef,
 
   private final ClusterjConnector connector = ClusterjConnector.getInstance();
 
+  @Override 
+  public ProjectQuota get(String projectName) throws StorageException{
+    HopsSession session = connector.obtainSession();
+    ProjectQuotaDTO dto = session.find(ProjectQuotaDTO.class, projectName);
+    ProjectQuota result = null;
+    if (dto != null) {
+      result= createProjectQuota(dto);
+    }
+    session.release(dto);
+    return result;
+  }
+  
+  @Override
+  public void add(ProjectQuota projectQuota) throws StorageException {
+    HopsSession session = connector.obtainSession();
+    
+    ProjectQuotaDTO dto = createPersistable(projectQuota, session);
+      
+    session.savePersistent(dto);
+    session.release(dto);
+  }
+  
   @Override
   public Map<String, ProjectQuota> getAll() throws StorageException {
     HopsSession session = connector.obtainSession();
@@ -88,7 +110,7 @@ public class ProjectQuotaClusterJ implements TablesDef.ProjectQuotaTableDef,
   }
 
   private static ProjectQuota createProjectQuota(ProjectQuotaDTO csDTO) {
-    ProjectQuota hop = new ProjectQuota(csDTO.getProjectid(), csDTO.
+    ProjectQuota hop = new ProjectQuota(csDTO.getProjectName(), csDTO.
             getRemainingQuota(), csDTO.getTotalUsedQuota());
     return hop;
   }
@@ -110,7 +132,7 @@ public class ProjectQuotaClusterJ implements TablesDef.ProjectQuotaTableDef,
           HopsSession session) throws StorageException {
     ProjectQuotaDTO pqDTO = session.newInstance(ProjectQuotaDTO.class);
     //Set values to persist new ContainerStatus
-    pqDTO.setProjectid(hopPQ.getProjectid());
+    pqDTO.setProjectName(hopPQ.getProjectid());
     pqDTO.setRemainingQuota(hopPQ.getRemainingQuota());
     pqDTO.setTotalUsedQuota(hopPQ.getTotalUsedQuota());
 
