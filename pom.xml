@@ -118,9 +118,9 @@
     <resources>
       <resource>
         <directory>src/main/resources</directory>
-      </resource>
-      <resource>
-        <directory>schema</directory>
+        <excludes>
+          <exclude>ndb-config.properties.template</exclude>
+        </excludes>
       </resource>
     </resources>
   </build>
