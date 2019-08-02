@@ -103,6 +103,17 @@ public class QuotaUpdateClusterj
   private MysqlServerConnector mysqlConnector =
       MysqlServerConnector.getInstance();
 
+  @Override 
+  public QuotaUpdate findByKey(int id, long inodeId) throws StorageException{
+    HopsSession dbSession = connector.obtainSession();
+    Object[] keys = new Object[]{id, inodeId};
+    QuotaUpdateDTO dto = (QuotaUpdateDTO) dbSession.find(QuotaUpdateDTO.class, keys);
+    if (dto != null) {
+      return convertAndRelease(dbSession, dto);
+    }
+    return null;
+  }
+  
   @Override
   public void prepare(Collection<QuotaUpdate> added,
       Collection<QuotaUpdate> removed) throws StorageException {
@@ -183,19 +194,24 @@ public class QuotaUpdateClusterj
       List<QuotaUpdateDTO> list) throws StorageException {
     List<QuotaUpdate> result = new ArrayList<>();
     for (QuotaUpdateDTO dto : list) {
-      Map<QuotaUpdate.StorageType, Long> typeSpaceDelta = new HashMap<>();
+      result.add(convertAndRelease(session, dto));
+    }
+    return result;
+  }
+
+  private QuotaUpdate convertAndRelease(HopsSession session, QuotaUpdateDTO dto) throws StorageException{
+    Map<QuotaUpdate.StorageType, Long> typeSpaceDelta = new HashMap<>();
       typeSpaceDelta.put(QuotaUpdate.StorageType.DISK, dto.getTypeSpaceDeltaDisk());
       typeSpaceDelta.put(QuotaUpdate.StorageType.SSD, dto.getTypeSpaceDeltaSSD());
       typeSpaceDelta.put(QuotaUpdate.StorageType.RAID5, dto.getTypeSpaceDeltaRaid5());
       typeSpaceDelta.put(QuotaUpdate.StorageType.ARCHIVE, dto.getTypeSpaceDeltaArchive());
       typeSpaceDelta.put(QuotaUpdate.StorageType.DB, dto.getTypeSpaceDeltaDb());
-      result.add(new QuotaUpdate(dto.getId(), dto.getInodeId(),
-          dto.getNamespaceDelta(), dto.getStorageSpaceDelta(), typeSpaceDelta));
+      QuotaUpdate result = new QuotaUpdate(dto.getId(), dto.getInodeId(),
+          dto.getNamespaceDelta(), dto.getStorageSpaceDelta(), typeSpaceDelta);
       session.release(dto);
-    }
-    return result;
+      return result;
   }
-
+  
   private static final String INODE_ID_PARAM = "inodeId";
 
   @Override
