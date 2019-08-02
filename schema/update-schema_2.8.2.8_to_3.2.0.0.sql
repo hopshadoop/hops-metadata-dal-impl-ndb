@@ -41,3 +41,7 @@ DROP TABLE `yarn_updatedcontainerinfo`;
 DROP TABLE `yarn_containers_logs`;
 
 DROP TABLE `yarn_containers_checkpoint`;
+
+insert into hdfs_variables (id, value) select 37, "" where (select count(*) from hdfs_variables)>0;
+
+insert into hdfs_variables (id, value) select 38, "" where (select count(*) from hdfs_variables)>0;
