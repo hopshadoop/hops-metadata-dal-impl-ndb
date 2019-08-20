@@ -178,9 +178,13 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     int getNumAces();
     void setNumAces(int numAces);
   
-    @Column(name = NUM_XATTRS)
-    byte getNumXAttrs();
-    void setNumXAttrs(byte numXAttrs);
+    @Column(name = NUM_USER_XATTRS)
+    byte getNumUserXAttrs();
+    void setNumUserXAttrs(byte numUserXAttrs);
+  
+    @Column(name = NUM_SYS_XATTRS)
+    byte getNumSysXAttrs();
+    void setNumSysXAttrs(byte numSysXAttrs);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -387,7 +391,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
               inode.getLogicalTime(),
               inode.getStoragePolicy(),
               inode.getNumAces(),
-              inode.getNumXAttrs());
+              inode.getNumUserXAttrs(),
+              inode.getNumSysXAttrs());
   }
 //  public List<ProjectedINode> findInodesForSubtreeOperationsWithWriteLockFTIS(
 //      int parentId) throws StorageException {
@@ -744,7 +749,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
         persistable.getSize(), NdbBoolean.convert(persistable
         .getFileStoredInDd()), persistable.getLogicalTime(),
         persistable.getStoragePolicy(), persistable.getChildrenNum(),
-        persistable.getNumAces(), persistable.getNumXAttrs());
+        persistable.getNumAces(), persistable.getNumUserXAttrs(),
+        persistable.getNumSysXAttrs());
 
     return node;
   }
@@ -776,7 +782,8 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     persistable.setStoragePolicy(inode.getStoragePolicyID());
     persistable.setChildrenNum(inode.getChildrenNum());
     persistable.setNumAces(inode.getNumAces());
-    persistable.setNumXAttrs(inode.getNumXAttrs());
+    persistable.setNumUserXAttrs(inode.getNumUserXAttrs());
+    persistable.setNumSysXAttrs(inode.getNumSysXAttrs());
   }
 
   private void explain(HopsQuery<InodeDTO> query) {
