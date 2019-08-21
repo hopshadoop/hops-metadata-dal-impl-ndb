@@ -34,6 +34,7 @@ import io.hops.metadata.ndb.wrapper.HopsSession;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -64,9 +65,9 @@ public class XAttrClusterJ implements TablesDef.XAttrTableDef,
     void setName(String name);
   
     @Column(name = VALUE)
-    String getValue();
+    byte[] getValue();
   
-    void setValue(String value);
+    void setValue(byte[] value);
   }
   
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -80,6 +81,7 @@ public class XAttrClusterJ implements TablesDef.XAttrTableDef,
       for (StoredXAttr.PrimaryKey pk : pks) {
         XAttrDTO dto = session.newInstance(XAttrDTO.class,
             new Object[]{pk.getInodeId(), pk.getNamespace(), pk.getName()});
+        dto.setValue(StoredXAttr.NON_EXISTENT_XATRR_VALUE);
         session.load(dto);
         dtos.add(dto);
       }
@@ -165,7 +167,7 @@ public class XAttrClusterJ implements TablesDef.XAttrTableDef,
     dto.setINodeId(xattr.getInodeId());
     dto.setNamespace(xattr.getNamespace());
     dto.setName(xattr.getName());
-    dto.setValue(xattr.getValue() == null ? "" : xattr.getValue());
+    dto.setValue(xattr.getValue());
     return dto;
   }
   
@@ -182,7 +184,7 @@ public class XAttrClusterJ implements TablesDef.XAttrTableDef,
     List<StoredXAttr> results = Lists.newArrayListWithExpectedSize(dtos.size());
     for(XAttrDTO dto : dtos){
       //check if the row exists, default value is empty string
-      if(dto.getValue() != null) {
+      if(StoredXAttr.xAttrExists(dto.getValue())) {
         results.add(convert(dto));
       }
     }
@@ -190,8 +192,8 @@ public class XAttrClusterJ implements TablesDef.XAttrTableDef,
   }
   
   private StoredXAttr convert(XAttrDTO dto){
-    return new StoredXAttr(dto.getINodeId(), dto.getNamespace(), dto.getName(),
-        dto.getValue().isEmpty() ? null : dto.getValue());
+    return new StoredXAttr(dto.getINodeId(), dto.getNamespace(),
+        dto.getName(), dto.getValue());
   }
   
 }
