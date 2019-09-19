@@ -44,10 +44,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class QuotaUpdateClusterj
     implements TablesDef.QuotaUpdateTableDef, QuotaUpdateDataAccess<QuotaUpdate> {
 
+  static final Log LOG = LogFactory.getLog(QuotaUpdateClusterj.class);
+  
   @PersistenceCapable(table = TABLE_NAME)
   public interface QuotaUpdateDTO {
 
@@ -147,15 +151,18 @@ public class QuotaUpdateClusterj
   }
 
   private static final String FIND_QUERY =
-      "SELECT * FROM " + TABLE_NAME + " ORDER BY " + ID + " LIMIT ";
+      "SELECT * FROM " + TABLE_NAME + " ORDER BY " + ID + " LIMIT ?";
 
   @Override
   public List<QuotaUpdate> findLimited(int limit) throws StorageException {
     ArrayList<QuotaUpdate> resultList;
+    PreparedStatement s = null;
+    ResultSet result = null;
     try {
       Connection conn = mysqlConnector.obtainSession();
-      PreparedStatement s = conn.prepareStatement(FIND_QUERY + limit);
-      ResultSet result = s.executeQuery();
+      s = conn.prepareStatement(FIND_QUERY);
+      s.setInt(1, limit);
+      result = s.executeQuery();
       resultList = new ArrayList<>();
 
       while (result.next()) {
@@ -176,6 +183,20 @@ public class QuotaUpdateClusterj
     } catch (SQLException ex) {
       throw HopsSQLExceptionHelper.wrap(ex);
     } finally {
+      if (s != null) {
+        try {
+          s.close();
+        } catch (SQLException ex) {
+          LOG.warn("Exception when closing the PrepareStatement", ex);
+        }
+      }
+      if (result != null) {
+        try {
+          result.close();
+        } catch (SQLException ex) {
+          LOG.warn("Exception when closing the REsultSet", ex);
+        }
+      }
       mysqlConnector.closeSession();
     }
     return resultList;

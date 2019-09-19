@@ -84,6 +84,9 @@ public class ConfClusterJ implements TablesDef.ConfTableDef, ConfDataAccess<byte
   private byte[] create(List<ConfDTO> results) {
     List<byte[]> reservationStates = new ArrayList<>(results.size());
     for (ConfDTO persistable : results) {
+      if(persistable==null){
+        continue;
+      }
       reservationStates.add(persistable.getIndex(), persistable.getConf());
     }
     if(reservationStates.isEmpty()){

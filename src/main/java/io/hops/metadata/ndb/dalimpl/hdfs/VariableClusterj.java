@@ -68,7 +68,7 @@ public class VariableClusterj
         try {
           Thread.sleep(100);
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          Thread.currentThread().interrupt();
         }
         LOG.warn("Unable to read variable id="+varType.getId()+". retry " +
                 "count: " + retryCount);

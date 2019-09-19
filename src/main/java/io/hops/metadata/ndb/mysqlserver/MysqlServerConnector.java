@@ -147,21 +147,43 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
       Connection conn = connector.obtainSession();
       if (transactional) {
         if (limit > 0) {
-          PreparedStatement s = conn.prepareStatement(
-                  "delete from " + tableName + " limit " + limit);
-          s.executeUpdate();
+          PreparedStatement s = null;
+          try {
+            String query = "delete from " + tableName + " limit ?";
+            s = conn.prepareStatement(query);
+            s.setInt(1, limit);
+            s.executeUpdate();
+          } finally {
+            if (s != null) {
+              s.close();
+            }
+          }
         } else {
           int nbrows = 0;
           do {
-            PreparedStatement s = conn.prepareStatement(
-                    "delete from " + tableName + " limit 1000");
-            nbrows = s.executeUpdate();
+            PreparedStatement s = null;
+            try {
+             String query = "delete from " + tableName + " limit 1000";
+             s = conn.prepareStatement(query);
+             nbrows = s.executeUpdate();
+            } finally {
+              if (s != null) {
+                s.close();
+              }
+            }
           } while (nbrows > 0);
         }
       } else {
-        PreparedStatement s =
-                conn.prepareStatement("truncate table " + tableName);
-        s.executeUpdate();
+        PreparedStatement s = null;
+        try {
+          String query = "truncate table " + tableName;
+          s = conn.prepareStatement(query);
+          s.executeUpdate();
+        } finally {
+          if (s != null) {
+            s.close();
+          }
+        }
       }
     } finally {
       connector.closeSession();
@@ -256,53 +278,59 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
   @Override
   public void dropAndRecreateDB() throws StorageException {
     MysqlServerConnector connector = MysqlServerConnector.getInstance();
-
     try {
-      Connection conn = null;
       Statement stmt = null;
-      String sql = "";
-      String database = conf.getProperty("com.mysql.clusterj.database");
       try {
+        Connection conn = null;
+        String sql = "";
+        String database = conf.getProperty("com.mysql.clusterj.database");
         conn = connector.obtainSession();
         stmt = conn.createStatement();
+        try {
+          sql = "DROP DATABASE IF EXISTS " + database;
+          LOG.warn("Dropping database " + database);
+          stmt.executeUpdate(sql);
+          LOG.warn("Database dropped");
+        } catch (Exception e) {
+          LOG.warn(e);
+        }
 
-        sql = "DROP DATABASE IF EXISTS " + database;
-        LOG.warn("Dropping database " + database);
-        stmt.executeUpdate(sql);
-        LOG.warn("Database dropped");
-      } catch (Exception e) {
-        LOG.warn(e);
-      }
+        try {
+          sql = "CREATE DATABASE  " + database;
+          LOG.warn("Creating database " + database);
+          stmt.executeUpdate(sql);
+          LOG.warn("Database created");
+        } catch (Exception e) {
+          LOG.warn(e);
+        }
 
-      try {
-        sql = "CREATE DATABASE  " + database;
-        LOG.warn("Creating database " + database);
-        stmt.executeUpdate(sql);
-        LOG.warn("Database created");
-      } catch (Exception e) {
-        LOG.warn(e);
-      }
+        try {
+          sql = "use  " + database;
+          LOG.warn("Selectign database " + database);
+          stmt.executeUpdate(sql);
+          LOG.warn("Database selected");
+        } catch (Exception e) {
+          LOG.warn(e);
+        }
 
-      try {
-        sql = "use  " + database;
-        LOG.warn("Selectign database " + database);
-        stmt.executeUpdate(sql);
-        LOG.warn("Database selected");
-      } catch (Exception e) {
-        LOG.warn(e);
-      }
+        try {
+          ScriptRunner runner = new ScriptRunner(conn, false, false);
+          LOG.warn("Importing Database");
+          runner.runScript(new BufferedReader(new InputStreamReader(getSchema())));
+          LOG.warn("Schema imported");
+        } catch (Exception e) {
+          LOG.warn(e);
+        }
+      } finally {
 
-      try {
-        ScriptRunner runner = new ScriptRunner(conn, false, false);
-        LOG.warn("Importing Database");
-        runner.runScript(new BufferedReader(new InputStreamReader(getSchema())));
-        LOG.warn("Schema imported");
-      } catch (Exception e) {
-        LOG.warn(e);
+        if (stmt != null) {
+          stmt.close();
+        }
+        connector.closeSession();
+        //System.exit(0); //The namenode can not continue after that. Format the database afterwards
       }
-    } finally {
-      connector.closeSession();
-      //System.exit(0); //The namenode can not continue after that. Format the database afterwards
+    } catch (SQLException ex) {
+      throw new StorageException(ex);
     }
 
   }
