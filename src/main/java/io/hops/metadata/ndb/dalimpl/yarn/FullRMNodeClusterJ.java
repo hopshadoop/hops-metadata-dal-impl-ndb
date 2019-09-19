@@ -115,6 +115,9 @@ public class FullRMNodeClusterJ implements FullRMNodeDataAccess<RMNodeComps> {
       }
     
     }
+    if(hopRMNode==null){
+      return null;
+    }
     PendingEvent hopPendingEvent = pendingEventDA.findEntry(hopRMNode.getPendingEventId(), nodeId);
     String rmNodeId = null;
     if(hopPendingEvent!=null){

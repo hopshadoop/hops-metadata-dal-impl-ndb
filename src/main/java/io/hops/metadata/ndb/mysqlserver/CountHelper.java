@@ -24,11 +24,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * This class is to do count operations using Mysql Server.
  */
 public class CountHelper {
+  static final Log LOG = LogFactory.getLog(CountHelper.class);
 
   public static final String COUNT_QUERY = "select count(*) from %s";
   public static final String COUNT_QUERY_UNIQUE =
@@ -66,10 +69,12 @@ public class CountHelper {
   }
   
   private static int count(String query) throws StorageException {
+    PreparedStatement s = null;
+    ResultSet result = null;
     try {
       Connection conn = connector.obtainSession();
-      PreparedStatement s = conn.prepareStatement(query);
-      ResultSet result = s.executeQuery();
+      s = conn.prepareStatement(query);
+      result = s.executeQuery();
       if (result.next()) {
         return result.getInt(1);
       } else {
@@ -79,6 +84,21 @@ public class CountHelper {
     } catch (SQLException ex) {
       throw new StorageException(ex);
     } finally {
+
+      if (s != null) {
+        try {
+          s.close();
+        } catch (SQLException ex) {
+          LOG.warn("Exception when closing the PrepareStatement", ex);
+        }
+      }
+      if (result != null) {
+        try {
+          result.close();
+        } catch (SQLException ex) {
+          LOG.warn("Exception when closing the ResultSet", ex);
+        }
+      }
       connector.closeSession();
     }
   }

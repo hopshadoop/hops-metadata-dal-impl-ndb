@@ -542,10 +542,12 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
 
   private List<EncodingStatus> find(String query) throws StorageException {
     ArrayList<EncodingStatus> resultList;
+    PreparedStatement s = null;
+    ResultSet result = null;
     try {
       Connection conn = mysqlConnector.obtainSession();
-      PreparedStatement s = conn.prepareStatement(query);
-      ResultSet result = s.executeQuery();
+      s = conn.prepareStatement(query);
+      result = s.executeQuery();
 
       resultList = new ArrayList<>();
 
@@ -557,8 +559,7 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
         Short targetReplication = result.getShort(TARGET_REPLICATION);
         Long statusModificationTime = result.getLong(STATUS_MODIFICATION_TIME);
         Integer parityStatus = result.getInt(PARITY_STATUS);
-        Long parityStatusModificationTime =
-            result.getLong(PARITY_STATUS_MODIFICATION_TIME);
+        Long parityStatusModificationTime = result.getLong(PARITY_STATUS_MODIFICATION_TIME);
         String parityFileName = result.getString(PARITY_FILE_NAME);
         int lostBlocks = result.getInt(LOST_BLOCKS);
         int lostParityBlocks = result.getInt(LOST_PARITY_BLOCKS);
@@ -574,6 +575,20 @@ public class EncodingStatusClusterj implements TablesDef.EncodingStatusTableDef,
     } catch (SQLException ex) {
       throw HopsSQLExceptionHelper.wrap(ex);
     } finally {
+      if (s != null) {
+        try {
+          s.close();
+        } catch (SQLException ex) {
+          LOG.warn("Exception when closing the PrepareStatement", ex);
+        }
+      }
+      if (result != null) {
+        try {
+          result.close();
+        } catch (SQLException ex) {
+          LOG.warn("Exception when closing the ResultSet", ex);
+        }
+      }
       mysqlConnector.closeSession();
     }
     return resultList;

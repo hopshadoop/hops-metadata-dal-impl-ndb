@@ -145,10 +145,6 @@ public class ResourceClusterJ
   }
 
   private Resource createHopResource(ResourceDTO resourceDTO) {
-    if (resourceDTO == null) {
-      return null;
-
-    }
     return new Resource(resourceDTO.getId(), resourceDTO.getMemory(), resourceDTO.
         getVirtualcores(), resourceDTO.getGPUs(), resourceDTO.getpendingeventid());
   }
@@ -169,6 +165,9 @@ public class ResourceClusterJ
     Map<String, Resource> map;
     map = new HashMap<>();
     for (ResourceDTO dto : results) {
+      if(dto==null){
+        continue;
+      }
       Resource hop = createHopResource(dto);
       map.put(hop.getId(), hop);
     }
