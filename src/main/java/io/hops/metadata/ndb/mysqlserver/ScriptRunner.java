@@ -32,12 +32,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Tool to run database scripts
  */
 public class ScriptRunner {
-
+    static final Log LOG = LogFactory.getLog(ScriptRunner.class);
+    
     private static final String DEFAULT_DELIMITER = ";";
     /**
      * regex to detect delimiter.
@@ -124,93 +127,113 @@ public class ScriptRunner {
      * @throws IOException if there is an error reading from the Reader
      */
     private void runScript(Connection conn, Reader reader) throws IOException,
-            SQLException {
-        StringBuffer command = null;
+      SQLException {
+    StringBuffer command = null;
+    try {
+      LineNumberReader lineReader = new LineNumberReader(reader);
+      String line;
+      while ((line = lineReader.readLine()) != null) {
+        Statement statement = null;
+        ResultSet rs = null;
         try {
-            LineNumberReader lineReader = new LineNumberReader(reader);
-            String line;
-            while ((line = lineReader.readLine()) != null) {
-                if (command == null) {
-                    command = new StringBuffer();
-                }
-                String trimmedLine = line.trim();
-                final Matcher delimMatch = delimP.matcher(trimmedLine);
-                if (trimmedLine.length() < 1
-                        || trimmedLine.startsWith("//")) {
-                    // Do nothing
-                } else if (delimMatch.matches()) {
-                    setDelimiter(delimMatch.group(2), false);
-                } else if (trimmedLine.startsWith("--")) {
-                    println(trimmedLine);
-                } else if (trimmedLine.length() < 1
-                        || trimmedLine.startsWith("--")) {
-                    // Do nothing
-                } else if (!fullLineDelimiter
-                        && trimmedLine.endsWith(getDelimiter())
-                        || fullLineDelimiter
-                        && trimmedLine.equals(getDelimiter())) {
-                    command.append(line.substring(0, line
-                            .lastIndexOf(getDelimiter())));
-                    command.append(" ");
-                    Statement statement = conn.createStatement();
+          if (command == null) {
+            command = new StringBuffer();
+          }
+          String trimmedLine = line.trim();
+          final Matcher delimMatch = delimP.matcher(trimmedLine);
+          if (trimmedLine.length() < 1
+              || trimmedLine.startsWith("//")) {
+            // Do nothing
+          } else if (delimMatch.matches()) {
+            setDelimiter(delimMatch.group(2), false);
+          } else if (trimmedLine.startsWith("--")) {
+            println(trimmedLine);
+          } else if (trimmedLine.length() < 1
+              || trimmedLine.startsWith("--")) {
+            // Do nothing
+          } else if (!fullLineDelimiter
+              && trimmedLine.endsWith(getDelimiter())
+              || fullLineDelimiter
+              && trimmedLine.equals(getDelimiter())) {
+            command.append(line.substring(0, line
+                .lastIndexOf(getDelimiter())));
+            command.append(" ");
+            statement = conn.createStatement();
 
-                    println(command);
+            println(command);
 
-                    boolean hasResults = false;
-                    try {
-                        hasResults = statement.execute(command.toString());
-                    } catch (SQLException e) {
-                        final String errText = String.format("Error executing '%s' (line %d): %s", command, lineReader.getLineNumber(), e.getMessage());
-                        if (stopOnError) {
-                            throw new SQLException(errText, e);
-                        } else {
-                            println(errText);
-                        }
-                    }
-
-                    if (autoCommit && !conn.getAutoCommit()) {
-                        conn.commit();
-                    }
-
-                    ResultSet rs = statement.getResultSet();
-                    if (hasResults && rs != null) {
-                        ResultSetMetaData md = rs.getMetaData();
-                        int cols = md.getColumnCount();
-                        for (int i = 0; i < cols; i++) {
-                            String name = md.getColumnLabel(i);
-                            print(name + "\t");
-                        }
-                        println("");
-                        while (rs.next()) {
-                            for (int i = 0; i < cols; i++) {
-                                String value = rs.getString(i);
-                                print(value + "\t");
-                            }
-                            println("");
-                        }
-                    }
-
-                    command = null;
-                    try {
-                        statement.close();
-                    } catch (Exception e) {
-                        // Ignore to workaround a bug in Jakarta DBCP
-                    }
-                } else {
-                    command.append(line);
-                    command.append("\n");
-                }
+            boolean hasResults = false;
+            try {
+              hasResults = statement.execute(command.toString());
+            } catch (SQLException e) {
+              final String errText = String.format("Error executing '%s' (line %d): %s", command, lineReader.
+                  getLineNumber(), e.getMessage());
+              if (stopOnError) {
+                throw new SQLException(errText, e);
+              } else {
+                println(errText);
+              }
             }
-            if (!autoCommit) {
-                conn.commit();
+
+            if (autoCommit && !conn.getAutoCommit()) {
+              conn.commit();
             }
-        } catch (Exception e) {
-            throw new IOException(String.format("Error executing '%s': %s", command, e.getMessage()), e);
+
+            rs = statement.getResultSet();
+            if (hasResults && rs != null) {
+              ResultSetMetaData md = rs.getMetaData();
+              int cols = md.getColumnCount();
+              for (int i = 0; i < cols; i++) {
+                String name = md.getColumnLabel(i);
+                print(name + "\t");
+              }
+              println("");
+              while (rs.next()) {
+                for (int i = 0; i < cols; i++) {
+                  String value = rs.getString(i);
+                  print(value + "\t");
+                }
+                println("");
+              }
+            }
+
+            command = null;
+            try {
+              statement.close();
+            } catch (Exception e) {
+              // Ignore to workaround a bug in Jakarta DBCP
+            }
+          } else {
+            command.append(line);
+            command.append("\n");
+          }
         } finally {
-            conn.rollback();
-            flush();
+          if (rs != null) {
+            try {
+              rs.close();
+            } catch (SQLException ex) {
+              LOG.warn("Exception when closing the ResultSet", ex);
+            }
+          }
+          if (statement != null) {
+            try {
+              statement.close();
+            } catch (SQLException ex) {
+              LOG.warn("Exception when closing the PrepareStatement", ex);
+            }
+          }
         }
+      }
+      if (!autoCommit) {
+        conn.commit();
+      }
+    } catch (Exception e) {
+      throw new IOException(String.format("Error executing '%s': %s", command, e.getMessage()), e);
+    } finally {
+      conn.rollback();
+      flush();
     }
+  }
 
     private String getDelimiter() {
         return delimiter;

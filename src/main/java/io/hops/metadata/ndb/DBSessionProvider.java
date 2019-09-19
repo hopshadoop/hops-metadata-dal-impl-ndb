@@ -205,6 +205,7 @@ public class DBSessionProvider implements Runnable {
         }
       } catch (InterruptedException ex) {
         LOG.warn(ex);
+        Thread.currentThread().interrupt();
       } catch (StorageException e) {
         LOG.error(e);
       }

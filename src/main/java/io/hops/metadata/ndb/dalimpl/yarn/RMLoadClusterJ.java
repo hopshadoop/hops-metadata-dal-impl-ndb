@@ -88,6 +88,9 @@ public class RMLoadClusterJ implements TablesDef.RMLoadTableDef, RMLoadDataAcces
   private Map<String, Load> createMap(List<RMLoadDTO> results) {
     Map<String, Load> map = new HashMap<>();
     for (RMLoadDTO dto : results) {
+      if(dto==null){
+        continue;
+      }
       Load hop = createHopLoad(dto);
       map.put(hop.getRmHostName(), hop);
     }
@@ -95,9 +98,6 @@ public class RMLoadClusterJ implements TablesDef.RMLoadTableDef, RMLoadDataAcces
   }
 
   private Load createHopLoad(RMLoadDTO loadDTO) {
-    if (loadDTO == null) {
-      return null;
-    }
     return new Load(loadDTO.getrmhostname(), loadDTO.getload());
   }
 }

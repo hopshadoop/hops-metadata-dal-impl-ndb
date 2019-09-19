@@ -155,17 +155,24 @@ public class BlockChecksumClusterj
 
   @Override
   public void deleteAll(long inodeId) throws StorageException {
-    final String query =
-        String.format("DELETE FROM %s WHERE %s=%d",
-                TablesDef.BlockChecksumTableDef.TABLE_NAME,
-                TablesDef.BlockChecksumTableDef.INODE_ID, inodeId);
+    final String query = String.format("DELETE FROM %s WHERE %s=%d",
+        TablesDef.BlockChecksumTableDef.TABLE_NAME,
+        TablesDef.BlockChecksumTableDef.INODE_ID, inodeId);
+    PreparedStatement s = null;
     try {
       Connection conn = mysqlConnector.obtainSession();
-      PreparedStatement s = conn.prepareStatement(query);
+      s = conn.prepareStatement(query);
       s.executeUpdate();
     } catch (SQLException ex) {
       throw HopsSQLExceptionHelper.wrap(ex);
     } finally {
+      if (s != null) {
+        try {
+          s.close();
+        } catch (SQLException ex) {
+          LOG.warn("Exception when closing the PrepareStatement", ex);
+        }
+      }
       mysqlConnector.closeSession();
     }
   }

@@ -25,11 +25,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * This class is to do count operations using Mysql Server.
  */
 public class MySQLQueryHelper {
+  static final Log LOG = LogFactory.getLog(MySQLQueryHelper.class);
 
   public static final String COUNT_QUERY = "select count(*) from %s";
   public static final String COUNT_QUERY_UNIQUE =
@@ -165,13 +168,21 @@ public class MySQLQueryHelper {
   }
 
   public static int execute(String query) throws StorageException {
+    PreparedStatement s = null;
     try {
       Connection conn = connector.obtainSession();
-      PreparedStatement s = conn.prepareStatement(query);
+      s = conn.prepareStatement(query);
       return s.executeUpdate();
     } catch (SQLException ex) {
       throw HopsSQLExceptionHelper.wrap(ex);
     } finally {
+      if (s != null) {
+        try {
+          s.close();
+        } catch (SQLException ex) {
+          LOG.warn("Exception when closing the PrepareStatement", ex);
+        }
+      }
       connector.closeSession();
     }
   }
@@ -183,14 +194,24 @@ public class MySQLQueryHelper {
   public static <R> R execute(String query, ResultSetHandler<R> handler)
       throws StorageException {
     try {
-      Connection conn = connector.obtainSession();
-      PreparedStatement s = conn.prepareStatement(query);
-      ResultSet result = s.executeQuery();
-      return handler.handle(result);
+      PreparedStatement s = null;
+      try {
+        Connection conn = connector.obtainSession();
+        s = conn.prepareStatement(query);
+        ResultSet result = s.executeQuery();
+        return handler.handle(result);
+      } catch (SQLException ex) {
+        throw HopsSQLExceptionHelper.wrap(ex);
+      } finally {
+        if (s != null) {
+          s.close();
+        }
+
+        connector.closeSession();
+      }
     } catch (SQLException ex) {
-      throw HopsSQLExceptionHelper.wrap(ex);
-    } finally {
-      connector.closeSession();
+      throw new StorageException(ex);
     }
   }
+
 }
