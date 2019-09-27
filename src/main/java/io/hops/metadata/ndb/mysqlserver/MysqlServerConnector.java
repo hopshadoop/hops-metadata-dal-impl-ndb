@@ -253,60 +253,6 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
-  @Override
-  public void dropAndRecreateDB() throws StorageException {
-    MysqlServerConnector connector = MysqlServerConnector.getInstance();
-
-    try {
-      Connection conn = null;
-      Statement stmt = null;
-      String sql = "";
-      String database = conf.getProperty("com.mysql.clusterj.database");
-      try {
-        conn = connector.obtainSession();
-        stmt = conn.createStatement();
-
-        sql = "DROP DATABASE IF EXISTS " + database;
-        LOG.warn("Dropping database " + database);
-        stmt.executeUpdate(sql);
-        LOG.warn("Database dropped");
-      } catch (Exception e) {
-        LOG.warn(e);
-      }
-
-      try {
-        sql = "CREATE DATABASE  " + database;
-        LOG.warn("Creating database " + database);
-        stmt.executeUpdate(sql);
-        LOG.warn("Database created");
-      } catch (Exception e) {
-        LOG.warn(e);
-      }
-
-      try {
-        sql = "use  " + database;
-        LOG.warn("Selectign database " + database);
-        stmt.executeUpdate(sql);
-        LOG.warn("Database selected");
-      } catch (Exception e) {
-        LOG.warn(e);
-      }
-
-      try {
-        ScriptRunner runner = new ScriptRunner(conn, false, false);
-        LOG.warn("Importing Database");
-        runner.runScript(new BufferedReader(new InputStreamReader(getSchema())));
-        LOG.warn("Schema imported");
-      } catch (Exception e) {
-        LOG.warn(e);
-      }
-    } finally {
-      connector.closeSession();
-      //System.exit(0); //The namenode can not continue after that. Format the database afterwards
-    }
-
-  }
-
   public InputStream getSchema()
           throws IOException {
     String configFile = "schema.sql";
