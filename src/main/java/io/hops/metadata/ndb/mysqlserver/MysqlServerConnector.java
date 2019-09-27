@@ -275,66 +275,6 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
-  @Override
-  public void dropAndRecreateDB() throws StorageException {
-    MysqlServerConnector connector = MysqlServerConnector.getInstance();
-    try {
-      Statement stmt = null;
-      try {
-        Connection conn = null;
-        String sql = "";
-        String database = conf.getProperty("com.mysql.clusterj.database");
-        conn = connector.obtainSession();
-        stmt = conn.createStatement();
-        try {
-          sql = "DROP DATABASE IF EXISTS " + database;
-          LOG.warn("Dropping database " + database);
-          stmt.executeUpdate(sql);
-          LOG.warn("Database dropped");
-        } catch (Exception e) {
-          LOG.warn(e);
-        }
-
-        try {
-          sql = "CREATE DATABASE  " + database;
-          LOG.warn("Creating database " + database);
-          stmt.executeUpdate(sql);
-          LOG.warn("Database created");
-        } catch (Exception e) {
-          LOG.warn(e);
-        }
-
-        try {
-          sql = "use  " + database;
-          LOG.warn("Selectign database " + database);
-          stmt.executeUpdate(sql);
-          LOG.warn("Database selected");
-        } catch (Exception e) {
-          LOG.warn(e);
-        }
-
-        try {
-          ScriptRunner runner = new ScriptRunner(conn, false, false);
-          LOG.warn("Importing Database");
-          runner.runScript(new BufferedReader(new InputStreamReader(getSchema())));
-          LOG.warn("Schema imported");
-        } catch (Exception e) {
-          LOG.warn(e);
-        }
-      } finally {
-
-        if (stmt != null) {
-          stmt.close();
-        }
-        connector.closeSession();
-        //System.exit(0); //The namenode can not continue after that. Format the database afterwards
-      }
-    } catch (SQLException ex) {
-      throw new StorageException(ex);
-    }
-
-  }
-
   public InputStream getSchema()
           throws IOException {
     String configFile = "schema.sql";
