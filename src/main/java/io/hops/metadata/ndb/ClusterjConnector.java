@@ -475,11 +475,13 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             MysqlServerConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.RepairJobsTableDef.TABLE_NAME);
           } else if (e == UserDataAccess.class) {
+            // Truncate not supported with FK
             MysqlServerConnector
-                .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.UsersTableDef.TABLE_NAME);
+                .truncateTable(true, io.hops.metadata.hdfs.TablesDef.UsersTableDef.TABLE_NAME);
           }else if (e == GroupDataAccess.class) {
+            // Truncate not supported with FK
             MysqlServerConnector
-                .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.GroupsTableDef.TABLE_NAME);
+                .truncateTable(true, io.hops.metadata.hdfs.TablesDef.GroupsTableDef.TABLE_NAME);
           }else if (e == UserGroupDataAccess.class) {
             MysqlServerConnector
                 .truncateTable(transactional, io.hops.metadata.hdfs.TablesDef.UsersGroupsTableDef.TABLE_NAME);
@@ -516,7 +518,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
           } else if (e == RetryCacheEntryDataAccess.class){
             truncate(transactional, io.hops.metadata.hdfs.TablesDef.RetryCacheEntryTableDef.TABLE_NAME);
           } else if (e == CacheDirectiveDataAccess.class){
-            truncate(transactional, io.hops.metadata.hdfs.TablesDef.CacheDirectiveTableDef.TABLE_NAME);
+            // Truncate not supported with FK
+            truncate(true, io.hops.metadata.hdfs.TablesDef.CacheDirectiveTableDef.TABLE_NAME);
           } else if (e == CachePoolDataAccess.class){
             truncate(transactional, io.hops.metadata.hdfs.TablesDef.CachePoolTableDef.TABLE_NAME);
           } else if (e == CachedBlockDataAccess.class){
