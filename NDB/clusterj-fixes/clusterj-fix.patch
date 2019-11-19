@@ -45,10 +45,10 @@ index ddc926a8..70c0698d 100644
   */
  public class DomainTypeHandlerImpl<T> extends AbstractDomainTypeHandlerImpl<T> {
  
--    protected interface Finalizable {
+-    public interface Finalizable {
 -        void finalize() throws Throwable;
 -    }
-+//    protected interface Finalizable {
++//    public interface Finalizable {
 +//        void finalize() throws Throwable;
 +//    }
  
