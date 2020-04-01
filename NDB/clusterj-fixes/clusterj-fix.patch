@@ -33,7 +33,7 @@ index ac4fcf73..13cb3e1a 100644
              // if not using connection pooling, create a new session factory
              result = new SessionFactoryImpl(props);
          }
-+        System.out.println("HopsFS created a ClusterJ VERSION sesseion factory.");
++        logger.info("HopsFS created a ClusterJ VERSION sesseion factory.");
          return result;
      }
  
