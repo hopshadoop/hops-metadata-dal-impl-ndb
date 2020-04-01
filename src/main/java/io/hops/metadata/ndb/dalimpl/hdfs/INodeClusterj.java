@@ -592,7 +592,6 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
     dobj.where(pred.not().and(pred2));
     HopsQuery<InodeDTO> query = session.createQuery(dobj);
     query.setParameter("isDirParam", NdbBoolean.convert(true));
-    //FIXME: InodeId is integer
     //startId is inclusive and endId exclusive
     query.setParameter("startId", startId);
     query.setParameter("endId", endId - 1);

@@ -82,7 +82,7 @@ public class HopsExceptionHelper {
   }
 
   private static boolean isDeadLockException(ClusterJException e){
-    return isExceptionContains(e, 266);
+    return isExceptionContains(e, 266) || isExceptionContains(e, 274);
   }
 
   private static boolean isExceptionContains(ClusterJException e, int code){

@@ -22,6 +22,7 @@ import com.mysql.clusterj.ClusterJException;
 import com.mysql.clusterj.ClusterJHelper;
 import com.mysql.clusterj.Constants;
 import com.mysql.clusterj.LockMode;
+import com.mysql.clusterj.core.util.LoggerFactory;
 import io.hops.exception.StorageException;
 import io.hops.metadata.ndb.wrapper.HopsExceptionHelper;
 import io.hops.metadata.ndb.wrapper.HopsSession;
@@ -66,11 +67,11 @@ public class DBSessionProvider implements Runnable {
   }
 
   private void start(int initialPoolSize) throws StorageException {
-    System.out.println("Database connect string: " +
+    LOG.info("Database connect string: " +
         conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING));
-    System.out.println(
+    LOG.info(
         "Database name: " + conf.get(Constants.PROPERTY_CLUSTER_DATABASE));
-    System.out.println("Max Transactions: " +
+    LOG.info("Max Transactions: " +
         conf.get(Constants.PROPERTY_CLUSTER_MAX_TRANSACTIONS));
     try {
       sessionFactory =
