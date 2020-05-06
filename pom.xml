@@ -51,7 +51,7 @@
     <repository>
       <id>Hops release</id>
       <name>Hops Release Repository</name>
-      <url>https://bbc1.sics.se/archiva/repository/Hops/</url>
+      <url>https://archiva.hops.works/repository/Hops/</url>
       <snapshots>
         <enabled>false</enabled>
         <updatePolicy>never</updatePolicy>
@@ -60,7 +60,7 @@
     <repository>
       <id>hops-snapshot-repository</id>
       <name>Hops Snapshot Repository</name>
-      <url>https://bbc1.sics.se/archiva/repository/Hops/</url>
+      <url>https://archiva.hops.works/repository/Hops/</url>
       <releases>
         <enabled>true</enabled>
       </releases>
@@ -161,7 +161,7 @@
     <repository>
       <id>Hops</id>
       <name>Hops Repo</name>
-      <url>https://bbc1.sics.se/archiva/repository/Hops/</url>
+      <url>https://archiva.hops.works/repository/Hops/</url>
       <releases>
         <enabled>true</enabled>
       </releases>
