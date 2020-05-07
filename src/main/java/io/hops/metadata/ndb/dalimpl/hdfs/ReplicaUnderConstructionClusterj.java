@@ -30,6 +30,7 @@ import io.hops.metadata.hdfs.dal.ReplicaUnderConstructionDataAccess;
 import io.hops.metadata.hdfs.entity.ReplicaUnderConstruction;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.NdbBoolean;
+import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
 import io.hops.metadata.ndb.wrapper.HopsPredicate;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
@@ -183,6 +184,11 @@ public class ReplicaUnderConstructionClusterj
     query.setParameter("iNodeIdParam", inodeId);
 
     query.deletePersistentAll();
+  }
+
+  @Override
+  public int countAll() throws StorageException {
+    return MySQLQueryHelper.countAll(TABLE_NAME);
   }
 
   private List<ReplicaUnderConstruction> convertAndRelease(HopsSession session,
