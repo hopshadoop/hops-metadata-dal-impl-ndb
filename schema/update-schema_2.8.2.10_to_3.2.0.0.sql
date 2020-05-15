@@ -45,3 +45,27 @@ DROP TABLE `yarn_containers_checkpoint`;
 insert into hdfs_variables (id, value) select 37, "" where (select count(*) from hdfs_variables)>0;
 
 insert into hdfs_variables (id, value) select 38, "" where (select count(*) from hdfs_variables)>0;
+
+ALTER TABLE `hdfs_xattrs`
+ADD COLUMN `num_parts` smallint(6) NOT NULL DEFAULT '1',
+ADD COLUMN `index` smallint(6) NOT NULL DEFAULT '0',
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`inode_id`,`namespace`,`name`, `index`),
+COMMENT = 'NDB_TABLE=READ_BACKUP=1';
+
+ALTER TABLE `hdfs_file_provenance_xattrs_buffer`
+ADD COLUMN `num_parts` smallint(6) NOT NULL DEFAULT '1',
+ADD COLUMN `index` smallint(6) NOT NULL DEFAULT '0',
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`inode_id`,`namespace`,`name`,`inode_logical_time`, `index`),
+COMMENT = 'NDB_TABLE=READ_BACKUP=1';
+
+ALTER TABLE `hdfs_metadata_log`
+ADD COLUMN `inode_partition_id` bigint(20) DEFAULT NULL,
+ADD COLUMN `inode_parent_id` bigint(20) DEFAULT NULL,
+ADD COLUMN `inode_name` varchar(255) COLLATE latin1_general_cs NOT NULL DEFAULT '',
+COMMENT = 'NDB_TABLE=READ_BACKUP=1';
+
+ALTER TABLE `hdfs_file_provenance_log`
+ADD COLUMN `i_xattr_num_parts` smallint(6) NOT NULL DEFAULT '1',
+COMMENT = 'NDB_TABLE=READ_BACKUP=1';

@@ -29,6 +29,7 @@ import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class FileProvXAttrBufferClusterj implements TablesDef.FileProvXAttrBufferTableDef,
   FileProvXAttrBufferDataAccess<FileProvXAttrBufferEntry> {
@@ -61,33 +62,51 @@ public class FileProvXAttrBufferClusterj implements TablesDef.FileProvXAttrBuffe
     int getINodeLogicalTime();
 
     void setINodeLogicalTime(int inodeLogicalTime);
-
+  
+    @PrimaryKey
+    @Column(name = INDEX)
+    short getIndex();
+  
+    void setIndex(short index);
+  
+    @Column(name = NUM_PARTS)
+    short getNumParts();
+  
+    void setNumParts(short numParts);
+    
     @Column(name = VALUE)
     byte[] getValue();
 
     void setValue(byte[] value);
   }
 
-  private FileProvXAttrBufferEntryDto createPersistable(FileProvXAttrBufferEntry logEntry) throws StorageException {
+  private List<FileProvXAttrBufferEntryDto> createPersistable(FileProvXAttrBufferEntry logEntry) throws StorageException {
     HopsSession session = connector.obtainSession();
-    FileProvXAttrBufferEntryDto dto = session.newInstance(FileProvXAttrBufferEntryDto.class);
-    dto.setINodeId(logEntry.getInodeId());
-    dto.setNamespace(logEntry.getNamespace());
-    dto.setName(logEntry.getName());
-    dto.setINodeLogicalTime(logEntry.getINodeLogicalTime());
-    dto.setValue(logEntry.getValue());
-    return dto;
+    List<FileProvXAttrBufferEntryDto> dtos = new ArrayList<>();
+    short numParts = logEntry.getNumParts();
+    for(short index = 0; index < numParts; index++){
+      FileProvXAttrBufferEntryDto dto = session.newInstance(FileProvXAttrBufferEntryDto.class);
+      dto.setINodeId(logEntry.getInodeId());
+      dto.setNamespace(logEntry.getNamespace());
+      dto.setName(logEntry.getName());
+      dto.setINodeLogicalTime(logEntry.getINodeLogicalTime());
+      dto.setValue(logEntry.getValue(index));
+      dto.setIndex(index);
+      dto.setNumParts(numParts);
+      dtos.add(dto);
+    }
+    return dtos;
   }
   
   @Override
   public void add(FileProvXAttrBufferEntry logEntry) throws StorageException {
     HopsSession session = connector.obtainSession();
-    FileProvXAttrBufferEntryDto dto = null;
+    List<FileProvXAttrBufferEntryDto> dtos = null;
     try {
-      dto = createPersistable(logEntry);
-      session.savePersistent(dto);
+      dtos = createPersistable(logEntry);
+      session.savePersistentAll(dtos);
     } finally {
-      session.release(dto);
+      session.release(dtos);
     }
   }
   
@@ -98,7 +117,7 @@ public class FileProvXAttrBufferClusterj implements TablesDef.FileProvXAttrBuffe
     ArrayList<FileProvXAttrBufferEntryDto> added = new ArrayList<>(logEntries.size());
     try {
       for (FileProvXAttrBufferEntry logEntry : logEntries) {
-        added.add(createPersistable(logEntry));
+        added.addAll(createPersistable(logEntry));
       }
       session.savePersistentAll(added);
     } finally {
