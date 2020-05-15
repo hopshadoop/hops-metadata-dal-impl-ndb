@@ -160,6 +160,11 @@ public class FileProvenanceClusterj implements TablesDef.FileProvenanceTableDef,
     int getDsLogicalTime();
   
     void setDsLogicalTime(int dsLogicalTime);
+  
+    @Column(name = XATTR_NUM_PARTS)
+    short getXAttrNumParts();
+  
+    void setXAttrNumParts(short numParts);
   }
 
   @Override
@@ -214,6 +219,7 @@ public class FileProvenanceClusterj implements TablesDef.FileProvenanceTableDef,
     dto.setLogicalTimeBatch(logEntry.getLogicalTimeBatch());
     dto.setTimestampBatch(logEntry.getTimestampBatch());
     dto.setDsLogicalTime(logEntry.getDsLogicalTime());
+    dto.setXAttrNumParts(logEntry.getXattrNumParts());
     return dto;
   }
 }

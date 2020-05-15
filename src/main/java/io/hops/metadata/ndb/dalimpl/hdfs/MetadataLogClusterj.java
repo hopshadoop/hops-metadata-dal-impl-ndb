@@ -79,6 +79,21 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
 
     @Column(name = OPERATION)
     short getOperation();
+  
+    @Column(name = INODE_PARTITION_ID)
+    long getInodePartitionId();
+  
+    void setInodePartitionId(long partitionId);
+  
+    @Column(name = INODE_PARENT_ID)
+    long getInodeParentId();
+  
+    void setInodeParentId(long parentId);
+  
+    @Column(name = INODE_NAME)
+    String getInodeName();
+  
+    void setInodeName(String name);
 
     void setOperation(short operation);
   }
@@ -171,6 +186,9 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     dto.setPk3(logEntry.getPk3());
     dto.setLogicalTime(logEntry.getLogicalTime());
     dto.setOperation(logEntry.getOperationId());
+    dto.setInodePartitionId(logEntry.getInodePartitionId());
+    dto.setInodeParentId(logEntry.getInodeParentId());
+    dto.setInodeName(logEntry.getInodeName());
     return dto;
   }
 
@@ -218,6 +236,9 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
         dto.getDatasetId(),
         dto.getInodeId(),
         dto.getLogicalTime(),
+        dto.getInodePartitionId(),
+        dto.getInodeParentId(),
+        dto.getInodeName(),
         dto.getPk1(),
         dto.getPk2(),
         dto.getPk3(),
