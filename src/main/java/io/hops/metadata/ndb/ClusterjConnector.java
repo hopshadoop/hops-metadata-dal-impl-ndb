@@ -299,6 +299,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       cls = ConfMutationClusterJ.ConfMutationDTO.class;
     } else if (className == ConfDataAccess.class) {
       cls = ConfClusterJ.ConfDTO.class;
+    } else if (className == LeaseCreationLocksDataAccess.class) {
+      cls = LeaseCreationLocksClusterj.LeaseCreationLockDTO.class;
     }
 
     HopsSession session = obtainSession();
@@ -352,7 +354,8 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         AceDataAccess.class, RetryCacheEntryDataAccess.class, CacheDirectiveDataAccess.class,
         CachePoolDataAccess.class, CachedBlockDataAccess.class,
         ActiveBlockReportsDataAccess.class, XAttrDataAccess.class, EncryptionZoneDataAccess.class,
-        FileProvenanceDataAccess.class, FileProvXAttrBufferDataAccess.class);
+        FileProvenanceDataAccess.class, FileProvXAttrBufferDataAccess.class,
+        LeaseCreationLocksDataAccess.class);
   }
   
   private boolean formatAll(boolean transactional) throws StorageException {

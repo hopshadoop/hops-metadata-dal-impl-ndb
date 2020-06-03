@@ -61,6 +61,10 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
     @Index(name = "update_idx")
     long getLastUpdate();
     void setLastUpdate(long last_upd);
+
+    @Column(name = COUNT)
+    int getCount();
+    void setCount(int count);
   }
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
@@ -199,12 +203,13 @@ public class LeaseClusterj implements TablesDef.LeaseTableDef, LeaseDataAccess<L
 
   private Lease createLease(LeaseDTO lTable) {
     return new Lease(lTable.getHolder(), lTable.getHolderId(),
-        lTable.getLastUpdate());
+        lTable.getLastUpdate(), lTable.getCount());
   }
 
   private void createPersistableLeaseInstance(Lease lease, LeaseDTO lTable) {
     lTable.setHolder(lease.getHolder());
     lTable.setHolderId(lease.getHolderId());
     lTable.setLastUpdate(lease.getLastUpdate());
+    lTable.setCount(lease.getCount());
   }
 }
