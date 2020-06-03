@@ -142,6 +142,7 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(FileProvenanceDataAccess.class, new FileProvenanceClusterj());
     dataAccessMap.put(AppProvenanceDataAccess.class, new AppProvenanceClusterJ());
     dataAccessMap.put(FileProvXAttrBufferDataAccess.class, new FileProvXAttrBufferClusterj());
+    dataAccessMap.put(LeaseCreationLocksDataAccess.class, new LeaseCreationLocksClusterj());
   }
 
   @Override

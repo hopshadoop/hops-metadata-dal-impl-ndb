@@ -69,3 +69,10 @@ COMMENT = 'NDB_TABLE=READ_BACKUP=1';
 ALTER TABLE `hdfs_file_provenance_log`
 ADD COLUMN `i_xattr_num_parts` smallint(6) NOT NULL DEFAULT '1',
 COMMENT = 'NDB_TABLE=READ_BACKUP=1';
+
+alter table hdfs_leases add column `count` int(11) NOT NULL DEFAULT 0;
+
+CREATE TABLE `hdfs_lease_creation_locks` (  
+  `id` int(11) NOT NULL,                   
+  PRIMARY KEY (`id`)                       
+) ENGINE=ndbcluster DEFAULT CHARSET=latin1;
