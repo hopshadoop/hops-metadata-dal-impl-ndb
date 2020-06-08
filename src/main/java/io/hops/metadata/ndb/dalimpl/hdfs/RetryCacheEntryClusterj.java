@@ -24,16 +24,18 @@ import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.RetryCacheEntryDataAccess;
 import io.hops.metadata.hdfs.entity.RetryCacheEntry;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
 import io.hops.metadata.ndb.wrapper.*;
 
 import java.util.*;
 
 public class RetryCacheEntryClusterj
-    implements TablesDef.RetryCacheEntryTableDef, RetryCacheEntryDataAccess {
+    implements TablesDef.RetryCacheEntryTableDef, RetryCacheEntryDataAccess<RetryCacheEntry> {
 
   private ClusterjConnector connector = ClusterjConnector.getInstance();
 
   @PersistenceCapable(table = TABLE_NAME)
+  @PartitionKey(column = EPOCH)
   public interface RetryCacheEntryDTO {
     
     @PrimaryKey
@@ -57,7 +59,13 @@ public class RetryCacheEntryClusterj
     long getExpirationTime();
 
     void setExpirationTime(long expirationTime);
-    
+
+    @PrimaryKey
+    @Column(name = EPOCH)
+    long getEpoch();
+
+    void setEpoch(long epoch);
+
     @Column(name = STATE)
     byte getState();
 
@@ -68,9 +76,10 @@ public class RetryCacheEntryClusterj
   public RetryCacheEntry find(RetryCacheEntry.PrimaryKey key) throws
       StorageException {
     HopsSession session = connector.obtainSession();
-    Object[] pk = new Object[2];
+    Object[] pk = new Object[3];
     pk[0] = key.getClientId();
     pk[1] = key.getCallId();
+    pk[2] = key.getEpoch();
 
     RetryCacheEntryDTO result = session.find(RetryCacheEntryDTO.class, pk);
     if (result != null) {
@@ -106,20 +115,45 @@ public class RetryCacheEntryClusterj
     session.release(deletions);
     session.release(changes);
   }
-  
-  public void removeOlds(long time) throws StorageException{
+
+  public int removeOlds(long epoch) throws StorageException{
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
-    HopsQueryDomainType<RetryCacheEntryDTO> dobj = qb.createQueryDefinition(RetryCacheEntryDTO.class);
-    HopsPredicate pred1 = dobj.get("expirationTime").lessEqual(dobj.param("ExpirationTime"));
-    dobj.where(pred1);
-    HopsQuery<RetryCacheEntryDTO> query = session.createQuery(dobj);
-    query.setParameter("ExpirationTime", time);
-    query.deletePersistentAll();
+    HopsQueryDomainType<RetryCacheEntryDTO> qdt = qb.createQueryDefinition(RetryCacheEntryDTO.class);
+    qdt.where(qdt.get("epoch").equal(qdt.param("param")));
+    HopsQuery<RetryCacheEntryDTO> query = session.createQuery(qdt);
+    query.setParameter("param", epoch);
+    return query.deletePersistentAll();
+  }
+
+  @Override
+  public int count() throws StorageException {
+    return MySQLQueryHelper.countAll(TABLE_NAME);
+  }
+
+  @Override
+  public List<RetryCacheEntry> findAll() throws StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQuery<RetryCacheEntryDTO> query =
+            session.createQuery(qb.createQueryDefinition(RetryCacheEntryDTO.class));
+    List<RetryCacheEntryDTO> dtos = query.getResultList();
+    List<RetryCacheEntry> list = convert(dtos);
+    session.release(dtos);
+    return list;
+  }
+
+  private List<RetryCacheEntry> convert(List<RetryCacheEntryDTO> list) throws StorageException {
+    List<RetryCacheEntry> retList = new ArrayList<>();
+    for (RetryCacheEntryDTO persistable : list) {
+        retList.add(convert(persistable));
+    }
+    return retList;
   }
 
   private RetryCacheEntry convert(RetryCacheEntryDTO result) {
-    return new RetryCacheEntry(result.getClientId(), result.getCallId(), result.getPayload(), result.getExpirationTime(), result.getState());
+    return new RetryCacheEntry(result.getClientId(), result.getCallId(), result.getPayload(),
+            result.getExpirationTime(), result.getEpoch(), result.getState());
   }
 
   private void createPersistable(RetryCacheEntry retryCacheEntry, RetryCacheEntryDTO newInstance) {
@@ -128,5 +162,6 @@ public class RetryCacheEntryClusterj
     newInstance.setPayload(retryCacheEntry.getPayload());
     newInstance.setExpirationTime(retryCacheEntry.getExpirationTime());
     newInstance.setState(retryCacheEntry.getState());
+    newInstance.setEpoch(retryCacheEntry.getEpoch());
   }
 }
