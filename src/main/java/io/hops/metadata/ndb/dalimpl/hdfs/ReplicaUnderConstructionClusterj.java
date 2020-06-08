@@ -168,25 +168,6 @@ public class ReplicaUnderConstructionClusterj
   }
 
   @Override
-  public void removeByBlockIdAndInodeId(long blockId, long inodeId) throws
-      StorageException {
-    HopsSession session = connector.obtainSession();
-    HopsQueryBuilder qb = session.getQueryBuilder();
-
-    HopsQueryDomainType<ReplicaUcDTO> qdt = qb.createQueryDefinition
-        (ReplicaUcDTO.class);
-    HopsPredicate pred1 = qdt.get("blockId").equal(qdt.param("blockIdParam"));
-    HopsPredicate pred2 = qdt.get("iNodeId").equal(qdt.param("iNodeIdParam"));
-    qdt.where(pred1.and(pred2));
-
-    HopsQuery<ReplicaUcDTO> query = session.createQuery(qdt);
-    query.setParameter("blockIdParam", blockId);
-    query.setParameter("iNodeIdParam", inodeId);
-
-    query.deletePersistentAll();
-  }
-
-  @Override
   public int countAll() throws StorageException {
     return MySQLQueryHelper.countAll(TABLE_NAME);
   }
