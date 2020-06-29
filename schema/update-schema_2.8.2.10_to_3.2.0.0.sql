@@ -84,5 +84,3 @@ ALTER TABLE hdfs_retry_cache_entry ADD (`epoch` bigint(20) NOT NULL DEFAULT 0);
 ALTER TABLE hdfs_retry_cache_entry DROP PRIMARY KEY;
 
 ALTER TABLE hdfs_retry_cache_entry ADD PRIMARY KEY (`client_id`,`call_id`,`epoch`) PARTITION BY KEY (`epoch`);
-
-INSERT INTO hdfs_variables (id, value) VALUES (39, 0x0000000000000000)
