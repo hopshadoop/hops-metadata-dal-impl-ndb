@@ -42,9 +42,9 @@ DROP TABLE `yarn_containers_logs`;
 
 DROP TABLE `yarn_containers_checkpoint`;
 
-insert into hdfs_variables (id, value) select 37, "" where (select count(*) from hdfs_variables)>0;
+insert into hdfs_variables (id, value) select 39, "" where (select count(*) from hdfs_variables)>0;
 
-insert into hdfs_variables (id, value) select 38, "" where (select count(*) from hdfs_variables)>0;
+insert into hdfs_variables (id, value) select 40, "" where (select count(*) from hdfs_variables)>0;
 
 ALTER TABLE `hdfs_xattrs`
 ADD COLUMN `num_parts` smallint(6) NOT NULL DEFAULT '1',
@@ -72,9 +72,9 @@ COMMENT = 'NDB_TABLE=READ_BACKUP=1';
 
 alter table hdfs_leases add column `count` int(11) NOT NULL DEFAULT 0;
 
-CREATE TABLE `hdfs_lease_creation_locks` (  
-  `id` int(11) NOT NULL,                   
-  PRIMARY KEY (`id`)                       
+CREATE TABLE `hdfs_lease_creation_locks` (
+  `id` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=ndbcluster DEFAULT CHARSET=latin1;
 
 TRUNCATE TABLE hdfs_retry_cache_entry;
@@ -85,4 +85,4 @@ ALTER TABLE hdfs_retry_cache_entry DROP PRIMARY KEY;
 
 ALTER TABLE hdfs_retry_cache_entry ADD PRIMARY KEY (`client_id`,`call_id`,`epoch`) PARTITION BY KEY (`epoch`);
 
-insert into hdfs_variables (id, value) select 39, 0x0000000000000000 where (select count(*) from hdfs_variables)>0;
+insert into hdfs_variables (id, value) select 41, 0x0000000000000000 where (select count(*) from hdfs_variables)>0;
