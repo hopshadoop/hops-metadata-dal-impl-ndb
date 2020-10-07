@@ -187,6 +187,42 @@ public class BlockInfoClusterj
     }
   }
 
+  //only for testing
+  @Override
+  public void deleteBlocksForFile(long inodeID) throws StorageException {
+    HopsSession session = connector.obtainSession();
+
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<BlockInfoDTO> dobj = qb.createQueryDefinition(BlockInfoDTO.class);
+    HopsPredicate pred1 = dobj.get("iNodeId").equal(dobj.param("inodeIdParam"));
+    dobj.where(pred1);
+
+    HopsQuery<BlockInfoDTO> query = session.createQuery(dobj);
+    query.setParameter("inodeIdParam", inodeID);
+    List<BlockInfoDTO> dtos = query.getResultList();
+
+    session.deletePersistentAll(dtos);
+    session.release(dtos);
+
+    deleteBlockLoopupForFile(inodeID);
+  }
+
+  private void deleteBlockLoopupForFile(long inodeID) throws StorageException {
+    HopsSession session = connector.obtainSession();
+
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<BlockLookUpClusterj.BlockLookUpDTO> dobj =
+            qb.createQueryDefinition(BlockLookUpClusterj.BlockLookUpDTO.class);
+    HopsPredicate pred = dobj.get("iNodeId").equal(dobj.param("inodeIdParam"));
+    dobj.where(pred);
+    HopsQuery<BlockLookUpClusterj.BlockLookUpDTO> query = session.createQuery(dobj);
+    query.setParameter("inodeIdParam", inodeID);
+    List<BlockLookUpClusterj.BlockLookUpDTO> dtos = query.getResultList();
+
+    session.deletePersistentAll(dtos);
+    session.release(dtos);
+  }
+
   @Override
   public BlockInfo findById(long blockId, long inodeId) throws StorageException {
     Object[] pk = new Object[2];
