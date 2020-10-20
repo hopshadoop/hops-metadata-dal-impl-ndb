@@ -332,6 +332,17 @@ public class ReplicaClusterj
     return 0;
   }
   
+  @Override
+  public List<Replica> findAll() throws StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQuery<ReplicaDTO> query =
+            session.createQuery(qb.createQueryDefinition(ReplicaDTO.class));
+    List<ReplicaDTO> dtos = query.getResultList();
+    List<Replica> list = convertAndRelease(session, dtos);
+    return list;
+  }
+  
   private static Long countBlocksInWindow(int storageId, long from, int size) throws
       StorageException {
     Long result =  MySQLQueryHelper.executeLongAggrQuery(String.format("SELECT count(*) " +
