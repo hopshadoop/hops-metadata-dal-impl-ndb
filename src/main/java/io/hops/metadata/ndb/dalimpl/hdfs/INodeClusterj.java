@@ -639,6 +639,25 @@ public class INodeClusterj implements TablesDef.INodeTableDef, INodeDataAccess<I
   }
 
   @Override
+  public List<INode> findINodes(String name) throws StorageException {
+    HopsSession session = connector.obtainSession();
+
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<InodeDTO> dobj =
+            qb.createQueryDefinition(InodeDTO.class);
+    HopsPredicate pred1 = dobj.get("name").equal(dobj.param("nameParam"));
+    dobj.where(pred1);
+
+    HopsQuery<InodeDTO> query = session.createQuery(dobj);
+    query.setParameter("nameParam", name);
+
+    List<InodeDTO> dtos = query.getResultList();
+    List<INode> results = convert(dtos);
+    session.release(dtos);
+    return results;
+  }
+  
+  @Override
   public void deleteInode(String inodeName) throws StorageException { // only for testing
     String query = "delete from "+TablesDef.INodeTableDef.TABLE_NAME+" where "+
             TablesDef.INodeTableDef.NAME +" = \""+inodeName+"\"";

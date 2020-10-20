@@ -54,7 +54,6 @@ public class MySQLQueryHelper {
    * @throws io.hops.exception.StorageException
    */
   public static int countAll(String tableName) throws StorageException {
-    // TODO[H]: Is it good to create and close connections in every call?
     String query = String.format(COUNT_QUERY, tableName);
     return executeIntAggrQuery(query);
   }

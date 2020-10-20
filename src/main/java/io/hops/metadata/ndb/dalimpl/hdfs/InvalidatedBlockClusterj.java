@@ -289,6 +289,34 @@ public class InvalidatedBlockClusterj implements
     query.deletePersistentAll();
   }
 
+  @Override
+  public List<InvalidatedBlock> findAll() throws StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQuery<InvalidateBlocksDTO> query =
+            session.createQuery(qb.createQueryDefinition(InvalidateBlocksDTO.class));
+    List<InvalidateBlocksDTO> dtos = query.getResultList();
+    List<InvalidatedBlock> list = createList(dtos);
+    return list;
+  }
+
+  @Override
+  public List<InvalidatedBlock> findInvalidatedBlockInCloudList(int cloudStorageID, int limit)
+          throws StorageException {
+    HopsSession session = connector.obtainSession();
+    HopsQueryBuilder qb = session.getQueryBuilder();
+    HopsQueryDomainType<InvalidateBlocksDTO> qdt =
+            qb.createQueryDefinition(InvalidateBlocksDTO.class);
+    qdt.where(qdt.get("storageId").equal(qdt.param("param")));
+    HopsQuery<InvalidateBlocksDTO> query = session.createQuery(qdt);
+    query.setParameter("param", cloudStorageID);
+    query.setLimits(0, limit);
+
+    List<InvalidateBlocksDTO> dtos = query.getResultList();
+    List<InvalidatedBlock> ivl = createList(dtos);
+    session.release(dtos);
+    return ivl;
+  }
 
   private List<InvalidatedBlock> createList(List<InvalidateBlocksDTO> dtoList) {
     List<InvalidatedBlock> list = new ArrayList<>();
