@@ -7,7 +7,7 @@ com.mysql.clusterj.connection.pool.size=1
 com.mysql.clusterj.max.transactions=1024
 #com.mysql.clusterj.connection.pool.nodeids=
 
-io.hops.metadata.ndb.mysqlserver.data_source_class_name = com.mysql.jdbc.jdbc2.optional.MysqlDataSource
+io.hops.metadata.ndb.mysqlserver.data_source_class_name = com.mysql.cj.jdbc.MysqlDataSource
 
 io.hops.metadata.ndb.mysqlserver.host=
 io.hops.metadata.ndb.mysqlserver.port=3306

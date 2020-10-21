@@ -18,7 +18,7 @@
  */
 package io.hops.metadata.ndb.mysqlserver;
 
-import com.mysql.jdbc.MysqlErrorNumbers;
+import com.mysql.cj.exceptions.MysqlErrorNumbers;
 import io.hops.exception.StorageException;
 import io.hops.exception.TransientStorageException;
 
