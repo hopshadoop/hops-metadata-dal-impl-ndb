@@ -30,6 +30,7 @@ import io.hops.metadata.ndb.wrapper.HopsSessionFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Random;
@@ -210,6 +211,14 @@ public class DBSessionProvider implements Runnable {
       } catch (StorageException e) {
         LOG.error(e);
       }
+    }
+  }
+
+  public void clearCache() throws StorageException {
+    Iterator<DBSession> itr = sessionPool.iterator();
+    while(itr.hasNext()){
+      DBSession session = itr.next();
+      session.getSession().dropInstanceCache();
     }
   }
 }
