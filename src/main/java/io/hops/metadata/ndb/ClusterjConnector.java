@@ -386,6 +386,19 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       Class<? extends EntityDataAccess>... das) throws StorageException {
     
     final int RETRIES = 5; // in test
+
+    // we need to clear the cache objects
+    if(!transactional) {
+      // This calls the SQL truncate  command which changes the schema ID.
+      // After calling truncate we reload the schema to avoid schema ID change
+      // exceptions. However, reloading the schema invalidates the
+      // objects in the DTO cache in the ClusterJ causing NPEs.
+      // Wipe the cache before we call truncate and reload the schema
+
+      // we clear the cache for all open sessions
+      dbSessionProvider.clearCache();
+    }
+
     for (int i = 0; i < RETRIES; i++) {
       try {
         for (Class e : das) {
