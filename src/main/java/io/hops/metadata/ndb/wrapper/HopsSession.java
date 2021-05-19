@@ -262,19 +262,11 @@ public class HopsSession {
       throw HopsExceptionHelper.wrap(e);
     }
   }
-
-  public void dropInstanceCache() throws StorageException {
-    try {
-      session.dropInstanceCache();
-    } catch (ClusterJException e) {
-      throw HopsExceptionHelper.wrap(e);
-    }
-  }
-
+  
   public <T> void release(T t)  throws StorageException {
     try {
       if(t!=null){
-        session.releaseCache(t, t.getClass());
+        session.release(t);
       }
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);
@@ -285,7 +277,7 @@ public class HopsSession {
     try {
       if(t!=null){
         for(T dto : t)  {
-          session.releaseCache(dto, dto.getClass());
+          session.release(dto);
         }
       }
     } catch (ClusterJException e) {

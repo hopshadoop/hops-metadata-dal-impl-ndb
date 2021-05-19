@@ -25,8 +25,8 @@
     
     <dependency>
       <groupId>com.mysql.ndb</groupId>
-      <artifactId>clusterj-rondb</artifactId>
-      <version>21.04.0</version>
+      <artifactId>clusterj-hops-fix</artifactId>
+      <version>8.0.21</version>
     </dependency>
 
     <dependency>

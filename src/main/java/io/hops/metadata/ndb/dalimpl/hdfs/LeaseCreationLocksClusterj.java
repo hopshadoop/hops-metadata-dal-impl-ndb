@@ -64,6 +64,7 @@ public class LeaseCreationLocksClusterj implements TablesDef.LeaseCreationLocksT
         dto.setID(i);
         session.savePersistent(dto);
         session.release(dto);
+        LOG.debug("Added lease creation lock row with ID: "+i);
       }
     }
   }
