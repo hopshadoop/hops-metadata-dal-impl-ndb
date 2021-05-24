@@ -22,14 +22,15 @@ import com.mysql.clusterj.ClusterJException;
 import com.mysql.clusterj.ClusterJHelper;
 import com.mysql.clusterj.Constants;
 import com.mysql.clusterj.LockMode;
-import com.mysql.clusterj.core.util.LoggerFactory;
 import io.hops.exception.StorageException;
+import io.hops.metadata.ndb.wrapper.ClusterJCaching;
 import io.hops.metadata.ndb.wrapper.HopsExceptionHelper;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.ndb.wrapper.HopsSessionFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Random;
@@ -52,14 +53,28 @@ public class DBSessionProvider implements Runnable {
   private AtomicInteger rollingAvgIndex = new AtomicInteger(-1);
   private boolean automaticRefresh = false;
   private Thread thread;
+  private final ClusterJCaching clusterJCaching;
 
-  public DBSessionProvider(Properties conf, int reuseCount, int initialPoolSize)
+  public DBSessionProvider(Properties conf)
       throws StorageException {
     this.conf = conf;
+
+    boolean useClusterjDtoCache = Boolean.parseBoolean(
+            (String) conf.get("io.hops.enable.clusterj.dto.cache"));
+    boolean useClusterjSessionCache = Boolean.parseBoolean(
+            (String) conf.get("io.hops.enable.clusterj.session.cache"));
+    clusterJCaching = new ClusterJCaching(useClusterjDtoCache, useClusterjSessionCache);
+
+    int initialPoolSize = Integer.parseInt(
+            (String) conf.get("io.hops.session.pool.size"));
+    int reuseCount = Integer.parseInt(
+            (String) conf.get("io.hops.session.reuse.count"));
+
     if (reuseCount <= 0) {
       System.err.println("Invalid value for session reuse count");
       System.exit(-1);
     }
+
     this.MAX_REUSE_COUNT = reuseCount;
     rand = new Random(System.currentTimeMillis());
     rollingAvg = new long[initialPoolSize];
@@ -73,9 +88,11 @@ public class DBSessionProvider implements Runnable {
         "Database name: " + conf.get(Constants.PROPERTY_CLUSTER_DATABASE));
     LOG.info("Max Transactions: " +
         conf.get(Constants.PROPERTY_CLUSTER_MAX_TRANSACTIONS));
+    LOG.info("Using ClusterJ Session Cache: "+clusterJCaching.useClusterjSessionCache());
+    LOG.info("Using ClusterJ DTO Cache: "+clusterJCaching.useClusterjDtoCache());
     try {
       sessionFactory =
-          new HopsSessionFactory(ClusterJHelper.getSessionFactory(conf));
+          new HopsSessionFactory(ClusterJHelper.getSessionFactory(conf), clusterJCaching);
     } catch (ClusterJException ex) {
       throw HopsExceptionHelper.wrap(ex);
     }
@@ -174,29 +191,13 @@ public class DBSessionProvider implements Runnable {
             DBSession session = toGC.remove();
             session.getSession().close();
           }
-          //System.out.println("CGed " + toGCSize);
 
           for (int i = 0; i < toGCSize; i++) {
             sessionPool.add(initSession());
           }
-          //System.out.println("Created " + toGCSize);
         }
-        //                for (int i = 0; i < 100; i++) {
-        //                    DBSession session = sessionPool.remove();
-        //                    double percent = (((double) session.getSessionUseCount() / (double) session.getMaxReuseCount()) * (double) 100);
-        //                    // System.out.print(session.getSessionUseCount()+","+session.getMaxReuseCount()+","+percent+" ");
-        //                    if (percent > 80) { // more than 80% used then recyle it
-        //                        session.getSession().close();
-        //                        System.out.println("Recycled a session");
-        //                        //add a new session
-        //                        sessionPool.add(initSession());
-        //                    } else {
-        //                        sessionPool.add(session);
-        //                    }
-        //                }
         Thread.sleep(5);
       } catch (NoSuchElementException e) {
-        //System.out.print(".");
         for (int i = 0; i < 100; i++) {
           try {
             sessionPool.add(initSession());
@@ -210,6 +211,14 @@ public class DBSessionProvider implements Runnable {
       } catch (StorageException e) {
         LOG.error(e);
       }
+    }
+  }
+
+  public void clearCache() throws StorageException {
+    Iterator<DBSession> itr = sessionPool.iterator();
+    while(itr.hasNext()){
+      DBSession session = itr.next();
+      session.getSession().dropInstanceCache();
     }
   }
 }

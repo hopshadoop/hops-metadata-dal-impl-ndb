@@ -6,7 +6,7 @@
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -68,7 +68,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   static final Log LOG = LogFactory.getLog(ClusterjConnector.class);
   private String clusterConnectString;
   private String databaseName;
-  
+
   private ClusterjConnector() {
   }
 
@@ -82,22 +82,16 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       LOG.warn("SessionFactory is already initialized");
       return;
     }
-    
+
     clusterConnectString = (String) conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING);
     LOG.info("Database connect string: " +
-        conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING));
+            conf.get(Constants.PROPERTY_CLUSTER_CONNECTSTRING));
     databaseName = (String) conf.get(Constants.PROPERTY_CLUSTER_DATABASE);
     LOG.info("Database name: " + conf.get(Constants.PROPERTY_CLUSTER_DATABASE));
     LOG.info("Max Transactions: " +
-        conf.get(Constants.PROPERTY_CLUSTER_MAX_TRANSACTIONS));
+            conf.get(Constants.PROPERTY_CLUSTER_MAX_TRANSACTIONS));
 
-    int initialPoolSize =
-        Integer.parseInt((String) conf.get("io.hops.session.pool.size"));
-    int reuseCount =
-        Integer.parseInt((String) conf.get("io.hops.session.reuse.count"));
-    dbSessionProvider =
-        new DBSessionProvider(conf, reuseCount, initialPoolSize);
-    
+    dbSessionProvider = new DBSessionProvider(conf);
     isInitialized = true;
   }
 
@@ -122,7 +116,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     if (dbSession != null) {
       sessions.remove(); // remove, and return to the pool
       dbSessionProvider.returnSession(dbSession,
-          error); // if there was an error then close the session
+              error); // if there was an error then close the session
     }
   }
 
@@ -164,7 +158,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       returnSession(dbError);
     }
   }
- 
+
   /**
    * It rolls back only when the transaction is active.
    */
@@ -206,7 +200,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
 
   @Override
   public boolean formatStorage(Class<? extends EntityDataAccess>... das)
-      throws StorageException {
+          throws StorageException {
     return format(true, das);
   }
 
@@ -241,7 +235,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
 
   @Override
   public void setPartitionKey(Class className, Object key)
-      throws StorageException {
+          throws StorageException {
     Class cls = null;
     if (className == BlockInfoDataAccess.class) {
       cls = BlockInfoClusterj.BlockInfoDTO.class;
@@ -316,7 +310,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     session.flush();
   }
 
-    @Override
+  @Override
   public boolean formatAllStorageNonTransactional() throws StorageException {
     return formatAll(false);
   }
@@ -333,39 +327,39 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
 
   private boolean formatYarn(boolean transactional) throws StorageException{
     return format(transactional, YarnLeDescriptorDataAccess.class, ApplicationStateDataAccess.class,
-        ApplicationAttemptStateDataAccess.class, DelegationKeyDataAccess.class, DelegationTokenDataAccess.class,
-        ProjectQuotaDataAccess.class, ProjectsDailyCostDataAccess.class, PriceMultiplicatorDataAccess.class,
-        ReservationStateDataAccess.class, ConfMutationDataAccess.class, ConfDataAccess.class, 
-        AppProvenanceDataAccess.class);
+            ApplicationAttemptStateDataAccess.class, DelegationKeyDataAccess.class, DelegationTokenDataAccess.class,
+            ProjectQuotaDataAccess.class, ProjectsDailyCostDataAccess.class, PriceMultiplicatorDataAccess.class,
+            ReservationStateDataAccess.class, ConfMutationDataAccess.class, ConfDataAccess.class,
+            AppProvenanceDataAccess.class);
   }
-  
+
   private boolean formatHDFS(boolean transactional) throws StorageException{
     return format(transactional,
-        INodeDataAccess.class, InMemoryInodeDataAccess.class,
-        SmallOnDiskInodeDataAccess.class, MediumOnDiskInodeDataAccess.class,
-        LargeOnDiskInodeDataAccess.class,
-        BlockInfoDataAccess.class, LeaseDataAccess.class,
-        LeasePathDataAccess.class, ReplicaDataAccess.class,
-        ReplicaUnderConstructionDataAccess.class,
-        InvalidateBlockDataAccess.class, ExcessReplicaDataAccess.class,
-        PendingBlockDataAccess.class, CorruptReplicaDataAccess.class,
-        UnderReplicatedBlockDataAccess.class, HdfsLeDescriptorDataAccess.class,
-        DirectoryWithQuotaFeatureDataAccess.class, StorageIdMapDataAccess.class,
-        BlockLookUpDataAccess.class, SafeBlocksDataAccess.class,
-        MisReplicatedRangeQueueDataAccess.class, QuotaUpdateDataAccess.class,
-        EncodingStatusDataAccess.class, BlockChecksumDataAccess.class,
-        OngoingSubTreeOpsDataAccess.class,
-        MetadataLogDataAccess.class, EncodingJobsDataAccess.class,
-        RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
-        UserGroupDataAccess.class,VariableDataAccess.class,
-        HashBucketDataAccess.class, StorageDataAccess.class,
-        AceDataAccess.class, RetryCacheEntryDataAccess.class, CacheDirectiveDataAccess.class,
-        CachePoolDataAccess.class, CachedBlockDataAccess.class,
-        ActiveBlockReportsDataAccess.class, XAttrDataAccess.class, EncryptionZoneDataAccess.class,
-        FileProvenanceDataAccess.class, FileProvXAttrBufferDataAccess.class,
-        LeaseCreationLocksDataAccess.class);
+            INodeDataAccess.class, InMemoryInodeDataAccess.class,
+            SmallOnDiskInodeDataAccess.class, MediumOnDiskInodeDataAccess.class,
+            LargeOnDiskInodeDataAccess.class,
+            BlockInfoDataAccess.class, LeaseDataAccess.class,
+            LeasePathDataAccess.class, ReplicaDataAccess.class,
+            ReplicaUnderConstructionDataAccess.class,
+            InvalidateBlockDataAccess.class, ExcessReplicaDataAccess.class,
+            PendingBlockDataAccess.class, CorruptReplicaDataAccess.class,
+            UnderReplicatedBlockDataAccess.class, HdfsLeDescriptorDataAccess.class,
+            DirectoryWithQuotaFeatureDataAccess.class, StorageIdMapDataAccess.class,
+            BlockLookUpDataAccess.class, SafeBlocksDataAccess.class,
+            MisReplicatedRangeQueueDataAccess.class, QuotaUpdateDataAccess.class,
+            EncodingStatusDataAccess.class, BlockChecksumDataAccess.class,
+            OngoingSubTreeOpsDataAccess.class,
+            MetadataLogDataAccess.class, EncodingJobsDataAccess.class,
+            RepairJobsDataAccess.class, UserDataAccess.class, GroupDataAccess.class,
+            UserGroupDataAccess.class,VariableDataAccess.class,
+            HashBucketDataAccess.class, StorageDataAccess.class,
+            AceDataAccess.class, RetryCacheEntryDataAccess.class, CacheDirectiveDataAccess.class,
+            CachePoolDataAccess.class, CachedBlockDataAccess.class,
+            ActiveBlockReportsDataAccess.class, XAttrDataAccess.class, EncryptionZoneDataAccess.class,
+            FileProvenanceDataAccess.class, FileProvXAttrBufferDataAccess.class,
+            LeaseCreationLocksDataAccess.class);
   }
-  
+
   private boolean formatAll(boolean transactional) throws StorageException {
     //HDFS
     if (!formatHDFS(transactional)) {
@@ -383,9 +377,22 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   }
 
   private boolean format(boolean transactional,
-      Class<? extends EntityDataAccess>... das) throws StorageException {
-    
+                         Class<? extends EntityDataAccess>... das) throws StorageException {
+
     final int RETRIES = 5; // in test
+
+    // we need to clear the cache objects
+    if(!transactional) {
+      // This calls the SQL truncate  command which changes the schema ID.
+      // After calling truncate we reload the schema to avoid schema ID change
+      // exceptions. However, reloading the schema invalidates the
+      // objects in the DTO cache in the ClusterJ causing NPEs.
+      // Wipe the cache before we call truncate and reload the schema
+
+      // we clear the cache for all open sessions
+      dbSessionProvider.clearCache();
+    }
+
     for (int i = 0; i < RETRIES; i++) {
       try {
         for (Class e : das) {
@@ -636,9 +643,9 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     } // end retry loop
     return false;
   }
-  
+
   private void truncate(boolean transactional, String tableName, Class dtoClass)
-      throws StorageException, SQLException {
+          throws StorageException, SQLException {
     MysqlServerConnector.truncateTable(transactional, tableName);
 
     if(!transactional){ // this means that SQL Truncate is used to empty the tables
@@ -664,5 +671,5 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   public String getDatabaseName() {
     return databaseName;
   }
-  
+
 }
