@@ -26,14 +26,16 @@ import java.util.Map;
 
 public class HopsSessionFactory {
   private final SessionFactory factory;
+  private final ClusterJCaching clusterJCaching;
 
-  public HopsSessionFactory(SessionFactory factory) {
+  public HopsSessionFactory(SessionFactory factory, ClusterJCaching clusterJCaching) {
     this.factory = factory;
+    this.clusterJCaching = clusterJCaching;
   }
 
   public HopsSession getSession() throws StorageException {
     try {
-      return new HopsSession(factory.getSession());
+      return new HopsSession(factory.getSession(), clusterJCaching);
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);
     }
@@ -41,7 +43,7 @@ public class HopsSessionFactory {
 
   public HopsSession getSession(Map map) throws StorageException {
     try {
-      return new HopsSession(factory.getSession(map));
+      return new HopsSession(factory.getSession(map), clusterJCaching);
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);
     }

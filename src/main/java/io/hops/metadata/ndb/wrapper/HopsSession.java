@@ -30,9 +30,11 @@ import java.util.Collection;
 public class HopsSession {
   private final Session session;
   private LockMode lockMode = LockMode.READ_COMMITTED;
+  private final ClusterJCaching clusterJCaching;
 
-  public HopsSession(Session session) {
+  public HopsSession(Session session, ClusterJCaching clusterJCaching) {
     this.session = session;
+    this.clusterJCaching = clusterJCaching;
   }
 
   public HopsQueryBuilder getQueryBuilder() throws StorageException {
@@ -207,7 +209,11 @@ public class HopsSession {
 
   public void close() throws StorageException {
     try {
-      session.close();
+      if(clusterJCaching.useClusterjSessionCache()){
+        session.closeCache(true);
+      } else {
+        session.close();
+      }
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);
     }
@@ -262,22 +268,34 @@ public class HopsSession {
       throw HopsExceptionHelper.wrap(e);
     }
   }
-  
-  public <T> void release(T t)  throws StorageException {
+
+  public void dropInstanceCache() throws StorageException {
     try {
-      if(t!=null){
-        session.release(t);
+      session.dropInstanceCache();
+    } catch (ClusterJException e) {
+      throw HopsExceptionHelper.wrap(e);
+    }
+  }
+
+  public <T> void release(T dto) throws StorageException {
+    try {
+      if (dto != null) {
+        if (clusterJCaching.useClusterjDtoCache()) {
+          session.releaseCache(dto, dto.getClass());
+        } else {
+          session.release(dto);
+        }
       }
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);
     }
   }
-  
-  public <T> void release(Collection<T> t)  throws StorageException {
+
+  public <T> void release(Collection<T> dtos) throws StorageException {
     try {
-      if(t!=null){
-        for(T dto : t)  {
-          session.release(dto);
+      if (dtos != null) {
+        for (T dto : dtos) {
+          release(dto);
         }
       }
     } catch (ClusterJException e) {
