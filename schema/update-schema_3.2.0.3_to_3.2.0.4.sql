@@ -1,0 +1,1 @@
+ALTER TABLE hdfs_xattrs MODIFY value VARBINARY(29500);
