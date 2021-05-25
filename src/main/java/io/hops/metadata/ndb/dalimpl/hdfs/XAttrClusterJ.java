@@ -203,7 +203,6 @@ public class XAttrClusterJ implements TablesDef.XAttrTableDef,
         deletions.addAll(xdeletions);
         changes.addAll(persistables);
       }
-      
       session.deletePersistentAll(deletions);
       session.savePersistentAll(changes);
     }finally {
@@ -295,11 +294,19 @@ public class XAttrClusterJ implements TablesDef.XAttrTableDef,
     for(XAttrDTO dto : dtos){
       if(dto.getNumParts() != NON_EXISTS_XATTR){
         values[index] = dto.getValue();
+        if(dto.getNumParts() != dtos.size()){
+          throw new IllegalStateException("Failed to read XAttr [ " + dto.getName()
+                  +  " ] for Inode " + dto.getINodeId() +"."+
+                  " Parts expected: "+dto.getNumParts()+" Parts read: " + dtos.size());
+        }
       }else{
         XAttrDTO partDto = session.find(XAttrDTO.class,
             new Object[]{dto.getINodeId(), dto.getNamespace(),
                 dto.getName(), index});
-        values[index] = partDto.getValue();
+        if(partDto != null) {
+          values[index] = partDto.getValue();
+          session.release(partDto);
+        }
       }
       if(values[index] == null){
         nulls++;
@@ -321,7 +328,7 @@ public class XAttrClusterJ implements TablesDef.XAttrTableDef,
     }
     
     return new StoredXAttr(dto.getINodeId(), dto.getNamespace(),
-        dto.getName(), value);
+        dto.getName(), value, dto.getNumParts());
   }
   
 }
