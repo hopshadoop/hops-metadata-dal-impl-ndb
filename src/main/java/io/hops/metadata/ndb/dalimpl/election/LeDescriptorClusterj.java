@@ -75,7 +75,7 @@ public abstract class LeDescriptorClusterj
   public LeDescriptor findByPkey(long id, int partitionKey)
       throws StorageException {
     HopsSession dbSession = connector.obtainSession();
-    Object[] keys = new Object[]{partitionKey, id};
+    Object[] keys = new Object[]{id, partitionKey};
     LeaderDTO lTable = (LeaderDTO) dbSession.find(dto, keys);
     if (lTable != null) {
       LeDescriptor leader = createDescriptor(lTable);

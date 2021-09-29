@@ -83,7 +83,7 @@ public class ProjectsDailyCostClusterJ implements
     @Override 
   public ProjectDailyCost get(String projectName, String user, long day) throws StorageException{
     HopsSession session = connector.obtainSession();
-    Object[] keys = new Object[]{projectName, user, day};
+    Object[] keys = new Object[]{user, projectName, day};
     ProjectDailyCostDTO dto = session.find(ProjectDailyCostDTO.class, keys);
     ProjectDailyCost result = null;
     if (dto != null) {

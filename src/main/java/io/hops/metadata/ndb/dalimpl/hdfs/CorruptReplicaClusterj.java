@@ -119,7 +119,7 @@ public class CorruptReplicaClusterj implements TablesDef.CorruptReplicaTableDef,
   public CorruptReplica findByPk(long blockId, int sid, int inodeId)
       throws StorageException {
     HopsSession dbSession = connector.obtainSession();
-    Object[] keys = new Object[2];
+    Object[] keys = new Object[3];
     keys[0] = inodeId;
     keys[1] = blockId;
     keys[2] = sid;
