@@ -28,6 +28,7 @@ import io.hops.metadata.hdfs.dal.MetadataLogDataAccess;
 import io.hops.metadata.hdfs.entity.INodeMetadataLogEntry;
 import io.hops.metadata.hdfs.entity.MetadataLogEntry;
 import io.hops.metadata.ndb.ClusterjConnector;
+import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
 import io.hops.metadata.ndb.wrapper.HopsPredicate;
 import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
@@ -217,6 +218,11 @@ public class MetadataLogClusterj implements TablesDef.MetadataLogTableDef,
     Collection<MetadataLogEntry> mlel = createCollection(dtos);
     session.release(dtos);
     return mlel;
+  }
+
+  @Override
+  public int countAll() throws StorageException {
+    return MySQLQueryHelper.countAll(TABLE_NAME);
   }
 
   private Collection<MetadataLogEntry> createCollection(
