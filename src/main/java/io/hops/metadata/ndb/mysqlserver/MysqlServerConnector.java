@@ -29,6 +29,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+
+import io.hops.metadata.hdfs.dal.SQLResultSetHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import java.sql.Connection;
@@ -301,7 +303,7 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
   public static float getResourceMemUtilization() throws StorageException {
     return MySQLQueryHelper.execute("SELECT memory_type, used, total FROM " +
                     "ndbinfo.memoryusage where memory_type = \"Data memory\"",
-            new MySQLQueryHelper.ResultSetHandler<Float>() {
+            new SQLResultSetHandler<Float>() {
               @Override
               public Float handle(ResultSet result)
                       throws SQLException {
@@ -318,7 +320,7 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
   public static boolean hasResources(final double threshold) throws StorageException {
     return MySQLQueryHelper.execute("SELECT memory_type, used, total FROM " +
             "ndbinfo.memoryusage where memory_type = \"Data memory\"",
-        new MySQLQueryHelper.ResultSetHandler<Boolean>() {
+        new SQLResultSetHandler<Boolean>() {
           @Override
           public Boolean handle(ResultSet result)
               throws SQLException, StorageException {

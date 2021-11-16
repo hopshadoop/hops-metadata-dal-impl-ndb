@@ -24,6 +24,7 @@ import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.QuotaUpdateDataAccess;
+import io.hops.metadata.hdfs.dal.SQLResultSetHandler;
 import io.hops.metadata.hdfs.entity.QuotaUpdate;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.mysqlserver.HopsSQLExceptionHelper;
@@ -41,6 +42,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -244,7 +246,7 @@ public class QuotaUpdateClusterj
   private static final String INODE_ID_PARAM = "inodeId";
 
   @Override
-  public List<QuotaUpdate> findByInodeId(long inodeId) throws StorageException {
+  public List<QuotaUpdate> findByInodeId(final long inodeId, final int limit) throws StorageException {
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<QuotaUpdateDTO> dobj =
@@ -254,6 +256,10 @@ public class QuotaUpdateClusterj
     HopsQuery<QuotaUpdateDTO> query = session.createQuery(dobj);
     query.setParameter(INODE_ID_PARAM, inodeId);
 
+    if (limit != -1) {
+      query.setLimits(0, limit);
+    }
+
     List<QuotaUpdateDTO> results = query.getResultList();
     return convertAndRelease(session, results);
   }
@@ -262,5 +268,21 @@ public class QuotaUpdateClusterj
   public int getCount() throws StorageException {
     int count = MySQLQueryHelper.countAll(TablesDef.QuotaUpdateTableDef.TABLE_NAME);
     return count;
+  }
+
+  @Override
+  public List<Long> getDistinctInodes() throws StorageException {
+    final String query = "select DISTINCT(" + INODE_ID + ") from " + TABLE_NAME;
+    return MySQLQueryHelper.execute(query, new SQLResultSetHandler<List<Long>>() {
+      @Override
+      public List<Long> handle(ResultSet result) throws SQLException {
+        List<Long> inodes = new ArrayList<>();
+
+        while (result.next()){
+          inodes.add(result.getLong(INODE_ID));
+        }
+        return inodes;
+      }
+    });
   }
 }

@@ -29,6 +29,7 @@ import com.mysql.clusterj.annotation.PrimaryKey;
 import io.hops.exception.StorageException;
 import io.hops.metadata.hdfs.TablesDef;
 import io.hops.metadata.hdfs.dal.ReplicaDataAccess;
+import io.hops.metadata.hdfs.dal.SQLResultSetHandler;
 import io.hops.metadata.hdfs.entity.Replica;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
@@ -239,7 +240,7 @@ public class ReplicaClusterj
       StorageException {
     return MySQLQueryHelper.execute(String.format("SELECT %s " +
         "FROM %s WHERE %s='%d'", BLOCK_ID, TABLE_NAME, STORAGE_ID, storageId)
-        , new MySQLQueryHelper.ResultSetHandler<Set<Long>>() {
+        , new SQLResultSetHandler<Set<Long>>() {
       @Override
       public Set<Long> handle(ResultSet result) throws SQLException {
         Set<Long> blocks = Sets.newHashSet();
