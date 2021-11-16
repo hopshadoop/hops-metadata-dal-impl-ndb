@@ -24,6 +24,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import io.hops.metadata.hdfs.dal.SQLResultSetHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -125,7 +127,7 @@ public class MySQLQueryHelper {
   
   public static int executeIntAggrQuery(final String query)
       throws StorageException {
-    return execute(query, new ResultSetHandler<Integer>() {
+    return execute(query, new SQLResultSetHandler<Integer>() {
       @Override
       public Integer handle(ResultSet result) throws SQLException, StorageException {
         if (!result.next()) {
@@ -139,7 +141,7 @@ public class MySQLQueryHelper {
   
     public static long executeLongAggrQuery(final String query)
       throws StorageException {
-    return execute(query, new ResultSetHandler<Long>() {
+    return execute(query, new SQLResultSetHandler<Long>() {
       @Override
       public Long handle(ResultSet result) throws SQLException, StorageException {
         if (!result.next()) {
@@ -153,7 +155,7 @@ public class MySQLQueryHelper {
     
   private static boolean executeBooleanQuery(final String query)
       throws StorageException {
-    return execute(query, new ResultSetHandler<Boolean>() {
+    return execute(query, new SQLResultSetHandler<Boolean>() {
       @Override
       public Boolean handle(ResultSet result) throws SQLException, StorageException {
         if (!result.next()) {
@@ -185,11 +187,7 @@ public class MySQLQueryHelper {
     }
   }
 
-  public interface ResultSetHandler<R> {
-    R handle(ResultSet result) throws SQLException, StorageException;
-  }
-
-  public static <R> R execute(String query, ResultSetHandler<R> handler)
+  public static <R> R execute(String query, SQLResultSetHandler<R> handler)
       throws StorageException {
     try {
       PreparedStatement s = null;
