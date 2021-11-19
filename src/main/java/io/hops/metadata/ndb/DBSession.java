@@ -20,20 +20,28 @@ package io.hops.metadata.ndb;
 
 import io.hops.metadata.ndb.wrapper.HopsSession;
 
+import java.util.UUID;
+
 public class DBSession {
 
   private HopsSession session;
   private final int MAX_REUSE_COUNT;
   private int sessionUseCount;
+  private final UUID connectionID;
 
-  public DBSession(HopsSession session, int maxReuseCount) {
+  public DBSession(HopsSession session, int maxReuseCount, UUID connectionID) {
     this.session = session;
     this.MAX_REUSE_COUNT = maxReuseCount;
     this.sessionUseCount = 0;
+    this.connectionID = connectionID;
   }
 
   public HopsSession getSession() {
     return session;
+  }
+
+  public UUID getConnectionID() {
+    return connectionID;
   }
 
   public int getSessionUseCount() {
