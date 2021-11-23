@@ -21,6 +21,7 @@ package io.hops.metadata.ndb.wrapper;
 import com.mysql.clusterj.ClusterJException;
 import com.mysql.clusterj.SessionFactory;
 import io.hops.exception.StorageException;
+import io.hops.metadata.hdfs.entity.Storage;
 
 import java.util.Map;
 
@@ -52,6 +53,22 @@ public class HopsSessionFactory {
   public void close() throws StorageException {
     try {
       factory.close();
+    } catch (ClusterJException e) {
+      throw HopsExceptionHelper.wrap(e);
+    }
+  }
+
+  public boolean isOpen() throws StorageException {
+    try {
+      return factory.currentState() == SessionFactory.State.Open;
+    } catch (ClusterJException e) {
+      throw HopsExceptionHelper.wrap(e);
+    }
+  }
+
+  public void reconnect() throws StorageException {
+    try {
+      factory.reconnect();
     } catch (ClusterJException e) {
       throw HopsExceptionHelper.wrap(e);
     }

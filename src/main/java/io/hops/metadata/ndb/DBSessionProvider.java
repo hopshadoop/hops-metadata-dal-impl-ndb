@@ -11,15 +11,17 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 package io.hops.metadata.ndb;
 
+import com.mysql.clusterj.ClusterJDatastoreException;
 import com.mysql.clusterj.ClusterJException;
 import com.mysql.clusterj.ClusterJHelper;
+import com.mysql.clusterj.ClusterJUserException;
 import com.mysql.clusterj.Constants;
 import com.mysql.clusterj.LockMode;
 import io.hops.exception.StorageException;
@@ -34,6 +36,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -54,6 +57,8 @@ public class DBSessionProvider implements Runnable {
   private boolean automaticRefresh = false;
   private Thread thread;
   private final ClusterJCaching clusterJCaching;
+  private UUID currentConnectionID;
+  private final int initialPoolSize;
 
   public DBSessionProvider(Properties conf)
       throws StorageException {
@@ -65,7 +70,7 @@ public class DBSessionProvider implements Runnable {
             (String) conf.get("io.hops.enable.clusterj.session.cache"));
     clusterJCaching = new ClusterJCaching(useClusterjDtoCache, useClusterjSessionCache);
 
-    int initialPoolSize = Integer.parseInt(
+    initialPoolSize = Integer.parseInt(
             (String) conf.get("io.hops.session.pool.size"));
     int reuseCount = Integer.parseInt(
             (String) conf.get("io.hops.session.reuse.count"));
@@ -88,6 +93,8 @@ public class DBSessionProvider implements Runnable {
         "Database name: " + conf.get(Constants.PROPERTY_CLUSTER_DATABASE));
     LOG.info("Max Transactions: " +
         conf.get(Constants.PROPERTY_CLUSTER_MAX_TRANSACTIONS));
+    LOG.info("Reconnect Timeout: " +
+      conf.get(Constants.PROPERTY_CONNECTION_RECONNECT_TIMEOUT));
     LOG.info("Using ClusterJ Session Cache: "+clusterJCaching.useClusterjSessionCache());
     LOG.info("Using ClusterJ DTO Cache: "+clusterJCaching.useClusterjDtoCache());
     try {
@@ -97,9 +104,7 @@ public class DBSessionProvider implements Runnable {
       throw HopsExceptionHelper.wrap(ex);
     }
 
-    for (int i = 0; i < initialPoolSize; i++) {
-      sessionPool.add(initSession());
-    }
+    createNewSessions();
 
     thread = new Thread(this, "Session Pool Refresh Daemon");
     thread.setDaemon(true);
@@ -115,7 +120,7 @@ public class DBSessionProvider implements Runnable {
         sessionCreationTime;
 
     int reuseCount = rand.nextInt(MAX_REUSE_COUNT) + 1;
-    DBSession dbSession = new DBSession(session, reuseCount);
+    DBSession dbSession = new DBSession(session, reuseCount, currentConnectionID);
     sessionsCreated.incrementAndGet();
     return dbSession;
   }
@@ -141,20 +146,38 @@ public class DBSessionProvider implements Runnable {
       DBSession session = sessionPool.remove();
       return session;
     } catch (NoSuchElementException e) {
-      LOG.warn(
-          "DB Sessino provider cant keep up with the demand for new sessions");
+      LOG.warn("DB session provider cant keep up with the demand for new sessions");
       return initSession();
     }
   }
 
-  public void returnSession(DBSession returnedSession, boolean forceClose) throws StorageException {
+  public void returnSession(DBSession returnedSession, Exception... exceptions) throws StorageException {
+    boolean forceClose = false;
+    if(sessionFactory.isOpen()){
+      for(Exception e : exceptions){
+        if (e == null) continue;
+        Throwable cause = e.getCause();
+        if (cause instanceof ClusterJDatastoreException) {
+          forceClose = true;
+        } else if (cause instanceof ClusterJUserException){
+          if(cause.getMessage().contains("No more operations can be performed while this Db is " +
+            "closing")){
+            forceClose = true;
+          }
+        } else if (returnedSession.getConnectionID() != currentConnectionID) {
+          forceClose = true;
+        }
+      }
+    }
+
     //session has been used, increment the use counter
     returnedSession
         .setSessionUseCount(returnedSession.getSessionUseCount() + 1);
 
-    if ((returnedSession.getSessionUseCount() >=
+    if (sessionFactory.isOpen() && ((returnedSession.getSessionUseCount() >=
         returnedSession.getMaxReuseCount()) ||
-        forceClose) { // session can be closed even before the reuse count has expired. Close the session incase of database errors.
+        forceClose)) { // session can be closed even before the reuse count has expired. Close
+      // the session incase of database errors.
       toGC.add(returnedSession);
     } else { // increment the count and return it to the pool
       returnedSession.getSession().setLockMode(LockMode.READ_COMMITTED);
@@ -179,24 +202,29 @@ public class DBSessionProvider implements Runnable {
     return sessionPool.size();
   }
 
+  boolean reconnecting = false;
   @Override
   public void run() {
     while (automaticRefresh) {
       try {
-        int toGCSize = toGC.size();
-
-        if (toGCSize > 0) {
-          LOG.debug("Renewing a session(s) " + toGCSize);
-          for (int i = 0; i < toGCSize; i++) {
-            DBSession session = toGC.remove();
-            session.getSession().close();
-          }
-
-          for (int i = 0; i < toGCSize; i++) {
-            sessionPool.add(initSession());
-          }
+        if (!sessionFactory.isOpen()) {
+          reconnecting = true;
+          sessionFactory.reconnect();
         }
-        Thread.sleep(5);
+
+        if ( sessionFactory.isOpen() && reconnecting ){
+          // reconnected after network failure
+          // close all old sessions and start new sessions
+          reconnecting = false;
+          currentConnectionID = UUID.randomUUID();
+          renewAllSessions();
+          gcSessions(false);
+        } else {
+          // do normal gc
+          gcSessions(true);
+        }
+
+        Thread.sleep(50);
       } catch (NoSuchElementException e) {
         for (int i = 0; i < 100; i++) {
           try {
@@ -211,6 +239,40 @@ public class DBSessionProvider implements Runnable {
       } catch (StorageException e) {
         LOG.error(e);
       }
+    }
+  }
+
+  public void renewAllSessions() throws StorageException {
+    while (!sessionPool.isEmpty()) {
+      DBSession session = sessionPool.poll();
+      if (session != null) {
+        closeSession(session);
+      }
+    }
+    createNewSessions();
+  }
+
+  public void gcSessions(boolean createNewSessions) throws StorageException {
+    int toGCSize = toGC.size();
+
+    if (toGCSize > 0) {
+      LOG.debug("Renewing a session(s) " + toGCSize);
+      for (int i = 0; i < toGCSize; i++) {
+        DBSession session = toGC.remove();
+        closeSession(session);
+      }
+
+      if(createNewSessions){
+        for (int i = 0; i < toGCSize; i++) {
+          sessionPool.add(initSession());
+        }
+      }
+    }
+  }
+
+  public void createNewSessions() throws StorageException {
+    for (int i = 0; i < initialPoolSize; i++) {
+      sessionPool.add(initSession());
     }
   }
 

@@ -56,6 +56,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import io.hops.metadata.yarn.dal.ReservationStateDataAccess;
 
@@ -111,12 +113,11 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   }
 
   @Override
-  public void returnSession(boolean error) throws StorageException {
+  public void returnSession(Exception... e) throws StorageException {
     DBSession dbSession = sessions.get();
     if (dbSession != null) {
       sessions.remove(); // remove, and return to the pool
-      dbSessionProvider.returnSession(dbSession,
-              error); // if there was an error then close the session
+      dbSessionProvider.returnSession(dbSession, e);
     }
   }
 
@@ -143,16 +144,16 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
   @Override
   public void commit() throws StorageException {
     HopsSession session = null;
-    boolean dbError = false;
+    Exception dbError = null;
     try {
       session = obtainSession();
       HopsTransaction tx = session.currentTransaction();
       if (!tx.isActive()) {
-        throw new StorageException("The transaction is not began!");
+        throw new StorageException("Cannot commit, no active transaction");
       }
       tx.commit();
     } catch (StorageException e) {
-      dbError = true;
+      dbError = e;
       throw e;
     } finally {
       returnSession(dbError);
@@ -163,9 +164,12 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
    * It rolls back only when the transaction is active.
    */
   @Override
-  public void rollback() throws StorageException {
+  public void rollback(Exception exception) throws StorageException {
+    List<Exception> allExceptions = new ArrayList<>();
+    if (exception != null) {
+      allExceptions.add(exception);
+    }
     HopsSession session = null;
-    boolean dbError = false;
     try {
       session = obtainSession();
       HopsTransaction tx = session.currentTransaction();
@@ -173,10 +177,12 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
         tx.rollback();
       }
     } catch (StorageException e) {
-      dbError = true;
+      allExceptions.add(e);
       throw e;
     } finally {
-      returnSession(dbError);
+      LOG.fatal("rolback return session.  errors count: "+allExceptions.size());
+      returnSession(allExceptions.toArray(new Exception[allExceptions.size()]));
+
     }
   }
 
