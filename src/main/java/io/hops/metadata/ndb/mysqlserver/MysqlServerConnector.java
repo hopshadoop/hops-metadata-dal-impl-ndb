@@ -193,7 +193,7 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
   }
   
   @Override
-  public void returnSession(boolean error) throws StorageException {
+  public void returnSession(Exception... error) throws StorageException {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
@@ -208,7 +208,7 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
   }
 
   @Override
-  public void rollback() throws StorageException {
+  public void rollback(Exception e) throws StorageException {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 

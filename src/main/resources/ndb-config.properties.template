@@ -3,6 +3,23 @@ com.mysql.clusterj.database=hops_db
 com.mysql.clusterj.connection.pool.size=1
 com.mysql.clusterj.max.transactions=1024
 
+#determines the number of seconds to wait until the first “live” node is detected.
+#If this amount of time is exceeded with no live nodes detected,
+#then the method immediately returns a negative value. Default=30
+com.mysql.clusterj.connect.timeout.before=30
+
+#determines the number of seconds to wait after the first “live” node is 
+#detected for all nodes to become active. If this amount of time is exceeded
+#without all nodes becoming active, then the method immediately returns a 
+#value greater than zero. Default=20
+com.mysql.clusterj.connect.timeout.after=20
+
+#The number of seconds to wait for all sessions to be closed when reconnecting a SessionFactory
+#due to network failures. The default, 0, indicates that the automatic reconnection to the cluster
+#due to network failures is disabled. Reconnection can be enabled by using the method
+#SessionFactory.reconnect(int timeout) and specifying a new timeout value. 
+com.mysql.clusterj.connection.reconnect.timeout=5
+
 #clusterj caching
 #set io.hops.enable.clusterj.dto.cache and io.hops.enable.clusterj.session.cache to use dto and session caching provided by clusterj
 io.hops.enable.clusterj.dto.cache=false
