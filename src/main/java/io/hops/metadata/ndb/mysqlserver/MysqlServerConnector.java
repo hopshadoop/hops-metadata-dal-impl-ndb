@@ -83,6 +83,8 @@ public class MysqlServerConnector implements StorageConnector<Connection> {
             io.hops.metadata.ndb.mysqlserver.Constants.PROPERTY_MYSQL_USERNAME));
     config.addDataSourceProperty("password", conf.getProperty(
             io.hops.metadata.ndb.mysqlserver.Constants.PROPERTY_MYSQL_PASSWORD));
+    config.addDataSourceProperty("useSSL", conf.getProperty(
+            io.hops.metadata.ndb.mysqlserver.Constants.PROPERTY_MYSQL_USESSL));
 
     connectionPool = new HikariDataSource(config);
   }
