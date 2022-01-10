@@ -33,4 +33,5 @@ public class Constants {
       "io.hops.metadata.ndb.mysqlserver.password";
   public static final String PROPERTY_MYSQL_USESSL =
       "io.hops.metadata.ndb.mysqlserver.useSSL";
+  public static final String DEFAULT_MYSQL_USESSL = "false";
 }
