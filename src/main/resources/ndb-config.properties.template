@@ -36,6 +36,7 @@ io.hops.metadata.ndb.mysqlserver.port=3306
 io.hops.metadata.ndb.mysqlserver.username=username
 io.hops.metadata.ndb.mysqlserver.password=password
 io.hops.metadata.ndb.mysqlserver.connection_pool_size=1
+io.hops.metadata.ndb.mysqlserver.useSSL=false
 
 #size of the session pool. should be altreat as big as the number of active RPC handling Threads in the system
 io.hops.session.pool.size=1000
