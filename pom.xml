@@ -5,7 +5,7 @@
 
   <groupId>io.hops.metadata</groupId>
   <artifactId>hops-metadata-dal-impl-ndb</artifactId>
-  <version>3.2.0.6-RC0</version>
+  <version>3.2.0.6-RC1</version>
   <packaging>jar</packaging>
 
   <name>hops-metadata-dal-impl-ndb</name>
