@@ -26,7 +26,7 @@
     <dependency>
       <groupId>com.mysql.ndb</groupId>
       <artifactId>clusterj-rondb</artifactId>
-      <version>21.04.6</version>
+      <version>21.04.7</version>
     </dependency>
 
     <dependency>
