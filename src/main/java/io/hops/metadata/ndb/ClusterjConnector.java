@@ -181,7 +181,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
       allExceptions.add(e);
       throw e;
     } finally {
-      LOG.fatal("rolback return session.  errors count: "+allExceptions.size());
+      LOG.debug("rolback return session.  errors count: "+allExceptions.size());
       returnSession(allExceptions.toArray(new Exception[allExceptions.size()]));
     }
   }
