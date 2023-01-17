@@ -155,7 +155,11 @@ public class AceClusterJ implements TablesDef.AcesTableDef, AceDataAccess<Ace> {
     AceDto aceDto = session.newInstance(AceDto.class);
     aceDto.setInodeId(from.getInodeId());
     aceDto.setIndex(from.getIndex());
-    aceDto.setSubject(from.getSubject());
+    if(from.getSubject() == null){
+      aceDto.setSubject("");
+    } else {
+      aceDto.setSubject(from.getSubject());
+    }
     aceDto.setIsDefault(NdbBoolean.convert(from.isDefault()));
     aceDto.setPermission(from.getPermission());
     aceDto.setType(from.getType().getValue());
