@@ -108,7 +108,8 @@ public class XAttrClusterJ implements TablesDef.XAttrTableDef,
       session.flush();
   
       
-      for(XAttrDTO dto : dtos){
+      while(!dtos.isEmpty()){
+        XAttrDTO dto = dtos.remove(0);
         //check if the row exists
         if(dto.getNumParts() != NON_EXISTS_XATTR) {
           List<XAttrDTO> pdtos =
@@ -129,8 +130,10 @@ public class XAttrClusterJ implements TablesDef.XAttrTableDef,
       session.flush();
       
       return convertBatch(session, partsDtos);
-    }finally {
-      session.release(dtos);
+    } finally {
+      if (!dtos.isEmpty()) {
+        session.release(dtos);
+      }
       for(List<XAttrDTO> dtoList : partsDtos){
         session.release(dtoList);
       }

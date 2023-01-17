@@ -487,7 +487,6 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
               VariableClusterj.VariableDTO vd =
                       session.newInstance(VariableClusterj.VariableDTO.class);
               vd.setId(varType.getId());
-              byte[] value = varType.getDefaultValue();
               vd.setValue(varType.getDefaultValue());
               session.savePersistent(vd);
             }
