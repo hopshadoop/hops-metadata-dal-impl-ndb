@@ -25,7 +25,7 @@ com.mysql.clusterj.connection.reconnect.timeout=5
 io.hops.enable.clusterj.dto.cache=false
 io.hops.enable.clusterj.session.cache=false
 
-com.mysql.clusterj.max.cached.instances=256
+com.mysql.clusterj.max.cached.instances=0
 com.mysql.clusterj.max.cached.sessions=0
 com.mysql.clusterj.warmup.cached.sessions=0
 
