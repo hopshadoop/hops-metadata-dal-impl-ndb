@@ -33,7 +33,6 @@ import io.hops.metadata.ndb.wrapper.HopsQuery;
 import io.hops.metadata.ndb.wrapper.HopsQueryBuilder;
 import io.hops.metadata.ndb.wrapper.HopsQueryDomainType;
 import io.hops.metadata.ndb.wrapper.HopsSession;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,7 +45,6 @@ import java.util.Map;
 public class XAttrClusterJ implements TablesDef.XAttrTableDef,
     XAttrDataAccess<StoredXAttr, StoredXAttr.PrimaryKey> {
   
-  static final Logger LOG = Logger.getLogger(XAttrClusterJ.class);
   
   @PersistenceCapable(table = TABLE_NAME)
   public interface XAttrDTO {

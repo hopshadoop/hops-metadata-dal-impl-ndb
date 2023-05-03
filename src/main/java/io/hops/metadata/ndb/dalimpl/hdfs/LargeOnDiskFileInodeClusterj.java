@@ -10,7 +10,6 @@ import io.hops.metadata.hdfs.entity.FileInodeData;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
 import io.hops.metadata.ndb.wrapper.HopsSession;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,7 +20,6 @@ import java.util.List;
  */
 public class LargeOnDiskFileInodeClusterj
         implements TablesDef.FileInodeLargeDiskData, LargeOnDiskInodeDataAccess<FileInodeData> {
-  static final Logger LOG = Logger.getLogger(LargeOnDiskFileInodeClusterj.class);
   private ClusterjConnector connector = ClusterjConnector.getInstance();
 
 
