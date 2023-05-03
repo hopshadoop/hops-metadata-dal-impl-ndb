@@ -31,12 +31,12 @@ import io.hops.metadata.ndb.wrapper.HopsSession;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 public class VariableClusterj
-    implements TablesDef.VariableTableDef, VariableDataAccess<Variable, Variable.Finder> {
-  static final Logger LOG = Logger.getLogger(VariableClusterj.class);
-
+        implements TablesDef.VariableTableDef, VariableDataAccess<Variable, Variable.Finder> {
+  private final Logger LOG = LogManager.getLogger(VariableClusterj.class);
   @PersistenceCapable(table = TABLE_NAME)
   public interface VariableDTO {
 

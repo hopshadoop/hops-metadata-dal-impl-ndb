@@ -10,14 +10,12 @@ import io.hops.metadata.hdfs.entity.FileInodeData;
 import io.hops.metadata.ndb.ClusterjConnector;
 import io.hops.metadata.ndb.mysqlserver.MySQLQueryHelper;
 import io.hops.metadata.ndb.wrapper.HopsSession;
-import org.apache.log4j.Logger;
 
 /**
  * Created by salman on 3/10/16.
  */
 public class MediumOnDiskFileInodeClusterj
         implements TablesDef.FileInodeMediumlDiskData, MediumOnDiskInodeDataAccess<FileInodeData> {
-  static final Logger LOG = Logger.getLogger(MediumOnDiskFileInodeClusterj.class);
   private ClusterjConnector connector = ClusterjConnector.getInstance();
 
 
