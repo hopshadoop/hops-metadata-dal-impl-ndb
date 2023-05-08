@@ -45,6 +45,14 @@
       <version>2.3.13</version>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>com.mysql.ndb</groupId>
+      <artifactId>clusterj-native</artifactId>
+      <version>21.04.12</version>
+      <classifier>natives-linux</classifier>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <repositories>
@@ -66,6 +74,15 @@
       </releases>
       <snapshots>
         <updatePolicy>always</updatePolicy>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>hops-release</id>
+      <name>Hops Release Repository</name>
+      <url>https://archiva.hops.works/repository/Hops/</url>
+      <snapshots>
+       <enabled>false</enabled>
+       <updatePolicy>never</updatePolicy>
       </snapshots>
     </repository>
   </repositories>
@@ -114,6 +131,39 @@
           <target>1.7</target>
         </configuration>
       </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>-Djava.library.path=${project.build.directory}/lib:${java.library.path}</argLine>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.mysql.ndb</groupId>
+                  <artifactId>clusterj-native</artifactId>
+                  <version>21.04.12</version>
+                  <classifier>natives-linux</classifier>
+                  <type>jar</type>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
     <resources>
       <resource>
