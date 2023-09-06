@@ -18,4 +18,5 @@ mysql --host=$1 --port=$2 -u $3 -p$4 $5 < update-schema_3.2.0.6_to_3.2.0.7.sql &
 mysql --host=$1 --port=$2 -u $3 -p$4 $5 < update-schema_3.2.0.7_to_3.2.0.8.sql &&
 mysql --host=$1 --port=$2 -u $3 -p$4 $5 < update-schema_3.2.0.8_to_3.2.0.9.sql &&
 mysql --host=$1 --port=$2 -u $3 -p$4 $5 < update-schema_3.2.0.9_to_3.2.0.10.sql&&
-mysql --host=$1 --port=$2 -u $3 -p$4 $5 < update-schema_3.2.0.10_to_3.2.0.11.sql
+mysql --host=$1 --port=$2 -u $3 -p$4 $5 < update-schema_3.2.0.10_to_3.2.0.11.sql&&
+mysql --host=$1 --port=$2 -u $3 -p$4 $5 < update-schema_3.2.0.11_to_3.2.0.12.sql
