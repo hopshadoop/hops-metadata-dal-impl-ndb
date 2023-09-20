@@ -26,7 +26,7 @@
     <dependency>
       <groupId>com.mysql.ndb</groupId>
       <artifactId>clusterj-rondb</artifactId>
-      <version>21.04.15</version>
+      <version>22.10.1</version>
     </dependency>
 
     <dependency>
@@ -48,7 +48,7 @@
     <dependency>
       <groupId>com.mysql.ndb</groupId>
       <artifactId>clusterj-native</artifactId>
-      <version>21.04.12</version>
+      <version>22.10.1</version>
       <classifier>natives-linux</classifier>
       <scope>test</scope>
     </dependency>
@@ -152,7 +152,7 @@
                 <artifactItem>
                   <groupId>com.mysql.ndb</groupId>
                   <artifactId>clusterj-native</artifactId>
-                  <version>21.04.12</version>
+                  <version>22.10.1</version>
                   <classifier>natives-linux</classifier>
                   <type>jar</type>
                   <overWrite>true</overWrite>
