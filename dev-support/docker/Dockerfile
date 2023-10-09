@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-FROM ubuntu:focal
+FROM ubuntu:jammy
 
 WORKDIR /root
 
@@ -36,6 +36,7 @@ RUN apt-get -q update \
         maven \
         openjdk-8-jdk \
         sudo \
+        openssl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
