@@ -33,10 +33,11 @@ ENV DEBCONF_TERSE true
 
 RUN apt-get -q update \
     && apt-get -q install -y --no-install-recommends \
-        maven \
         openjdk-8-jdk \
         sudo \
         openssl \
+    && apt-get -q install -y --no-install-recommends \
+        maven \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
