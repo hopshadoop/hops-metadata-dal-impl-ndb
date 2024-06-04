@@ -32,7 +32,6 @@ import io.hops.metadata.ndb.dalimpl.election.HdfsLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.election.YarnLeaderClusterj;
 import io.hops.metadata.ndb.dalimpl.hdfs.*;
 import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.ReservationStateClusterJ;
-import io.hops.metadata.ndb.dalimpl.yarn.AppProvenanceClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.quota.PriceMultiplicatorClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.quota.ProjectQuotaClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.quota.ProjectsDailyCostClusterJ;
@@ -41,7 +40,6 @@ import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.ApplicationStateClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.DelegationKeyClusterJ;
 import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.DelegationTokenClusterJ;
 import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
-import io.hops.metadata.yarn.dal.AppProvenanceDataAccess;
 import io.hops.metadata.yarn.dal.quota.PriceMultiplicatorDataAccess;
 import io.hops.metadata.yarn.dal.quota.ProjectQuotaDataAccess;
 import io.hops.metadata.yarn.dal.quota.ProjectsDailyCostDataAccess;
@@ -139,9 +137,6 @@ public class NdbStorageFactory implements DalStorageFactory {
     dataAccessMap.put(ConfMutationDataAccess.class, new ConfMutationClusterJ());
     dataAccessMap.put(ConfDataAccess.class, new ConfClusterJ());
     dataAccessMap.put(EncryptionZoneDataAccess.class, new EncryptionZoneClusterJ());
-    dataAccessMap.put(FileProvenanceDataAccess.class, new FileProvenanceClusterj());
-    dataAccessMap.put(AppProvenanceDataAccess.class, new AppProvenanceClusterJ());
-    dataAccessMap.put(FileProvXAttrBufferDataAccess.class, new FileProvXAttrBufferClusterj());
     dataAccessMap.put(LeaseCreationLocksDataAccess.class, new LeaseCreationLocksClusterj());
   }
 
