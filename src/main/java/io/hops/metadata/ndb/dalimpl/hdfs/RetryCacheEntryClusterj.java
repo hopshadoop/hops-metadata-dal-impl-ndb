@@ -116,13 +116,14 @@ public class RetryCacheEntryClusterj
     session.release(changes);
   }
 
-  public int removeOlds(long epoch) throws StorageException{
+  public int removeOlds(long epoch, int batchSize) throws StorageException{
     HopsSession session = connector.obtainSession();
     HopsQueryBuilder qb = session.getQueryBuilder();
     HopsQueryDomainType<RetryCacheEntryDTO> qdt = qb.createQueryDefinition(RetryCacheEntryDTO.class);
     qdt.where(qdt.get("epoch").equal(qdt.param("param")));
     HopsQuery<RetryCacheEntryDTO> query = session.createQuery(qdt);
     query.setParameter("param", epoch);
+    query.setLimits(0, batchSize);
     return query.deletePersistentAll();
   }
 
