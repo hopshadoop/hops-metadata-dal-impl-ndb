@@ -44,7 +44,6 @@ import io.hops.metadata.ndb.dalimpl.yarn.rmstatestore.ReservationStateClusterJ;
 import io.hops.metadata.ndb.mysqlserver.MysqlServerConnector;
 import io.hops.metadata.ndb.wrapper.HopsSession;
 import io.hops.metadata.ndb.wrapper.HopsTransaction;
-import io.hops.metadata.yarn.dal.AppProvenanceDataAccess;
 import io.hops.metadata.yarn.dal.quota.PriceMultiplicatorDataAccess;
 import io.hops.metadata.yarn.dal.quota.ProjectQuotaDataAccess;
 import io.hops.metadata.yarn.dal.quota.ProjectsDailyCostDataAccess;
@@ -335,8 +334,7 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
     return format(transactional, YarnLeDescriptorDataAccess.class, ApplicationStateDataAccess.class,
             ApplicationAttemptStateDataAccess.class, DelegationKeyDataAccess.class, DelegationTokenDataAccess.class,
             ProjectQuotaDataAccess.class, ProjectsDailyCostDataAccess.class, PriceMultiplicatorDataAccess.class,
-            ReservationStateDataAccess.class, ConfMutationDataAccess.class, ConfDataAccess.class,
-            AppProvenanceDataAccess.class);
+            ReservationStateDataAccess.class, ConfMutationDataAccess.class, ConfDataAccess.class);
   }
 
   private boolean formatHDFS(boolean transactional) throws StorageException{
@@ -362,7 +360,6 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             AceDataAccess.class, RetryCacheEntryDataAccess.class, CacheDirectiveDataAccess.class,
             CachePoolDataAccess.class, CachedBlockDataAccess.class,
             ActiveBlockReportsDataAccess.class, XAttrDataAccess.class, EncryptionZoneDataAccess.class,
-            FileProvenanceDataAccess.class, FileProvXAttrBufferDataAccess.class,
             LeaseCreationLocksDataAccess.class);
   }
 
@@ -625,14 +622,6 @@ public class ClusterjConnector implements StorageConnector<DBSession> {
             truncate(transactional,
                     io.hops.metadata.hdfs.TablesDef.EncryptionZones.TABLE_NAME,
                     EncryptionZoneClusterJ.EncryptionZoneDTO.class);
-          } else if (e == FileProvenanceDataAccess.class) {
-            truncate(transactional,
-                    io.hops.metadata.hdfs.TablesDef.FileProvenanceTableDef.TABLE_NAME,
-                    FileProvenanceClusterj.ProvenanceLogEntryDto.class);
-          } else if (e == FileProvXAttrBufferDataAccess.class) {
-            truncate(transactional,
-                    io.hops.metadata.hdfs.TablesDef.FileProvXAttrBufferTableDef.TABLE_NAME,
-                    FileProvXAttrBufferClusterj.FileProvXAttrBufferEntryDto.class);
           } else if (e == LeaseCreationLocksDataAccess.class) {
             truncate(transactional,
                     io.hops.metadata.hdfs.TablesDef.LeaseCreationLocksTableDef.TABLE_NAME,
